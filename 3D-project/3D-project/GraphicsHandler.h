@@ -14,10 +14,10 @@ private:
 	ID3D11RenderTargetView* rtvBackBuffer;
 	
 public:
-	GraphicsHandler();
+	GraphicsHandler(HWND wHandler, int width, int height);
 	~GraphicsHandler();
 
 	HRESULT CreateDirect3DContext(HWND wHandler);
-	void setViewPort(int heigth, int width);
+	void setViewPort( int width, int heigth);
 };
 #endif

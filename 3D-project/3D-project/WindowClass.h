@@ -12,7 +12,7 @@ private:
 	int heigth;
 	HINSTANCE hInstance;
 
-	GraphicsHandler graphicsHandler;
+	GraphicsHandler *graphicsHandler;
 
 
 public:

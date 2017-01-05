@@ -1,11 +1,14 @@
 #include "GraphicsHandler.h"
 
-GraphicsHandler::GraphicsHandler()
+GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
+	this->CreateDirect3DContext(wHandler);
+	this->setViewPort(height, width);
 }
 
 GraphicsHandler::~GraphicsHandler()
 {
+
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)

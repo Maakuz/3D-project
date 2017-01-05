@@ -24,8 +24,8 @@ WindowClass::WindowClass(HINSTANCE hInstance)
 	this->wnd = 0;
 	this->hInstance = hInstance;
 	this->initializeWindow();
-	graphicsHandler.CreateDirect3DContext(this->wnd);
-	graphicsHandler.setViewPort(this->heigth, this->width);
+	this->graphicsHandler = new GraphicsHandler(this->wnd, this->width, this->heigth);
+	
 }
 
 WindowClass::WindowClass(HINSTANCE hInstance, int width, int height)
@@ -39,6 +39,7 @@ WindowClass::WindowClass(HINSTANCE hInstance, int width, int height)
 
 WindowClass::~WindowClass()
 {
+	delete graphicsHandler;
 }
 
 void WindowClass::initializeWindow()
@@ -51,7 +52,7 @@ void WindowClass::initializeWindow()
 	wc.cbWndExtra = 0;
 	wc.hInstance = this->hInstance;
 	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
-	wc.hCursor = LoadCursor(0, IDC_NO);
+	wc.hCursor = LoadCursor(0, IDC_HELP);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wc.lpszMenuName = 0;
 	wc.lpszClassName = L"Basic test";
