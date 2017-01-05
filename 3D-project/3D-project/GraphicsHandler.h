@@ -17,6 +17,7 @@ private:
 	ID3D11RenderTargetView* rtvBackBuffer;
 	
 	ID3D11VertexShader* vertexShader;
+	ID3D11PixelShader* pixelShader;
 	ID3D11InputLayout* vertexLayout;
 	
 public:
@@ -26,5 +27,6 @@ public:
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void setViewPort(int heigth, int width);
 	void createShaders();
+
 };
 #endif
