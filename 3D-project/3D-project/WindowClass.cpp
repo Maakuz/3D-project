@@ -24,7 +24,7 @@ WindowClass::WindowClass(HINSTANCE hInstance)
 	this->wnd = 0;
 	this->hInstance = hInstance;
 	this->initializeWindow();
-	this->graphicsHandler = new GraphicsHandler(this->wnd, this->width, this->heigth);
+	this->graphicsHandler = new GraphicsHandler(this->wnd, this->heigth, this->width);
 	
 }
 
@@ -35,6 +35,7 @@ WindowClass::WindowClass(HINSTANCE hInstance, int width, int height)
 	this->wnd = 0;
 	this->hInstance = hInstance;
 	this->initializeWindow();
+	this->graphicsHandler = new GraphicsHandler(this->wnd, this->heigth, this->width);
 }
 
 WindowClass::~WindowClass()
@@ -92,19 +93,21 @@ int WindowClass::run()
 {
 	MSG msg = { 0 };
 
-	bool ret = true;
+	
 
-	while ((ret = GetMessage(&msg, 0, 0, 0)) != 0)
+	while (WM_QUIT != msg.message)
 	{
-		if (ret == -1)
-		{
-			MessageBox(this->wnd, L"message fetching failed", L"Error", MB_OK);
-		}
-		else
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+		else
+		{
+			graphicsHandler->render();
+		}
+			
+		
 	}
 
 	return 0;

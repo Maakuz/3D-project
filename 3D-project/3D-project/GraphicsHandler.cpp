@@ -13,6 +13,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
+	this->createShaders();
+	this->createTriangleData();
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -52,9 +54,17 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 
 
 		ID3D11Texture2D* backBuffer = nullptr;
-		swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
+		hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
+		if (FAILED(hr))
+		{
+			MessageBox(0, L"getBuffer failed", L"error", MB_OK);
+		}
 
-		gDevice->CreateRenderTargetView(backBuffer, NULL, &rtvBackBuffer);
+		 hr = gDevice->CreateRenderTargetView(backBuffer, NULL, &rtvBackBuffer);
+		 if (FAILED(hr))
+		 {
+			 MessageBox(0, L"RTV creation failed", L"error", MB_OK);
+		 }
 		backBuffer->Release();
 
 		//Lägg in depthviewsaken här i stället för nULL
@@ -79,16 +89,16 @@ void GraphicsHandler::createShaders()
 {
 	HRESULT hr;
 	ID3DBlob* vsBlob = nullptr;
-	hr =D3DCompileFromFile(
+	hr = D3DCompileFromFile(
 		L"VertexShader.hlsl",
-		NULL,
-		NULL,
+		nullptr,
+		nullptr,
 		"main",
 		"vs_5_0",
 		0,
 		0,
 		&vsBlob,
-		NULL);
+		nullptr);
 
 	if (FAILED(hr))
 	{
@@ -108,7 +118,7 @@ void GraphicsHandler::createShaders()
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
-	HRESULT hr = this->gDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &this->vertexLayout);
+	hr = this->gDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &this->vertexLayout);
 
 	if (FAILED(hr))
 	{
@@ -183,7 +193,7 @@ void GraphicsHandler::render()
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->GSSetShader(nullptr, nullptr, 0);
-	gDeviceContext->PSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->PSSetShader(this->pixelShader, nullptr, 0);
 
 	UINT32 vertexSize = sizeof(float) * 6;
 	UINT32 offset = 0;
@@ -194,5 +204,5 @@ void GraphicsHandler::render()
 
 
 	gDeviceContext->Draw(3, 0);
-
+	this->swapChain->Present(0, 0);
 }
