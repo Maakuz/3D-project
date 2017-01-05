@@ -24,6 +24,8 @@ WindowClass::WindowClass(HINSTANCE hInstance)
 	this->wnd = 0;
 	this->hInstance = hInstance;
 	this->initializeWindow();
+	graphicsHandler.CreateDirect3DContext(this->wnd);
+	graphicsHandler.setViewPort(this->heigth, this->width);
 }
 
 WindowClass::WindowClass(HINSTANCE hInstance, int width, int height)
