@@ -2,6 +2,13 @@
 
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
+	this->gDevice = nullptr;
+	this->gDeviceContext = nullptr;
+	this->rtvBackBuffer = nullptr;
+	this->swapChain = nullptr;
+	this->vertexLayout = nullptr;
+	this->vertexShader = nullptr;
+
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 }
@@ -68,8 +75,6 @@ void GraphicsHandler::setViewPort(int heigth, int width)
 
 void GraphicsHandler::createShaders()
 {
-
-	///////////////////////////////////////////vetrex shader//////////////////////////////////////////////////////////
 	ID3DBlob* vsBlob = nullptr;
 	D3DCompileFromFile(
 		L"VertexShader.hlsl",
@@ -83,5 +88,14 @@ void GraphicsHandler::createShaders()
 		NULL);
 
 	this->gDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), NULL, &this->vertexShader);
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	D3D11_INPUT_ELEMENT_DESC inputDesc[] = 
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	HRESULT hr = this->gDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &this->vertexLayout);
+
+	vsBlob->Release();
 }
