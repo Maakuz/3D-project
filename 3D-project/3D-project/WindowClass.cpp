@@ -49,12 +49,15 @@ void WindowClass::initializeWindow()
 	wc.cbWndExtra = 0;
 	wc.hInstance = this->hInstance;
 	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
-	wc.hCursor = LoadCursor(0, IDC_IBEAM);
+	wc.hCursor = LoadCursor(0, IDC_NO);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 	wc.lpszMenuName = 0;
 	wc.lpszClassName = L"Basic test";
 
-	RegisterClass(&wc);
+	if (!RegisterClass(&wc))
+	{
+		MessageBox(this->wnd, L"registerClass failed", L"Error", MB_OK);
+	}
 
 	this->wnd = CreateWindow(
 		L"Basic test",
@@ -68,6 +71,13 @@ void WindowClass::initializeWindow()
 		0,
 		this->hInstance,
 		0);
+	
+	if (this->wnd == 0)
+	{
+		MessageBox(this->wnd, L"window creation failed", L"Error", MB_OK);
+	}
+		
+	
 
 	ShowWindow(this->wnd, SW_SHOWDEFAULT);
 	UpdateWindow(this->wnd);
@@ -85,7 +95,7 @@ int WindowClass::run()
 	{
 		if (ret == -1)
 		{
-
+			MessageBox(this->wnd, L"message fetching failed", L"Error", MB_OK);
 		}
 		else
 		{
