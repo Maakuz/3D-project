@@ -65,3 +65,20 @@ void GraphicsHandler::setViewPort(int heigth, int width)
 	vp.MaxDepth = 1.f;
 	gDeviceContext->RSSetViewports(1, &vp);
 }
+
+void GraphicsHandler::createShaders()
+{
+	ID3DBlob* vsBlob = nullptr;
+	D3DCompileFromFile(
+		L"VertexShader.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"vs_5_0",
+		0,
+		0,
+		&vsBlob,
+		NULL);
+
+	this->gDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), NULL, &this->vertexShader);
+}
