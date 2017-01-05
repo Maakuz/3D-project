@@ -68,6 +68,8 @@ void GraphicsHandler::setViewPort(int heigth, int width)
 
 void GraphicsHandler::createShaders()
 {
+
+	///////////////////////////////////////////vetrex shader//////////////////////////////////////////////////////////
 	ID3DBlob* vsBlob = nullptr;
 	D3DCompileFromFile(
 		L"VertexShader.hlsl",
@@ -81,4 +83,5 @@ void GraphicsHandler::createShaders()
 		NULL);
 
 	this->gDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), NULL, &this->vertexShader);
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
