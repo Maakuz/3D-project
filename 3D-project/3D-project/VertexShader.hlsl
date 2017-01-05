@@ -4,8 +4,16 @@ struct VS_IN
     float3 color : COLOR;
 };
 
-
-float4 main( float4 pos : POSITION ) : SV_POSITION
+struct VS_OUT
 {
-	return pos;
+    float4 pos : SV_Position;
+    float3 color : COLOR;
+};
+
+VS_OUT main(VS_IN input)
+{
+	VS_OUT output = (VS_OUT)0;
+
+    output.pos = input.pos, 1;
+    output.color = input.color;
 }

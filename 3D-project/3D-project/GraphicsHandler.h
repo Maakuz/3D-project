@@ -18,6 +18,7 @@ private:
 	
 	ID3D11VertexShader* vertexShader;
 	ID3D11InputLayout* vertexLayout;
+	ID3D11Buffer* vertexBuffer;
 	
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
@@ -26,5 +27,8 @@ public:
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void setViewPort(int heigth, int width);
 	void createShaders();
+
+	void createTriangleData();
+	void render();
 };
 #endif
