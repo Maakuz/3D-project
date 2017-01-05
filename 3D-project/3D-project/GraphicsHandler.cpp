@@ -9,6 +9,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->vertexLayout = nullptr;
 	this->vertexShader = nullptr;
 	this->vertexBuffer = nullptr;
+	this->pixelShader = nullptr;
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
@@ -76,8 +77,9 @@ void GraphicsHandler::setViewPort(int heigth, int width)
 
 void GraphicsHandler::createShaders()
 {
+	HRESULT hr;
 	ID3DBlob* vsBlob = nullptr;
-	D3DCompileFromFile(
+	hr =D3DCompileFromFile(
 		L"VertexShader.hlsl",
 		NULL,
 		NULL,
@@ -88,17 +90,56 @@ void GraphicsHandler::createShaders()
 		&vsBlob,
 		NULL);
 
-	this->gDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), NULL, &this->vertexShader);
-
-	D3D11_INPUT_ELEMENT_DESC inputDesc[] = 
+	if (FAILED(hr))
 	{
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		MessageBox(0, L"vsblob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), NULL, &this->vertexShader);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"vertex shader creation failed", L"error", MB_OK);
+	}
+
+	D3D11_INPUT_ELEMENT_DESC inputDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	HRESULT hr = this->gDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &this->vertexLayout);
 
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"input desc creation failed", L"error", MB_OK);
+	}
+
 	vsBlob->Release();
+
+	ID3DBlob *psBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"PixelShader.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"ps_5_0",
+		0,
+		0,
+		&psBlob,
+		NULL);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"psBlob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"pixel shader creation failed", L"error", MB_OK);
+	}
+
+	
 }
 
 void GraphicsHandler::createTriangleData()
@@ -129,7 +170,7 @@ void GraphicsHandler::createTriangleData()
 
 	D3D11_SUBRESOURCE_DATA data;
 	data.pSysMem = triangleVertices;
-	gDevice->CreateBuffer(&bufferDesc, &data, &this->vertexBuffer);
+	this->gDevice->CreateBuffer(&bufferDesc, &data, &this->vertexBuffer);
 }
 
 void GraphicsHandler::render()
