@@ -1,75 +1,84 @@
-#include <Windows.h>
+#include "WindowClass.h"
+#include <d3d11.h>
 
-HWND wnd = 0;
+
+#pragma comment (lib, "d3d11.lib")
+
+IDXGISwapChain* swapChain = nullptr;
+ID3D11Device* gDevice = nullptr;
+ID3D11DeviceContext* gDeviceContext = nullptr;
+ID3D11RenderTargetView* rtvBackBuffer = nullptr;
 
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+
+void setViewPort(int heigth, int width);
+HRESULT CreateDirect3DContext(HWND wHandler);
+
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-	WNDCLASS wc = { 0 };
+	WindowClass windClass(hInstance, 640, 480);
 
-	wc.style = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc = WndProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(0, IDI_APPLICATION);
-	wc.hCursor = LoadCursor(0, IDC_IBEAM);
-	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wc.lpszMenuName = 0;
-	wc.lpszClassName = L"Basic test";
+	/*CreateDirect3DContext(wnd);
 
-	RegisterClass(&wc);
+	setViewPort(640, 480);*/
 
-	wnd = CreateWindow(
-		L"Basic test", 
-		L"3D project", 
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		640,
-		480,
-		0,
-		0,
-		hInstance,
-		0);
+	
 
-	ShowWindow(wnd, nCmdShow);
-	UpdateWindow(wnd);
-
-	MSG msg = {0};
-
-	bool ret = true;
-
-	while ((ret = GetMessage(&msg, 0, 0, 0)) != 0)
-	{
-		if (ret == -1)
-		{
-			
-		}
-		else
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
-
-	return 0;
+	return windClass.run();
 }
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+HRESULT CreateDirect3DContext(HWND wHandler)
 {
-	switch (msg)
+	DXGI_SWAP_CHAIN_DESC desc;
+	ZeroMemory(&desc, sizeof(DXGI_SWAP_CHAIN_DESC));
+
+	desc.BufferCount = 1;
+	desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	desc.OutputWindow = wHandler;
+	desc.SampleDesc.Count = 1;
+	desc.Windowed = true;
+
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(
+		NULL,
+		D3D_DRIVER_TYPE_HARDWARE,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		D3D11_SDK_VERSION,
+		&desc,
+		&swapChain,
+		&gDevice,
+		NULL,
+		&gDeviceContext);
+
+	if (SUCCEEDED(hr))
 	{
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
+		//Depth buffer borde nog hända här
 
-	default:
-		return DefWindowProc(hwnd, msg, wparam, lparam);
-		break;
+
+		ID3D11Texture2D* backBuffer = nullptr;
+		swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
+
+		gDevice->CreateRenderTargetView(backBuffer, NULL, &rtvBackBuffer);
+		backBuffer->Release();
+
+		//Lägg in depthviewsaken här i stället för nULL
+		gDeviceContext->OMSetRenderTargets(1, &rtvBackBuffer, NULL);
 	}
+	return hr;
+}
 
-	return 0;
+void setViewPort(int heigth, int width)
+{
+	D3D11_VIEWPORT vp;
+	vp.Height = (float)heigth;
+	vp.Width = (float)width;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	vp.MinDepth = 0.f;
+	vp.MaxDepth = 1.f;
+	gDeviceContext->RSSetViewports(1, &vp);
 }
