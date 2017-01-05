@@ -17,6 +17,7 @@ private:
 	ID3D11RenderTargetView* rtvBackBuffer;
 	
 	ID3D11VertexShader* vertexShader;
+	ID3D11InputLayout* vertexLayout;
 	
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
