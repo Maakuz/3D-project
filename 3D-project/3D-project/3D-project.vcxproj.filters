@@ -24,12 +24,18 @@
     <ClCompile Include="GraphicsHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BufferClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WindowClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GraphicsHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
