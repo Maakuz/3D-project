@@ -11,6 +11,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->vertexShader = nullptr;
 	this->vertexBuffer = nullptr;
 	this->pixelShader = nullptr;
+	this->bufferClass = new BufferClass(this->gDevice);
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
@@ -21,7 +22,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 GraphicsHandler::~GraphicsHandler()
 {
-
+	delete bufferClass;
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
@@ -73,6 +74,9 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 
 		//Lägg in depthviewsaken här i stället för nULL
 		gDeviceContext->OMSetRenderTargets(1, &rtvBackBuffer, NULL);
+
+		delete this->bufferClass;
+		this->bufferClass = new BufferClass(this->gDevice);
 	}
 	return hr;
 }
@@ -164,13 +168,13 @@ void GraphicsHandler::createTriangleData()
 		float r, g, b;
 	};
 
-	TriangleVertex triangleVertices[6] =
+	TriangleVertex triangleVertices[3] =
 	{
 		0.5f, -0.5f, 0.0f,	//v0 pos
-		1.0f, 1.0f,	0.0f//v0 color
+		1.0f, 0.0f,	0.0f,   //v0 color
 
-		- 0.5f, -0.5f, 0.0f,	//v1
-		0.0f, 1.0f,	0.0f,//v1 color
+		-0.5f, -0.5f, 0.0f,	//v1
+		0.0f, 1.0f,	0.0f,   //v1 color
 
 		-0.5f, 0.5f, 0.0f, //v2
 		0.0f, 0.0f, 1.0f	//v2 color
@@ -185,6 +189,14 @@ void GraphicsHandler::createTriangleData()
 	D3D11_SUBRESOURCE_DATA data;
 	data.pSysMem = triangleVertices;
 	this->gDevice->CreateBuffer(&bufferDesc, &data, &this->vertexBuffer);
+
+	UINT32 vertexSize = sizeof(TriangleVertex);
+	UINT32 offset = 0;
+	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+
+
+	this->matrixBuffer = bufferClass->createConstantBuffer();
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
 objectInfo GraphicsHandler::loadObj()
@@ -447,9 +459,6 @@ void GraphicsHandler::render()
 	gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->PSSetShader(this->pixelShader, nullptr, 0);
 
-	UINT32 vertexSize = sizeof(float) * 6;
-	UINT32 offset = 0;
-	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	gDeviceContext->IASetInputLayout(this->vertexLayout);

@@ -54,6 +54,8 @@ private:
 	ID3D11Buffer* vertexBuffer;
 	objectInfo objInfo;
 	
+	ID3D11Buffer* matrixBuffer;
+	BufferClass* bufferClass;
 	
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
