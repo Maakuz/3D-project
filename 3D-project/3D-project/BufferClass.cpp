@@ -23,9 +23,9 @@ matrixStruct BufferClass::initiateMatrices()
 	double zNear = 0.1;
 
 	this->matrices.world = DirectX::XMMATRIX(
-		1, 0, 0, 0,
+		cos(45), 0, sin(45), 0,
 		0, 1, 0, 0,
-		0, 0, 1, 0,
+		-sin(45), 0, cos(45), 0,
 		0, 0, 0, 1);
 
 	DirectX::XMVECTOR eyePosition;
@@ -38,7 +38,7 @@ matrixStruct BufferClass::initiateMatrices()
 	upDirection = DirectX::XMVectorSet(0, 1, 0, 0);
 
 	this->matrices.view = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
-	this->matrices.view = DirectX::XMMatrixTranspose(this->matrices.projection);
+	this->matrices.view = DirectX::XMMatrixTranspose(this->matrices.view);
 
 	this->matrices.projection = DirectX::XMMatrixPerspectiveFovLH(FovAngleY, AspectRatio, zNear, zFar);
 	this->matrices.projection = DirectX::XMMatrixTranspose(this->matrices.projection);
