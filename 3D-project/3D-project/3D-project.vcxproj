@@ -154,6 +154,9 @@
     <ClInclude Include="GraphicsHandler.h" />
     <ClInclude Include="WindowClass.h" />
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="VertexShader.hlsl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
