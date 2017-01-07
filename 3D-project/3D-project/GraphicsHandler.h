@@ -3,6 +3,7 @@
 
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include "BufferClass.h"
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
@@ -20,7 +21,8 @@ private:
 	ID3D11PixelShader* pixelShader;
 	ID3D11InputLayout* vertexLayout;
 	ID3D11Buffer* vertexBuffer;
-	
+	ID3D11Buffer* matrixBuffer;
+	BufferClass* bufferClass;
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
 	~GraphicsHandler();

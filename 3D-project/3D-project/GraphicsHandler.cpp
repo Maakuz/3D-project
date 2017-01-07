@@ -10,6 +10,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->vertexShader = nullptr;
 	this->vertexBuffer = nullptr;
 	this->pixelShader = nullptr;
+	this->bufferClass = new BufferClass(this->gDevice);
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
@@ -19,7 +20,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 GraphicsHandler::~GraphicsHandler()
 {
-
+	delete bufferClass;
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
@@ -181,6 +182,10 @@ void GraphicsHandler::createTriangleData()
 	D3D11_SUBRESOURCE_DATA data;
 	data.pSysMem = triangleVertices;
 	this->gDevice->CreateBuffer(&bufferDesc, &data, &this->vertexBuffer);
+
+	this->matrixBuffer = bufferClass->createConstantBuffer();
+
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
 void GraphicsHandler::render()
