@@ -51,17 +51,18 @@ void BufferClass::updateMatrices()
 	D3D11_MAPPED_SUBRESOURCE pData;
 }
 
-ID3D11Buffer* BufferClass::createConstantBuffer(UINT size, D3D11_SUBRESOURCE_DATA* pData)
+ID3D11Buffer* BufferClass::createConstantBuffer()
 {
 	D3D11_BUFFER_DESC description;
-	description.ByteWidth = size;
+	description.ByteWidth = sizeof(BufferClass);
 	description.Usage = D3D11_USAGE_DYNAMIC;
 	description.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	description.MiscFlags = 0;
 	description.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
 	ID3D11Buffer* pBuffer = 0;
-	HRESULT hr = this->gDevice->CreateBuffer(&description, pData, &pBuffer);
+	D3D11_SUBRESOURCE_DATA matriceResource = getMatricesSubresource();
+	HRESULT hr = this->gDevice->CreateBuffer(&description, &matriceResource, &pBuffer);
 	if (FAILED(hr))
 	{
 		//error

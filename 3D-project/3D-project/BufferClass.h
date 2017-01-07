@@ -23,11 +23,7 @@ public:
 	D3D11_SUBRESOURCE_DATA getMatricesSubresource();
 	matrixStruct initiateMatrices();
 	void updateMatrices();
-	ID3D11Buffer* createConstantBuffer(UINT size, D3D11_SUBRESOURCE_DATA* pData);
-
+	ID3D11Buffer* createConstantBuffer();
 };
-
-
-
 
 #endif
