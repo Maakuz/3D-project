@@ -3,10 +3,42 @@
 
 #include <d3d11.h>
 #include <d3dcompiler.h>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
+
+struct objectInfo
+{
+	int nrOfVertexcies;
+	int norOfIndexcies;
+	struct vertexInfo
+	{
+		
+		//vertex positions
+		float vpx, vpy, vpz;
+
+		// vertex normals
+		float vnx, vny, vnz;
+
+		//uv coords
+		float u, v;
+
+	};
+	struct indexInfo
+	{
+		int a1, b1, c1;
+		int a2, b2, c2;
+		int a3, b3, c3;
+	};
+
+	std::vector<vertexInfo> vInfo;
+	std::vector<indexInfo> iInfo;
+};
 
 class GraphicsHandler
 {
@@ -20,6 +52,8 @@ private:
 	ID3D11PixelShader* pixelShader;
 	ID3D11InputLayout* vertexLayout;
 	ID3D11Buffer* vertexBuffer;
+	objectInfo objInfo;
+	
 	
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
@@ -31,5 +65,8 @@ public:
 
 	void createTriangleData();
 	void render();
+	objectInfo loadObj();
 };
+
+
 #endif

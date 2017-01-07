@@ -1,5 +1,6 @@
 #include "GraphicsHandler.h"
 
+
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
 	this->gDevice = nullptr;
@@ -15,6 +16,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->setViewPort(height, width);
 	this->createShaders();
 	this->createTriangleData();
+	this->objInfo = this->loadObj();
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -58,13 +60,15 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		if (FAILED(hr))
 		{
 			MessageBox(0, L"getBuffer failed", L"error", MB_OK);
+			return hr;
 		}
 
-		 hr = gDevice->CreateRenderTargetView(backBuffer, NULL, &rtvBackBuffer);
-		 if (FAILED(hr))
-		 {
-			 MessageBox(0, L"RTV creation failed", L"error", MB_OK);
-		 }
+		hr = gDevice->CreateRenderTargetView(backBuffer, NULL, &rtvBackBuffer);
+		if (FAILED(hr))
+		{
+			MessageBox(0, L"RTV creation failed", L"error", MB_OK);
+			return hr;
+		}
 		backBuffer->Release();
 
 		//Lägg in depthviewsaken här i stället för nULL
@@ -149,7 +153,7 @@ void GraphicsHandler::createShaders()
 		MessageBox(0, L"pixel shader creation failed", L"error", MB_OK);
 	}
 
-	
+
 }
 
 void GraphicsHandler::createTriangleData()
@@ -181,6 +185,254 @@ void GraphicsHandler::createTriangleData()
 	D3D11_SUBRESOURCE_DATA data;
 	data.pSysMem = triangleVertices;
 	this->gDevice->CreateBuffer(&bufferDesc, &data, &this->vertexBuffer);
+}
+
+objectInfo GraphicsHandler::loadObj()
+{
+	std::string fileName("../resource/apple.obj"), identifier;
+	std::string line;
+	std::ifstream file(fileName);
+	objectInfo objInfo;
+	if (file.is_open() == false)
+	{
+		MessageBox(0, L"obj file failed to open", L"error", MB_OK);
+	}
+	else
+	{
+
+
+		std::istringstream inputString;
+		struct vPos
+		{
+			float x, y, z;
+		};
+		struct vNor
+		{
+			float x, y, z;
+		};
+		struct UV
+		{
+			float u, v;
+		};
+
+
+		vPos vpTemp;
+		vNor vnTemp;
+		UV uvTemp;
+		objectInfo::indexInfo fTemp;
+		std::string temp;
+		std::string temp1;
+		std::string temp2;
+		std::string temp3;
+		int i = 0;
+		int counter = 0;
+		bool cont = true;
+
+
+
+		std::vector<vPos> vp;
+		std::vector<vNor> vn;
+		std::vector<UV> uv;
+		std::vector<objectInfo::indexInfo> f;
+
+
+
+		while (std::getline(file, line))
+		{
+			inputString.str(line);
+			//fills vertex pos
+			if (line.substr(0, 2) == "v ")
+			{
+				inputString >> identifier >>
+					vpTemp.x >> vpTemp.y >> vpTemp.z;
+				vp.push_back(vpTemp);
+			}
+			//fills vertex normals
+			else if (line.substr(0, 2) == "vn")
+			{
+				inputString >> identifier >>
+					vnTemp.x >> vnTemp.y >> vnTemp.z;
+				vn.push_back(vnTemp);
+			}
+			//fills texcoords
+			else if (line.substr(0, 2) == "vt")
+			{
+				inputString >> identifier >>
+					uvTemp.u >> uvTemp.v;
+				uv.push_back(uvTemp);
+			}
+			//fills faces
+			//else if (line.substr(0, 2) == "f ")
+			//{
+			//	inputString. >> identifier >> 
+			//		temp1 >> temp2 >> temp3;
+			//	temp1 += 'e';
+			//	temp2 += 'e';
+			//	temp3 += 'e';
+			//	while (cont)
+			//	{
+			//		if (temp1[i] != '/' && temp1[i] != 'e')
+			//		{
+			//			temp += temp1[i];
+			//		}
+			//		else
+			//		{
+			//			if (counter == 0)
+			//			{
+			//				fTemp.a1 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//			}
+			//			else if (counter == 1)
+			//			{
+			//				fTemp.b1 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//			}
+			//			else if (counter == 2)
+			//			{
+			//				fTemp.c1 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//				cont = false;
+			//			}
+			//		}
+			//		i++;
+			//	}
+			//	i = 0;
+			//	counter = 0;
+			//	cont = true;
+			//	while (cont)
+			//	{
+			//		if (temp2[i] != '/' && temp2[i] != 'e')
+			//		{
+			//			temp += temp2[i];
+			//		}
+			//		else
+			//		{
+			//			if (counter == 0)
+			//			{
+			//				fTemp.a2 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//			}
+			//			else if (counter == 1)
+			//			{
+			//				fTemp.b2 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//			}
+			//			else if (counter == 2)
+			//			{
+			//				fTemp.c2 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//				cont = false;
+			//			}
+			//		}
+			//	
+			//		i++;
+			//	}
+			//	i = 0;
+			//	counter = 0;
+			//	cont = true;
+
+			//	while (cont)
+			//	{
+			//		if (temp3[i] != '/' && temp3[i] != 'e')
+			//		{
+			//			temp += temp3[i];
+			//		}
+			//		else
+			//		{
+			//			if (counter == 0)
+			//			{
+			//				fTemp.a3 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//			}
+			//			else if (counter == 1)
+			//			{
+			//				fTemp.b3 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//			}
+			//			else if (counter == 2)
+			//			{
+			//				fTemp.c3 = std::stoi(temp);
+			//				counter++;
+			//				temp = "";
+			//				cont = false;
+			//			}
+			//		}
+			//		i++;
+			//	}
+			//	cont = true;
+			//	/*temp1 = "";
+			//	temp2 = "";
+			//	temp3 = "";
+			//	identifier = "";*/
+			//	f.push_back(fTemp);
+			//}
+			//
+		}
+		file.close();
+
+		//fill objInfo with the data
+		objectInfo::vertexInfo tempVInfo;
+
+	
+		for (size_t i = 0; i < f.size(); i++)
+		{
+			// vertex 1 in face
+			tempVInfo.vpx = vp.at(f.at(i).a1 - 1).x;
+			tempVInfo.vpy = vp.at(f.at(i).a1 - 1).y;
+			tempVInfo.vpz = vp.at(f.at(i).a1 - 1).z;
+
+			tempVInfo.vnx = vn.at(f.at(i).b1 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).b1 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).b1 - 1).z;
+
+			/*tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).c1 - 1).v;*/
+
+			objInfo.vInfo.push_back(tempVInfo);
+
+			// vertex 2 in face
+			tempVInfo.vpx = vp.at(f.at(i).a2 - 1).x;
+			tempVInfo.vpy = vp.at(f.at(i).a2 - 1).y;
+			tempVInfo.vpz = vp.at(f.at(i).a2 - 1).z;
+
+			tempVInfo.vnx = vn.at(f.at(i).b2 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).b2 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).b2 - 1).z;
+
+		/*	tempVInfo.u = uv.at(f.at(i).c2 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).c2 - 1).v;*/
+
+			objInfo.vInfo.push_back(tempVInfo);
+
+			// vertex 3 in face
+			tempVInfo.vpx = vp.at(f.at(i).a3 - 1).x;
+			tempVInfo.vpy = vp.at(f.at(i).a3 - 1).y;
+			tempVInfo.vpz = vp.at(f.at(i).a3 - 1).z;
+
+			tempVInfo.vnx = vn.at(f.at(i).b3 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).b3 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).b3 - 1).z;
+
+		/*	tempVInfo.u = uv.at(f.at(i).c3 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).c3 - 1).v;
+*/
+			objInfo.vInfo.push_back(tempVInfo);
+		}
+
+		objInfo.nrOfVertexcies = vp.size();
+		objInfo.norOfIndexcies = f.size();
+
+		objInfo.iInfo = f;
+	}
+	return objInfo;
 }
 
 void GraphicsHandler::render()
