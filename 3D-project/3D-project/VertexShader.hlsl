@@ -24,7 +24,10 @@ VS_OUT main(VS_IN input)
 	VS_OUT output = (VS_OUT)0;
 
     output.pos = float4(input.pos, 1);
+    
     output.norm = float4(input.norm, 0);
+    output.norm = mul(output.norm, world);
+
     output.tex = input.tex;
 
     output.pos = mul(output.pos, world);

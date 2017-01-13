@@ -57,6 +57,10 @@ private:
 	
 	ID3D11Buffer* matrixBuffer;
 	BufferClass* bufferClass;
+
+	//texture things
+	ID3D11Resource* textureResoure;
+	ID3D11ShaderResourceView* textureView;
 	
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
@@ -65,6 +69,8 @@ public:
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void setViewPort(int heigth, int width);
 	void createShaders();
+
+	void createTexture();
 
 	void createTriangleData();
 	void render();

@@ -1,4 +1,5 @@
 #include "GraphicsHandler.h"
+#include "WICTextureLoader.h"
 #include <iostream>
 
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
@@ -17,6 +18,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->setViewPort(height, width);
 	this->createShaders();
 	this->createTriangleData();
+	this->createTexture();
 	this->objInfo = this->loadObj();
 }
 
@@ -161,6 +163,24 @@ void GraphicsHandler::createShaders()
 
 }
 
+void GraphicsHandler::createTexture()
+{
+
+	DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"skin.tif", &this->textureResoure, &this->textureView);
+
+
+	D3D11_TEXTURE2D_DESC texDesc;
+
+	texDesc.ArraySize = 1; //OKLART VAD I HELVETE dEN SKA HA
+	//texDesc.BindFlags = 
+
+	D3D11_SUBRESOURCE_DATA sData;
+
+	D3D11_SAMPLER_DESC sDesc;
+
+
+}
+
 void GraphicsHandler::createTriangleData()
 {
 	struct TriangleVertex
@@ -173,13 +193,16 @@ void GraphicsHandler::createTriangleData()
 	TriangleVertex triangleVertices[3] =
 	{
 		0.5f, -0.5f, 0.0f,	//v0 pos
-		1.0f, 0.0f,	0.0f,   //v0 color
+		0.0f, 0.0f,	1.0f,   //v0 color
+		1.f , 1.f,
 
 		-0.5f, -0.5f, 0.0f,	//v1
-		0.0f, 1.0f,	0.0f,   //v1 color
+		0.0f, 0.0f,	1.0f,   //v1 color
+		0.f , 1.f,
 
 		-0.5f, 0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f	//v2 color
+		0.0f, 0.0f, 1.0f, //v2 color
+		0.f,  0.f
 	};
 
 	D3D11_BUFFER_DESC bufferDesc;
