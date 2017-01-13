@@ -3,12 +3,26 @@
 
 #include <DirectXMath.h>
 #include <d3d11.h>
+#include <vector>
 
 struct matrixStruct
 {
 	DirectX::XMMATRIX world;
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX projection;
+};
+
+struct vertexInfo
+{
+
+	//vertex positions
+	float vpx, vpy, vpz;
+
+	// vertex normals
+	float vnx, vny, vnz;
+
+	//uv coords
+	float u, v;
 };
 
 class BufferClass
@@ -24,6 +38,10 @@ public:
 	matrixStruct initiateMatrices();
 	void updateMatrices();
 	ID3D11Buffer* createConstantBuffer();
+	ID3D11Buffer* createVertexBuffer(std::vector<vertexInfo> *info);
+
 };
+
+
 
 #endif

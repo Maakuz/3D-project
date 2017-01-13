@@ -1,5 +1,4 @@
 #include "GraphicsHandler.h"
-#include <iostream>
 
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
@@ -16,13 +15,29 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 	this->createShaders();
-	this->createTriangleData();
+	//this->createTriangleData();
 	this->objInfo = this->loadObj();
+
+	this->vertexBuffer = this->bufferClass->createVertexBuffer(&this->objInfo.vInfo);
+	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+
+	this->matrixBuffer = bufferClass->createConstantBuffer();
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
 GraphicsHandler::~GraphicsHandler()
 {
 	delete bufferClass;
+	vertexBuffer->Release();
+	rtvBackBuffer->Release();
+	swapChain->Release();
+	vertexLayout->Release();
+	vertexShader->Release();
+	pixelShader->Release();
+	gDevice->Release();
+	gDeviceContext->Release();
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
@@ -231,7 +246,7 @@ objectInfo GraphicsHandler::loadObj()
 		vPos vpTemp;
 		vNor vnTemp;
 		UV uvTemp;
-		objectInfo::indexInfo fTemp;
+		indexInfo fTemp;
 		std::string temp;
 		std::string temp1;
 		std::string temp2;
@@ -245,7 +260,7 @@ objectInfo GraphicsHandler::loadObj()
 		std::vector<vPos> vp;
 		std::vector<vNor> vn;
 		std::vector<UV> uv;
-		std::vector<objectInfo::indexInfo> f;
+		std::vector<indexInfo> f;
 
 
 
@@ -390,69 +405,81 @@ objectInfo GraphicsHandler::loadObj()
 		file.close();
 
 		//fill objInfo with the data
-		objectInfo::vertexInfo tempVInfo;
+		vertexInfo tempVInfo;
 
 	
 		for (size_t i = 0; i < f.size(); i++)
 		{
-			// vertex 1 in face
+			// vertex 1 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a1 - 1).x;
 			tempVInfo.vpy = vp.at(f.at(i).a1 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a1 - 1).z;
 
-			if (vn.size() > i)
-			{
-				tempVInfo.vnx = vn.at(f.at(i).b1 - 1).x;
-				tempVInfo.vny = vn.at(f.at(i).b1 - 1).y;
-				tempVInfo.vnz = vn.at(f.at(i).b1 - 1).z;
-			}
+			
+			tempVInfo.vnx = vn.at(f.at(i).b1 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).b1 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).b1 - 1).z;
+			
 
 			if (uv.size() > i)
 			{
 				tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
 				tempVInfo.v = uv.at(f.at(i).c1 - 1).v;
 			}
+			else
+			{
+				tempVInfo.u = -1;
+				tempVInfo.v = -1;
+			}
 		
 
 			objInfo.vInfo.push_back(tempVInfo);
 
-			// vertex 2 in face
+			// vertex 2 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a2 - 1).x;
 			tempVInfo.vpy = vp.at(f.at(i).a2 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a2 - 1).z;
 
-			if (vn.size() > i)
-			{
-				tempVInfo.vnx = vn.at(f.at(i).b2 - 1).x;
-				tempVInfo.vny = vn.at(f.at(i).b2 - 1).y;
-				tempVInfo.vnz = vn.at(f.at(i).b2 - 1).z;
-			}
+			
+			tempVInfo.vnx = vn.at(f.at(i).b2 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).b2 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).b2 - 1).z;
+			
 
 			if (uv.size() > i)
 			{
 				tempVInfo.u = uv.at(f.at(i).c2 - 1).u;
 				tempVInfo.v = uv.at(f.at(i).c2 - 1).v;
 			}
+			else
+			{
+				tempVInfo.u = -1;
+				tempVInfo.v = -1;
+			}
 
 			objInfo.vInfo.push_back(tempVInfo);
 
-			// vertex 3 in face
+			// vertex 3 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a3 - 1).x;
 			tempVInfo.vpy = vp.at(f.at(i).a3 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a3 - 1).z;
 
-			if (vn.size() > i)
-			{
-				tempVInfo.vnx = vn.at(f.at(i).b3 - 1).x;
-				tempVInfo.vny = vn.at(f.at(i).b3 - 1).y;
-				tempVInfo.vnz = vn.at(f.at(i).b3 - 1).z;
-			}
+			
+			tempVInfo.vnx = vn.at(f.at(i).b3 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).b3 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).b3 - 1).z;
+			
 			
 
 			if (uv.size() > i)
 			{
 				tempVInfo.u = uv.at(f.at(i).c3 - 1).u;
 				tempVInfo.v = uv.at(f.at(i).c3 - 1).v;
+			}
+			else
+			{
+				tempVInfo.u = -1;
+				tempVInfo.v = -1;
 			}
 
 			objInfo.vInfo.push_back(tempVInfo);

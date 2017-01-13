@@ -23,9 +23,9 @@ matrixStruct BufferClass::initiateMatrices()
 	double zNear = 0.1;
 
 	this->matrices.world = DirectX::XMMATRIX(
-		cos(45), 0, sin(45), 0,
+		cos(0), 0, sin(0), 0,
 		0, 1, 0, 0,
-		-sin(45), 0, cos(45), 0,
+		-sin(0), 0, cos(0), 0,
 		0, 0, 0, 1);
 
 	DirectX::XMVECTOR eyePosition;
@@ -71,7 +71,24 @@ ID3D11Buffer* BufferClass::createConstantBuffer()
 	return (pBuffer);
 }
 
+ID3D11Buffer * BufferClass::createVertexBuffer(std::vector<vertexInfo> *info)
+{
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.ByteWidth = sizeof(info);
+		
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = info;
+	ID3D11Buffer* tempVertexBuffer;
+	this->gDevice->CreateBuffer(&bufferDesc, &data, &tempVertexBuffer); 
+
+
+	return tempVertexBuffer;
+}
+
 BufferClass::~BufferClass()
 {
-
+	gDevice->Release();
 }
