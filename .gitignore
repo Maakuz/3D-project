@@ -1,5 +1,4 @@
 3D-project/3D-project.opensdf
-3D-project/3D-project.vcxproj
 3D-project/3D-project.vcxproj.filters
 3D-project/3D-project.sdf
 3D proj/3D-project/Debug/*
@@ -9,8 +8,6 @@
 3D-project/.vs/3D-project/v14/.suo
 3D-project/3D-project.VC.db
 3D-project/3D-project.VC.VC.opendb
-3D-project/3D-project/3D-project.vcxproj
-3D-project/3D-project/3D-project.vcxproj.filters
 3D-project/3D-project/GraphicsHandler.cpp.orig
 3D-project/3D-project/GraphicsHandler.h.orig
 3D-project/3D-project/x64/Debug/3D-project.Build.CppClean.log
@@ -40,7 +37,5 @@
 3D-project/x64/Debug/3D-project.pdb
 3D-project/x64/Debug/PixelShader.cso
 3D-project/x64/Debug/VertexShader.cso
-3D-project/3D-project/3D-project.vcxproj
-3D-project/3D-project/3D-project.vcxproj.filters
 3D-project/3D-project/x64/Debug/3D-project.tlog/unsuccessfulbuild
 3D-project/3D-project/3D-project.vcxproj
