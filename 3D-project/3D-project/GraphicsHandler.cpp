@@ -10,7 +10,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->vertexShader = nullptr;
 	this->vertexBuffer = nullptr;
 	this->pixelShader = nullptr;
-	this->bufferClass = new BufferClass(this->gDevice);
+	this->bufferClass = nullptr;
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
@@ -90,7 +90,6 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		//Lägg in depthviewsaken här i stället för nULL
 		gDeviceContext->OMSetRenderTargets(1, &rtvBackBuffer, NULL);
 
-		delete this->bufferClass;
 		this->bufferClass = new BufferClass(this->gDevice);
 	}
 	return hr;
@@ -423,6 +422,7 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vnz = vn.at(f.at(i).b1 - 1).z;
 			
 
+			//todo THIS IS FUCKED!
 			if (uv.size() > i)
 			{
 				tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
@@ -447,7 +447,7 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vny = vn.at(f.at(i).b2 - 1).y;
 			tempVInfo.vnz = vn.at(f.at(i).b2 - 1).z;
 			
-
+			//todo THIS IS FUCKED!
 			if (uv.size() > i)
 			{
 				tempVInfo.u = uv.at(f.at(i).c2 - 1).u;
@@ -472,7 +472,7 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vnz = vn.at(f.at(i).b3 - 1).z;
 			
 			
-
+			// todo THIS IS FUCKED!
 			if (uv.size() > i)
 			{
 				tempVInfo.u = uv.at(f.at(i).c3 - 1).u;
@@ -488,8 +488,8 @@ objectInfo GraphicsHandler::loadObj()
 
 		}
 
-		objInfo.nrOfVertexcies = vp.size();
-		objInfo.norOfIndexcies = f.size();
+		objInfo.nrOfVertexcies = (int)(vp.size());
+		objInfo.norOfIndexcies = (int)(f.size());
 
 		objInfo.iInfo = f;
 	}

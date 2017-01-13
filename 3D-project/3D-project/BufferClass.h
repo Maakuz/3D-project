@@ -42,7 +42,6 @@ public:
 	void updateMatrices();
 	ID3D11Buffer* createConstantBuffer();
 	ID3D11Buffer* createVertexBuffer(std::vector<vertexInfo> *info);
-
 };
 
 
