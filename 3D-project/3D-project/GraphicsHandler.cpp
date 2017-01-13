@@ -1,5 +1,5 @@
 #include "GraphicsHandler.h"
-
+#include <iostream>
 
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
@@ -274,119 +274,118 @@ objectInfo GraphicsHandler::loadObj()
 				uv.push_back(uvTemp);
 			}
 			//fills faces
-			//else if (line.substr(0, 2) == "f ")
-			//{
-			//	inputString. >> identifier >> 
-			//		temp1 >> temp2 >> temp3;
-			//	temp1 += 'e';
-			//	temp2 += 'e';
-			//	temp3 += 'e';
-			//	while (cont)
-			//	{
-			//		if (temp1[i] != '/' && temp1[i] != 'e')
-			//		{
-			//			temp += temp1[i];
-			//		}
-			//		else
-			//		{
-			//			if (counter == 0)
-			//			{
-			//				fTemp.a1 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//			}
-			//			else if (counter == 1)
-			//			{
-			//				fTemp.b1 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//			}
-			//			else if (counter == 2)
-			//			{
-			//				fTemp.c1 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//				cont = false;
-			//			}
-			//		}
-			//		i++;
-			//	}
-			//	i = 0;
-			//	counter = 0;
-			//	cont = true;
-			//	while (cont)
-			//	{
-			//		if (temp2[i] != '/' && temp2[i] != 'e')
-			//		{
-			//			temp += temp2[i];
-			//		}
-			//		else
-			//		{
-			//			if (counter == 0)
-			//			{
-			//				fTemp.a2 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//			}
-			//			else if (counter == 1)
-			//			{
-			//				fTemp.b2 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//			}
-			//			else if (counter == 2)
-			//			{
-			//				fTemp.c2 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//				cont = false;
-			//			}
-			//		}
-			//	
-			//		i++;
-			//	}
-			//	i = 0;
-			//	counter = 0;
-			//	cont = true;
+			else if (line.substr(0, 2) == "f ")
+			{
+				inputString >> identifier >> 
+					temp1 >> temp2 >> temp3;
+				temp1 += 'e';
+				temp2 += 'e';
+				temp3 += 'e';
+				while (cont)
+				{
+					if (temp1[i] != '/' && temp1[i] != 'e')
+					{
+						temp += temp1[i];
+					}
+					else
+					{
+						if (counter == 0)
+						{
+							fTemp.a1 = std::stoi(temp);
+							counter++;
+							temp = "";
+						}
+						else if (counter == 1)
+						{
+							fTemp.b1 = std::stoi(temp);
+							counter++;
+							temp = "";
+						}
+						else if (counter == 2)
+						{
+							fTemp.c1 = std::stoi(temp);
+							counter++;
+							temp = "";
+							cont = false;
+						}
+					}
+					i++;
+				}
+				i = 0;
+				counter = 0;
+				cont = true;
+				while (cont)
+				{
+					if (temp2[i] != '/' && temp2[i] != 'e')
+					{
+						temp += temp2[i];
+					}
+					else
+					{
+						if (counter == 0)
+						{
+							fTemp.a2 = std::stoi(temp);
+							counter++;
+							temp = "";
+						}
+						else if (counter == 1)
+						{
+							fTemp.b2 = std::stoi(temp);
+							counter++;
+							temp = "";
+						}
+						else if (counter == 2)
+						{
+							fTemp.c2 = std::stoi(temp);
+							counter++;
+							temp = "";
+							cont = false;
+						}
+					}
+				
+					i++;
+				}
+				i = 0;
+				counter = 0;
+				cont = true;
 
-			//	while (cont)
-			//	{
-			//		if (temp3[i] != '/' && temp3[i] != 'e')
-			//		{
-			//			temp += temp3[i];
-			//		}
-			//		else
-			//		{
-			//			if (counter == 0)
-			//			{
-			//				fTemp.a3 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//			}
-			//			else if (counter == 1)
-			//			{
-			//				fTemp.b3 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//			}
-			//			else if (counter == 2)
-			//			{
-			//				fTemp.c3 = std::stoi(temp);
-			//				counter++;
-			//				temp = "";
-			//				cont = false;
-			//			}
-			//		}
-			//		i++;
-			//	}
-			//	cont = true;
-			//	/*temp1 = "";
-			//	temp2 = "";
-			//	temp3 = "";
-			//	identifier = "";*/
-			//	f.push_back(fTemp);
-			//}
-			//
+				while (cont)
+				{
+					if (temp3[i] != '/' && temp3[i] != 'e')
+					{
+						temp += temp3[i];
+					}
+					else
+					{
+						if (counter == 0)
+						{
+							fTemp.a3 = std::stoi(temp);
+							counter++;
+							temp = "";
+						}
+						else if (counter == 1)
+						{
+							fTemp.b3 = std::stoi(temp);
+							counter++;
+							temp = "";
+						}
+						else if (counter == 2)
+						{
+							fTemp.c3 = std::stoi(temp);
+							counter++;
+							temp = "";
+							cont = false;
+						}
+					}
+					i++;
+				}
+				cont = true;
+				i = 0;
+				counter = 0;
+				f.push_back(fTemp);
+				inputString = std::istringstream();
+			}
+			
 		}
 		file.close();
 
@@ -401,12 +400,19 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a1 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a1 - 1).z;
 
-			tempVInfo.vnx = vn.at(f.at(i).b1 - 1).x;
-			tempVInfo.vny = vn.at(f.at(i).b1 - 1).y;
-			tempVInfo.vnz = vn.at(f.at(i).b1 - 1).z;
+			if (vn.size() > i)
+			{
+				tempVInfo.vnx = vn.at(f.at(i).b1 - 1).x;
+				tempVInfo.vny = vn.at(f.at(i).b1 - 1).y;
+				tempVInfo.vnz = vn.at(f.at(i).b1 - 1).z;
+			}
 
-			/*tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
-			tempVInfo.v = uv.at(f.at(i).c1 - 1).v;*/
+			if (uv.size() > i)
+			{
+				tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
+				tempVInfo.v = uv.at(f.at(i).c1 - 1).v;
+			}
+		
 
 			objInfo.vInfo.push_back(tempVInfo);
 
@@ -415,12 +421,18 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a2 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a2 - 1).z;
 
-			tempVInfo.vnx = vn.at(f.at(i).b2 - 1).x;
-			tempVInfo.vny = vn.at(f.at(i).b2 - 1).y;
-			tempVInfo.vnz = vn.at(f.at(i).b2 - 1).z;
+			if (vn.size() > i)
+			{
+				tempVInfo.vnx = vn.at(f.at(i).b2 - 1).x;
+				tempVInfo.vny = vn.at(f.at(i).b2 - 1).y;
+				tempVInfo.vnz = vn.at(f.at(i).b2 - 1).z;
+			}
 
-		/*	tempVInfo.u = uv.at(f.at(i).c2 - 1).u;
-			tempVInfo.v = uv.at(f.at(i).c2 - 1).v;*/
+			if (uv.size() > i)
+			{
+				tempVInfo.u = uv.at(f.at(i).c2 - 1).u;
+				tempVInfo.v = uv.at(f.at(i).c2 - 1).v;
+			}
 
 			objInfo.vInfo.push_back(tempVInfo);
 
@@ -429,14 +441,22 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a3 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a3 - 1).z;
 
-			tempVInfo.vnx = vn.at(f.at(i).b3 - 1).x;
-			tempVInfo.vny = vn.at(f.at(i).b3 - 1).y;
-			tempVInfo.vnz = vn.at(f.at(i).b3 - 1).z;
+			if (vn.size() > i)
+			{
+				tempVInfo.vnx = vn.at(f.at(i).b3 - 1).x;
+				tempVInfo.vny = vn.at(f.at(i).b3 - 1).y;
+				tempVInfo.vnz = vn.at(f.at(i).b3 - 1).z;
+			}
+			
 
-		/*	tempVInfo.u = uv.at(f.at(i).c3 - 1).u;
-			tempVInfo.v = uv.at(f.at(i).c3 - 1).v;
-*/
+			if (uv.size() > i)
+			{
+				tempVInfo.u = uv.at(f.at(i).c3 - 1).u;
+				tempVInfo.v = uv.at(f.at(i).c3 - 1).v;
+			}
+
 			objInfo.vInfo.push_back(tempVInfo);
+
 		}
 
 		objInfo.nrOfVertexcies = vp.size();
