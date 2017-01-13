@@ -5,12 +5,6 @@
 #include <d3d11.h>
 #include <vector>
 
-struct matrixStruct
-{
-	DirectX::XMMATRIX world;
-	DirectX::XMMATRIX view;
-	DirectX::XMMATRIX projection;
-};
 
 struct vertexInfo
 {
@@ -24,6 +18,15 @@ struct vertexInfo
 	//uv coords
 	float u, v;
 };
+
+struct matrixStruct
+{
+	DirectX::XMMATRIX world;
+	DirectX::XMMATRIX view;
+	DirectX::XMMATRIX projection;
+};
+
+
 
 class BufferClass
 {

@@ -11,18 +11,7 @@
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
-struct vertexInfo
-{
 
-	//vertex positions
-	float vpx, vpy, vpz;
-
-	// vertex normals
-	float vnx, vny, vnz;
-
-	//uv coords
-	float u, v;
-}; 
 
 struct indexInfo
 {
@@ -58,7 +47,7 @@ private:
 	
 	ID3D11Buffer* matrixBuffer;
 	BufferClass* bufferClass;
-	
+
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
 	~GraphicsHandler();

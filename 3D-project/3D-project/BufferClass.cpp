@@ -17,7 +17,7 @@ D3D11_SUBRESOURCE_DATA BufferClass::getMatricesSubresource()
 
 matrixStruct BufferClass::initiateMatrices()
 {
-	float FovAngleY = 3.14 * 0.45;
+	float FovAngleY = (float)(3.14 * 0.45);
 	float AspectRatio = 640 / 480;
 	int zFar = 20;
 	double zNear = 0.1;
@@ -90,5 +90,5 @@ ID3D11Buffer * BufferClass::createVertexBuffer(std::vector<vertexInfo> *info)
 
 BufferClass::~BufferClass()
 {
-	gDevice->Release();
+	//gDevice->Release();
 }
