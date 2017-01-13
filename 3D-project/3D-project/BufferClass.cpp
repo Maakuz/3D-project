@@ -17,16 +17,19 @@ D3D11_SUBRESOURCE_DATA BufferClass::getMatricesSubresource()
 
 matrixStruct BufferClass::initiateMatrices()
 {
-	float FovAngleY = 3.14 * 0.45;
-	float AspectRatio = 640 / 480;
-	int zFar = 20;
-	double zNear = 0.1;
+	float FovAngleY = (float)(3.14 * 0.45);
+	float AspectRatio = (float)(640 / 480);
+	float zFar = 20.0f;
+	float zNear = 0.1f;
 
-	this->matrices.world = DirectX::XMMATRIX(
-		cos(45), 0, sin(45), 0,
+	/*this->matrices.world = DirectX::XMMATRIX(
+		cos(0), 0, sin(0), 0,
 		0, 1, 0, 0,
-		-sin(45), 0, cos(45), 0,
-		0, 0, 0, 1);
+		-sin(0), 0, cos(0), 0,
+		0, 0, 0, 1);*/
+
+	this->matrices.world = DirectX::XMMatrixRotationY(0);
+	this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
 
 	DirectX::XMVECTOR eyePosition;
 	eyePosition = DirectX::XMVectorSet(0, 0, -2, 0);
@@ -48,7 +51,7 @@ matrixStruct BufferClass::initiateMatrices()
 
 void BufferClass::updateMatrices()
 {
-	D3D11_MAPPED_SUBRESOURCE pData;
+	//D3D11_MAPPED_SUBRESOURCE pData;
 }
 
 ID3D11Buffer* BufferClass::createConstantBuffer()
@@ -71,7 +74,24 @@ ID3D11Buffer* BufferClass::createConstantBuffer()
 	return (pBuffer);
 }
 
+ID3D11Buffer * BufferClass::createVertexBuffer(std::vector<vertexInfo> *info)
+{
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.ByteWidth = sizeof(info);
+		
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = info;
+	ID3D11Buffer* tempVertexBuffer;
+	this->gDevice->CreateBuffer(&bufferDesc, &data, &tempVertexBuffer); 
+
+
+	return tempVertexBuffer;
+}
+
 BufferClass::~BufferClass()
 {
-
+	gDevice->Release();
 }
