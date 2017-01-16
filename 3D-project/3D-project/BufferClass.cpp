@@ -24,13 +24,13 @@ matrixStruct BufferClass::initiateMatrices()
 	float zFar = 20.0f;
 	float zNear = 0.1f;
 
-	/*this->matrices.world = DirectX::XMMATRIX(
+	this->matrices.world = DirectX::XMMATRIX(
 		cos(0), 0, sin(0), 0,
 		0, 1, 0, 0,
 		-sin(0), 0, cos(0), 0,
-		0, 0, 0, 1);*/
+		0, 0, 0, 1);
 
-	this->matrices.world = DirectX::XMMatrixRotationY(0);
+	//this->matrices.world = DirectX::XMMatrixRotationY(0);
 	//this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
 
 	DirectX::XMVECTOR eyePosition;
@@ -42,11 +42,15 @@ matrixStruct BufferClass::initiateMatrices()
 	DirectX::XMVECTOR upDirection;
 	upDirection = DirectX::XMVectorSet(0, 1, 0, 0);
 
-	this->matrices.view = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
-	this->matrices.view = DirectX::XMMatrixTranspose(this->matrices.view);
+	matrices.view = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
+
+	DirectX::XMMATRIX temp = matrices.view;
+	matrices.view = DirectX::XMMatrixTranspose(temp);
 
 	this->matrices.projection = DirectX::XMMatrixPerspectiveFovLH(FovAngleY, AspectRatio, zNear, zFar);
-	this->matrices.projection = DirectX::XMMatrixTranspose(this->matrices.projection);
+
+	temp = matrices.projection;
+	this->matrices.projection = DirectX::XMMatrixTranspose(temp);
 
 	return this->matrices;
 }
