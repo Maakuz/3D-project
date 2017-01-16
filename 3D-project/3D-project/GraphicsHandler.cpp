@@ -57,7 +57,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		D3D11_CREATE_DEVICE_DEBUG, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
+		NULL, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -442,23 +442,16 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a1 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a1 - 1).z;
 
+			tempVInfo.u = uv.at(f.at(i).b1 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).b1 - 1).v;
+
 			
-			tempVInfo.vnx = vn.at(f.at(i).b1 - 1).x;
-			tempVInfo.vny = vn.at(f.at(i).b1 - 1).y;
-			tempVInfo.vnz = vn.at(f.at(i).b1 - 1).z;
+			tempVInfo.vnx = vn.at(f.at(i).c1 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).c1 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).c1 - 1).z;
 			
 
-			//todo THIS IS FUCKED!
-			if (uv.size() > i)
-			{
-				tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
-				tempVInfo.v = uv.at(f.at(i).c1 - 1).v;
-			}
-			else
-			{
-				tempVInfo.u = -1;
-				tempVInfo.v = -1;
-			}
+		
 		
 
 			objInfo.vInfo.push_back(tempVInfo);
@@ -468,22 +461,17 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a2 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a2 - 1).z;
 
+			tempVInfo.u = uv.at(f.at(i).b2 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).b2 - 1).v;
+
 			
-			tempVInfo.vnx = vn.at(f.at(i).b2 - 1).x;
-			tempVInfo.vny = vn.at(f.at(i).b2 - 1).y;
-			tempVInfo.vnz = vn.at(f.at(i).b2 - 1).z;
+			tempVInfo.vnx = vn.at(f.at(i).c2 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).c2 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).c2 - 1).z;
 			
-			//todo THIS IS FUCKED!
-			if (uv.size() > i)
-			{
-				tempVInfo.u = uv.at(f.at(i).c2 - 1).u;
-				tempVInfo.v = uv.at(f.at(i).c2 - 1).v;
-			}
-			else
-			{
-				tempVInfo.u = -1;
-				tempVInfo.v = -1;
-			}
+		
+				
+			
 
 			objInfo.vInfo.push_back(tempVInfo);
 
@@ -492,24 +480,18 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a3 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a3 - 1).z;
 
+			tempVInfo.u = uv.at(f.at(i).b3 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).b3 - 1).v;
 			
-			tempVInfo.vnx = vn.at(f.at(i).b3 - 1).x;
-			tempVInfo.vny = vn.at(f.at(i).b3 - 1).y;
-			tempVInfo.vnz = vn.at(f.at(i).b3 - 1).z;
+			tempVInfo.vnx = vn.at(f.at(i).c3 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).c3 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).c3 - 1).z;
 			
 			
 			// todo THIS IS FUCKED!
-			if (uv.size() > i)
-			{
-				tempVInfo.u = uv.at(f.at(i).c3 - 1).u;
-				tempVInfo.v = uv.at(f.at(i).c3 - 1).v;
-			}
-			else
-			{
-				tempVInfo.u = -1;
-				tempVInfo.v = -1;
-			}
-
+		
+			
+	
 			objInfo.vInfo.push_back(tempVInfo);
 
 		}
