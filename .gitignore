@@ -1,6 +1,54 @@
+#3D-project/3D-project.opensdf
+#3D-project/3D-project.vcxproj.filters
+#3D-project/3D-project.sdf
+#3D proj/3D-project/Debug/*
+#3D proj/3D-project/3D-project/Debug/*
+
+#experiment belowe this
+
+
+3D-project/3D-project.VC.db
+3D-project/3D-project.VC.VC.opendb
+3D-project/3D-project/x64/Debug/3D-project.Build.CppClean.log
+3D-project/3D-project/x64/Debug/3D-project.log
+3D-project/3D-project/x64/Debug/3D-project.tlog/3D-project.lastbuildstate
+3D-project/3D-project/x64/Debug/3D-project.tlog/3D-project.write.1u.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/CL.command.1.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/CL.read.1.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/CL.write.1.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/FXC.command.1.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/fxc.read.1.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/fxc.write.1.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/link.command.1.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/link.read.1.tlog
+3D-project/3D-project/x64/Debug/3D-project.tlog/link.write.1.tlog
+3D-project/3D-project/x64/Debug/BufferClass.obj
+3D-project/3D-project/x64/Debug/GraphicsHandler.obj
+3D-project/3D-project/x64/Debug/Main.obj
+3D-project/3D-project/x64/Debug/vc140.idb
+3D-project/3D-project/x64/Debug/vc140.pdb
+3D-project/3D-project/x64/Debug/WindowClass.obj
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/Win32/Debug/DirectXTK.lib
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/Win32/Debug/directxtk.pdb
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/Win32/Debug/DirectXTKAudioDX.lib
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/Win32/Debug/directxtkaudiodx.pdb
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/Win32/Release/DirectXTK.lib
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/Win32/Release/directxtk.pdb
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/Win32/Release/DirectXTKAudioDX.lib
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/Win32/Release/directxtkaudiodx.pdb
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/x64/Debug/DirectXTK.lib
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/x64/Debug/directxtk.pdb
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/x64/Debug/DirectXTKAudioDX.lib
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/x64/Debug/directxtkaudiodx.pdb
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/x64/Release/DirectXTK.lib
+3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/private/coapp.NuGetNativeMSBuildTasks.dll
+3D-project/x64/Debug/3D-project.exe
+3D-project/x64/Debug/3D-project.ilk
+3D-project/x64/Debug/3D-project.pdb
+3D-project/x64/Debug/PixelShader.cso
+3D-project/x64/Debug/VertexShader.cso
+.gitignore.orig
+3D-project/3D-project/GraphicsHandler.cpp.orig
 3D-project/3D-project.opensdf
-3D-project/3D-project.vcxproj
-3D-project/3D-project.vcxproj.filters
-3D-project/3D-project.sdf
-3D proj/3D-project/Debug/*
-3D proj/3D-project/3D-project/Debug/*
+3D-project/.vs/3D-project/v14/.suo
+3D-project/resource/Maps/Thumbs.db

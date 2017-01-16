@@ -8,35 +8,26 @@
 #include <sstream>
 #include <vector>
 #include "BufferClass.h"
+#include "WICTextureLoader.h"
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
 
+struct indexInfo
+{
+	int a1, b1, c1;
+	int a2, b2, c2;
+	int a3, b3, c3;
+};
+
+
 struct objectInfo
 {
-	int nrOfVertexcies;
+	int nrOfVertices;
 	int norOfIndexcies;
-	struct vertexInfo
-	{
-		
-		//vertex positions
-		float vpx, vpy, vpz;
-
-		// vertex normals
-		float vnx, vny, vnz;
-
-		//uv coords
-		float u, v;
-
-	};
-	struct indexInfo
-	{
-		int a1, b1, c1;
-		int a2, b2, c2;
-		int a3, b3, c3;
-	};
-
+	
+	//VertexInfo is located in BufferClass.h
 	std::vector<vertexInfo> vInfo;
 	std::vector<indexInfo> iInfo;
 };
@@ -57,6 +48,10 @@ private:
 	
 	ID3D11Buffer* matrixBuffer;
 	BufferClass* bufferClass;
+
+	//texture things
+	ID3D11Resource* textureResoure;
+	ID3D11ShaderResourceView* textureView;
 	
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
@@ -65,6 +60,8 @@ public:
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void setViewPort(int heigth, int width);
 	void createShaders();
+
+	void createTexture();
 
 	void createTriangleData();
 	void render();

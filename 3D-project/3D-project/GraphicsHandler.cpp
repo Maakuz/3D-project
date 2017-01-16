@@ -1,5 +1,4 @@
 #include "GraphicsHandler.h"
-#include <iostream>
 
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
@@ -11,18 +10,35 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->vertexShader = nullptr;
 	this->vertexBuffer = nullptr;
 	this->pixelShader = nullptr;
-	this->bufferClass = new BufferClass(this->gDevice);
+	this->bufferClass = nullptr;
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 	this->createShaders();
-	this->createTriangleData();
+	//this->createTriangleData();
+	this->createTexture();
 	this->objInfo = this->loadObj();
+
+	this->vertexBuffer = this->bufferClass->createVertexBuffer(&this->objInfo.vInfo);
+	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+
+	this->matrixBuffer = bufferClass->createConstantBuffer();
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
 GraphicsHandler::~GraphicsHandler()
 {
 	delete bufferClass;
+	vertexBuffer->Release();
+	rtvBackBuffer->Release();
+	swapChain->Release();
+	vertexLayout->Release();
+	vertexShader->Release();
+	pixelShader->Release();
+	gDevice->Release();
+	gDeviceContext->Release();
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
@@ -41,7 +57,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		NULL,
+		NULL, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -75,7 +91,6 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		//Lägg in depthviewsaken här i stället för nULL
 		gDeviceContext->OMSetRenderTargets(1, &rtvBackBuffer, NULL);
 
-		delete this->bufferClass;
 		this->bufferClass = new BufferClass(this->gDevice);
 	}
 	return hr;
@@ -123,7 +138,8 @@ void GraphicsHandler::createShaders()
 	D3D11_INPUT_ELEMENT_DESC inputDesc[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	hr = this->gDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &this->vertexLayout);
@@ -160,24 +176,50 @@ void GraphicsHandler::createShaders()
 
 }
 
+void GraphicsHandler::createTexture()
+{
+
+	DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"../resource/Maps/skin.tif", &this->textureResoure, &this->textureView);
+
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+}
+
 void GraphicsHandler::createTriangleData()
 {
 	struct TriangleVertex
 	{
 		float x, y, z;
 		float r, g, b;
+		float u, v;
+		//float pad;
 	};
 
-	TriangleVertex triangleVertices[3] =
+	TriangleVertex triangleVertices[6] =
 	{
 		0.5f, -0.5f, 0.0f,	//v0 pos
-		1.0f, 0.0f,	0.0f,   //v0 color
+		0.0f, 0.0f,	1.0f,   //v0 color
+		1.0f, 1.0f,
 
 		-0.5f, -0.5f, 0.0f,	//v1
-		0.0f, 1.0f,	0.0f,   //v1 color
+		0.0f, 0.0f,	1.0f,   //v1 color
+		0.0f, 1.0f,
 
 		-0.5f, 0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f	//v2 color
+		0.0f, 0.0f, 1.0f, //v2 color
+		0.0f,  0.0f,
+
+		//t2
+		-0.5f, 0.5f, 0.0f,	//v0 pos
+		0.0f, 0.0f,	1.0f,   //v0 color
+		0.0f, 0.0f,
+
+		0.5f, 0.5f, 0.0f,	//v1
+		0.0f, 0.0f,	1.0f,   //v1 color
+		1.0f, 0.0f,
+
+		0.5f, -0.5f, 0.0f, //v2
+		0.0f, 0.0f, 1.0f, //v2 color
+		1.0f, 1.0f
 	};
 
 	D3D11_BUFFER_DESC bufferDesc;
@@ -201,7 +243,7 @@ void GraphicsHandler::createTriangleData()
 
 objectInfo GraphicsHandler::loadObj()
 {
-	std::string fileName("../resource/apple.obj"), identifier;
+	std::string fileName("../resource/Cube.obj"), identifier;
 	std::string line;
 	std::ifstream file(fileName);
 	objectInfo objInfo;
@@ -231,7 +273,7 @@ objectInfo GraphicsHandler::loadObj()
 		vPos vpTemp;
 		vNor vnTemp;
 		UV uvTemp;
-		objectInfo::indexInfo fTemp;
+		indexInfo fTemp;
 		std::string temp;
 		std::string temp1;
 		std::string temp2;
@@ -245,7 +287,7 @@ objectInfo GraphicsHandler::loadObj()
 		std::vector<vPos> vp;
 		std::vector<vNor> vn;
 		std::vector<UV> uv;
-		std::vector<objectInfo::indexInfo> f;
+		std::vector<indexInfo> f;
 
 
 
@@ -258,6 +300,7 @@ objectInfo GraphicsHandler::loadObj()
 				inputString >> identifier >>
 					vpTemp.x >> vpTemp.y >> vpTemp.z;
 				vp.push_back(vpTemp);
+				inputString = std::istringstream();
 			}
 			//fills vertex normals
 			else if (line.substr(0, 2) == "vn")
@@ -265,6 +308,7 @@ objectInfo GraphicsHandler::loadObj()
 				inputString >> identifier >>
 					vnTemp.x >> vnTemp.y >> vnTemp.z;
 				vn.push_back(vnTemp);
+				inputString = std::istringstream();
 			}
 			//fills texcoords
 			else if (line.substr(0, 2) == "vt")
@@ -272,10 +316,12 @@ objectInfo GraphicsHandler::loadObj()
 				inputString >> identifier >>
 					uvTemp.u >> uvTemp.v;
 				uv.push_back(uvTemp);
+				inputString = std::istringstream();
 			}
 			//fills faces
 			else if (line.substr(0, 2) == "f ")
 			{
+				
 				inputString >> identifier >> 
 					temp1 >> temp2 >> temp3;
 				temp1 += 'e';
@@ -390,77 +436,73 @@ objectInfo GraphicsHandler::loadObj()
 		file.close();
 
 		//fill objInfo with the data
-		objectInfo::vertexInfo tempVInfo;
+		vertexInfo tempVInfo;
 
 	
 		for (size_t i = 0; i < f.size(); i++)
 		{
-			// vertex 1 in face
+			// vertex 1 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a1 - 1).x;
 			tempVInfo.vpy = vp.at(f.at(i).a1 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a1 - 1).z;
 
-			if (vn.size() > i)
-			{
-				tempVInfo.vnx = vn.at(f.at(i).b1 - 1).x;
-				tempVInfo.vny = vn.at(f.at(i).b1 - 1).y;
-				tempVInfo.vnz = vn.at(f.at(i).b1 - 1).z;
-			}
+			//uv 1 in face i
+			tempVInfo.u = uv.at(f.at(i).b1 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).b1 - 1).v;
 
-			if (uv.size() > i)
-			{
-				tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
-				tempVInfo.v = uv.at(f.at(i).c1 - 1).v;
-			}
+			//normal 1 in face i 
+			tempVInfo.vnx = vn.at(f.at(i).c1 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).c1 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).c1 - 1).z;
+			
+
+		
 		
 
 			objInfo.vInfo.push_back(tempVInfo);
 
-			// vertex 2 in face
+			// vertex 2 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a2 - 1).x;
 			tempVInfo.vpy = vp.at(f.at(i).a2 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a2 - 1).z;
 
-			if (vn.size() > i)
-			{
-				tempVInfo.vnx = vn.at(f.at(i).b2 - 1).x;
-				tempVInfo.vny = vn.at(f.at(i).b2 - 1).y;
-				tempVInfo.vnz = vn.at(f.at(i).b2 - 1).z;
-			}
+			//uv 2 in face i
+			tempVInfo.u = uv.at(f.at(i).b2 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).b2 - 1).v;
 
-			if (uv.size() > i)
-			{
-				tempVInfo.u = uv.at(f.at(i).c2 - 1).u;
-				tempVInfo.v = uv.at(f.at(i).c2 - 1).v;
-			}
+			//normal 1 in face i 
+			tempVInfo.vnx = vn.at(f.at(i).c2 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).c2 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).c2 - 1).z;
+			
+		
+				
+			
 
 			objInfo.vInfo.push_back(tempVInfo);
 
-			// vertex 3 in face
+			// vertex 3 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a3 - 1).x;
 			tempVInfo.vpy = vp.at(f.at(i).a3 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a3 - 1).z;
 
-			if (vn.size() > i)
-			{
-				tempVInfo.vnx = vn.at(f.at(i).b3 - 1).x;
-				tempVInfo.vny = vn.at(f.at(i).b3 - 1).y;
-				tempVInfo.vnz = vn.at(f.at(i).b3 - 1).z;
-			}
+			//uv 3 in face i
+			tempVInfo.u = uv.at(f.at(i).b3 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).b3 - 1).v;
 			
-
-			if (uv.size() > i)
-			{
-				tempVInfo.u = uv.at(f.at(i).c3 - 1).u;
-				tempVInfo.v = uv.at(f.at(i).c3 - 1).v;
-			}
+			//normal 1 in face i 
+			tempVInfo.vnx = vn.at(f.at(i).c3 - 1).x;
+			tempVInfo.vny = vn.at(f.at(i).c3 - 1).y;
+			tempVInfo.vnz = vn.at(f.at(i).c3 - 1).z;
+			
+			
 
 			objInfo.vInfo.push_back(tempVInfo);
 
 		}
 
-		objInfo.nrOfVertexcies = vp.size();
-		objInfo.norOfIndexcies = f.size();
+		objInfo.nrOfVertices = (int)(vp.size());
+		objInfo.norOfIndexcies = (int)(f.size());
 
 		objInfo.iInfo = f;
 	}
@@ -484,6 +526,6 @@ void GraphicsHandler::render()
 	gDeviceContext->IASetInputLayout(this->vertexLayout);
 
 
-	gDeviceContext->Draw(3, 0);
+	gDeviceContext->Draw(this->objInfo.nrOfVertexcies, 0);
 	this->swapChain->Present(0, 0);
 }
