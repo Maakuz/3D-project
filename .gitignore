@@ -47,3 +47,5 @@
 3D-project/x64/Debug/3D-project.pdb
 3D-project/x64/Debug/PixelShader.cso
 3D-project/x64/Debug/VertexShader.cso
+.gitignore.orig
+3D-project/3D-project/GraphicsHandler.cpp.orig

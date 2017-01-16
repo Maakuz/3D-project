@@ -2,14 +2,14 @@ struct VS_IN
 {
     float3 pos : POSITION;
     float3 norm : NORMAL;
-    float2 tex : TEXCOORD;
+    float2 uv : TEXCOORD;
 };
 
 struct VS_OUT
 {
     float4 pos : SV_Position;
     float4 norm : NORMAL;
-    float2 tex : TEXCOORD;
+    float2 uv : TEXCOORD;
 };
 
 cbuffer WVPMatrixBuffer
@@ -28,7 +28,7 @@ VS_OUT main(VS_IN input)
     output.norm = float4(input.norm, 0);
     output.norm = mul(output.norm, world);
 
-    output.tex = input.tex;
+    output.uv = input.uv;
 
     output.pos = mul(output.pos, world);
     output.pos = mul(output.pos, view);

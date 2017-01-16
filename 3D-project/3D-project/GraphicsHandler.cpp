@@ -15,9 +15,9 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 	this->createShaders();
-	//this->createTriangleData();
+	this->createTriangleData();
 	this->createTexture();
-	this->objInfo = this->loadObj();
+	/*this->objInfo = this->loadObj();
 
 	this->vertexBuffer = this->bufferClass->createVertexBuffer(&this->objInfo.vInfo);
 	UINT32 vertexSize = sizeof(vertexInfo);
@@ -25,7 +25,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
 	this->matrixBuffer = bufferClass->createConstantBuffer();
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);*/
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -57,7 +57,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		NULL, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
+		D3D11_CREATE_DEVICE_DEBUG, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -181,13 +181,16 @@ void GraphicsHandler::createTexture()
 
 	DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"skin.tif", &this->textureResoure, &this->textureView);
 
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+	//D3D11_TEXTURE2D_DESC texDesc;
 
-	D3D11_TEXTURE2D_DESC texDesc;
-
-	texDesc.ArraySize = 1; //OKLART VAD I HELVETE dEN SKA HA
-	//texDesc.BindFlags = 
+	//texDesc.ArraySize = 1; //OKLART VAD I HELVETE dEN SKA HA
+	////texDesc.BindFlags = 
+	
+	//this->gDevice->CreateTexture2D();
 
 	D3D11_SUBRESOURCE_DATA sData;
+	
 
 	D3D11_SAMPLER_DESC sDesc;
 
@@ -201,21 +204,35 @@ void GraphicsHandler::createTriangleData()
 		float x, y, z;
 		float r, g, b;
 		float u, v;
+		//float pad;
 	};
 
-	TriangleVertex triangleVertices[3] =
+	TriangleVertex triangleVertices[6] =
 	{
 		0.5f, -0.5f, 0.0f,	//v0 pos
 		0.0f, 0.0f,	1.0f,   //v0 color
-		1.f , 1.f,
+		1.0f, 1.0f,
 
 		-0.5f, -0.5f, 0.0f,	//v1
 		0.0f, 0.0f,	1.0f,   //v1 color
-		0.f , 1.f,
+		0.0f, 1.0f,
 
 		-0.5f, 0.5f, 0.0f, //v2
 		0.0f, 0.0f, 1.0f, //v2 color
-		0.f,  0.f
+		0.0f,  0.0f,
+
+		//t2
+		-0.5f, 0.5f, 0.0f,	//v0 pos
+		0.0f, 0.0f,	1.0f,   //v0 color
+		0.0f, 0.0f,
+
+		0.5f, 0.5f, 0.0f,	//v1
+		0.0f, 0.0f,	1.0f,   //v1 color
+		1.0f, 0.0f,
+
+		0.5f, -0.5f, 0.0f, //v2
+		0.0f, 0.0f, 1.0f, //v2 color
+		1.0f, 1.0f
 	};
 
 	D3D11_BUFFER_DESC bufferDesc;
@@ -456,8 +473,6 @@ objectInfo GraphicsHandler::loadObj()
 				tempVInfo.v = -1;
 			}
 		
-			/*tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
-			tempVInfo.v = uv.at(f.at(i).c1 - 1).v;*/
 
 			objInfo.vInfo.push_back(tempVInfo);
 
@@ -537,6 +552,6 @@ void GraphicsHandler::render()
 	gDeviceContext->IASetInputLayout(this->vertexLayout);
 
 
-	gDeviceContext->Draw(3, 0);
+	gDeviceContext->Draw(6, 0);
 	this->swapChain->Present(0, 0);
 }
