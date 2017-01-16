@@ -11,6 +11,6 @@ struct VS_OUT
 float4 main(VS_OUT input) : SV_TARGET
 {
     //Kanskse borde ändras lite
-	return input.norm;
+	return input.tex, 1;
 
 }

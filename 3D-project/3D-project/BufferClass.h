@@ -5,6 +5,7 @@
 #include <d3d11.h>
 #include <vector>
 
+#pragma comment (lib, "d3d11.lib")
 
 struct vertexInfo
 {
