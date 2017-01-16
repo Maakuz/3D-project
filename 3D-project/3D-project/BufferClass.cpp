@@ -24,13 +24,13 @@ matrixStruct BufferClass::initiateMatrices()
 	float zFar = 20.0f;
 	float zNear = 0.1f;
 
-	this->matrices.world = DirectX::XMMATRIX(
+	/*this->matrices.world = DirectX::XMMATRIX(
 		cos(0), 0, sin(0), 0,
 		0, 1, 0, 0,
 		-sin(0), 0, cos(0), 0,
-		0, 0, 0, 1);
+		0, 0, 0, 1);*/
 
-	//this->matrices.world = DirectX::XMMatrixRotationY(0);
+	this->matrices.world = DirectX::XMMatrixRotationY(0);
 	//this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
 
 	DirectX::XMVECTOR eyePosition;
