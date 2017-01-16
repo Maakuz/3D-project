@@ -10,7 +10,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->vertexShader = nullptr;
 	this->vertexBuffer = nullptr;
 	this->pixelShader = nullptr;
-	this->bufferClass = nullptr;
+	this->cameraClass = nullptr;
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
@@ -19,26 +19,27 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createTexture();
 	this->objInfo = this->loadObj();
 
-	this->vertexBuffer = this->bufferClass->createVertexBuffer(&this->objInfo.vInfo);
-	UINT32 vertexSize = sizeof(vertexInfo);
-	UINT32 offset = 0;
-	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+	createVertexBuffer();
+	
 
-	this->matrixBuffer = bufferClass->createConstantBuffer();
+
+
+	//Constant buffer till vertex shader
+	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
 GraphicsHandler::~GraphicsHandler()
 {
-	delete bufferClass;
-	vertexBuffer->Release();
-	rtvBackBuffer->Release();
-	swapChain->Release();
-	vertexLayout->Release();
-	vertexShader->Release();
-	pixelShader->Release();
-	gDevice->Release();
-	gDeviceContext->Release();
+	delete this->cameraClass;
+	this->vertexBuffer->Release();
+	this->rtvBackBuffer->Release();
+	this->swapChain->Release();
+	this->vertexLayout->Release();
+	this->vertexShader->Release();
+	this->pixelShader->Release();
+	this->gDevice->Release();
+	this->gDeviceContext->Release();
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
@@ -57,7 +58,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		NULL, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
+		D3D11_CREATE_DEVICE_DEBUG, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -91,7 +92,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		//Lägg in depthviewsaken här i stället för nULL
 		gDeviceContext->OMSetRenderTargets(1, &rtvBackBuffer, NULL);
 
-		this->bufferClass = new BufferClass(this->gDevice);
+		this->cameraClass = new CameraClass(this->gDevice);
 	}
 	return hr;
 }
@@ -179,7 +180,7 @@ void GraphicsHandler::createShaders()
 void GraphicsHandler::createTexture()
 {
 
-	DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"../resource/Maps/skin.tif", &this->textureResoure, &this->textureView);
+	DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"../resource/Maps/kung.png", &this->textureResoure, &this->textureView);
 
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 }
@@ -237,7 +238,7 @@ void GraphicsHandler::createTriangleData()
 	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
 
-	this->matrixBuffer = bufferClass->createConstantBuffer();
+	this->matrixBuffer = cameraClass->createConstantBuffer();
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
@@ -509,6 +510,31 @@ objectInfo GraphicsHandler::loadObj()
 	return objInfo;
 }
 
+void GraphicsHandler::createVertexBuffer()
+{
+	D3D11_BUFFER_DESC bufferDesc;
+	ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+
+
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.ByteWidth = this->objInfo.vInfo.size() * sizeof(vertexInfo);
+
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	data.pSysMem = this->objInfo.vInfo.data();
+
+	ZeroMemory(&this->vertexBuffer, sizeof(ID3D11Buffer));
+
+	this->gDevice->CreateBuffer(&bufferDesc, &data, &this->vertexBuffer);
+
+
+	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+}
+
 void GraphicsHandler::render()
 {
 	float clearColor[] = { 0, 0, 0, 1 };
@@ -526,6 +552,6 @@ void GraphicsHandler::render()
 	gDeviceContext->IASetInputLayout(this->vertexLayout);
 
 
-	gDeviceContext->Draw(this->objInfo.nrOfVertexcies, 0);
+	gDeviceContext->Draw(36, 0);
 	this->swapChain->Present(0, 0);
 }
