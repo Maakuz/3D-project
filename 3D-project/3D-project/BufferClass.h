@@ -9,7 +9,6 @@
 
 struct vertexInfo
 {
-
 	//vertex positions
 	float vpx, vpy, vpz;
 

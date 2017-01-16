@@ -24,10 +24,10 @@ struct indexInfo
 
 struct objectInfo
 {
-	int nrOfVertexcies;
+	int nrOfVertices;
 	int norOfIndexcies;
 	
-	
+	//VertexInfo is located in BufferClass.h
 	std::vector<vertexInfo> vInfo;
 	std::vector<indexInfo> iInfo;
 };
