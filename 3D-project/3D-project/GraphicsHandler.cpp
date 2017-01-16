@@ -15,9 +15,9 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 	this->createShaders();
-	this->createTriangleData();
+	//this->createTriangleData();
 	this->createTexture();
-	//this->objInfo = this->loadObj();
+	this->objInfo = this->loadObj();
 
 	this->vertexBuffer = this->bufferClass->createVertexBuffer(&this->objInfo.vInfo);
 	UINT32 vertexSize = sizeof(vertexInfo);
@@ -57,7 +57,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		D3D11_CREATE_DEVICE_DEBUG, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
+		NULL, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -456,6 +456,8 @@ objectInfo GraphicsHandler::loadObj()
 				tempVInfo.v = -1;
 			}
 		
+			/*tempVInfo.u = uv.at(f.at(i).c1 - 1).u;
+			tempVInfo.v = uv.at(f.at(i).c1 - 1).v;*/
 
 			objInfo.vInfo.push_back(tempVInfo);
 
