@@ -50,3 +50,5 @@
 .gitignore.orig
 3D-project/3D-project/GraphicsHandler.cpp.orig
 3D-project/3D-project.opensdf
+3D-project/.vs/3D-project/v14/.suo
+3D-project/resource/Maps/Thumbs.db

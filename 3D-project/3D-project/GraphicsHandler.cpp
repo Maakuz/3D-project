@@ -243,7 +243,7 @@ void GraphicsHandler::createTriangleData()
 
 objectInfo GraphicsHandler::loadObj()
 {
-	std::string fileName("../resource/apple.obj"), identifier;
+	std::string fileName("../resource/Cube.obj"), identifier;
 	std::string line;
 	std::ifstream file(fileName);
 	objectInfo objInfo;
@@ -300,6 +300,7 @@ objectInfo GraphicsHandler::loadObj()
 				inputString >> identifier >>
 					vpTemp.x >> vpTemp.y >> vpTemp.z;
 				vp.push_back(vpTemp);
+				inputString = std::istringstream();
 			}
 			//fills vertex normals
 			else if (line.substr(0, 2) == "vn")
@@ -307,6 +308,7 @@ objectInfo GraphicsHandler::loadObj()
 				inputString >> identifier >>
 					vnTemp.x >> vnTemp.y >> vnTemp.z;
 				vn.push_back(vnTemp);
+				inputString = std::istringstream();
 			}
 			//fills texcoords
 			else if (line.substr(0, 2) == "vt")
@@ -314,10 +316,12 @@ objectInfo GraphicsHandler::loadObj()
 				inputString >> identifier >>
 					uvTemp.u >> uvTemp.v;
 				uv.push_back(uvTemp);
+				inputString = std::istringstream();
 			}
 			//fills faces
 			else if (line.substr(0, 2) == "f ")
 			{
+				
 				inputString >> identifier >> 
 					temp1 >> temp2 >> temp3;
 				temp1 += 'e';
@@ -442,10 +446,11 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a1 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a1 - 1).z;
 
+			//uv 1 in face i
 			tempVInfo.u = uv.at(f.at(i).b1 - 1).u;
 			tempVInfo.v = uv.at(f.at(i).b1 - 1).v;
 
-			
+			//normal 1 in face i 
 			tempVInfo.vnx = vn.at(f.at(i).c1 - 1).x;
 			tempVInfo.vny = vn.at(f.at(i).c1 - 1).y;
 			tempVInfo.vnz = vn.at(f.at(i).c1 - 1).z;
@@ -461,10 +466,11 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a2 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a2 - 1).z;
 
+			//uv 2 in face i
 			tempVInfo.u = uv.at(f.at(i).b2 - 1).u;
 			tempVInfo.v = uv.at(f.at(i).b2 - 1).v;
 
-			
+			//normal 1 in face i 
 			tempVInfo.vnx = vn.at(f.at(i).c2 - 1).x;
 			tempVInfo.vny = vn.at(f.at(i).c2 - 1).y;
 			tempVInfo.vnz = vn.at(f.at(i).c2 - 1).z;
@@ -480,18 +486,17 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vpy = vp.at(f.at(i).a3 - 1).y;
 			tempVInfo.vpz = vp.at(f.at(i).a3 - 1).z;
 
+			//uv 3 in face i
 			tempVInfo.u = uv.at(f.at(i).b3 - 1).u;
 			tempVInfo.v = uv.at(f.at(i).b3 - 1).v;
 			
+			//normal 1 in face i 
 			tempVInfo.vnx = vn.at(f.at(i).c3 - 1).x;
 			tempVInfo.vny = vn.at(f.at(i).c3 - 1).y;
 			tempVInfo.vnz = vn.at(f.at(i).c3 - 1).z;
 			
 			
-			// todo THIS IS FUCKED!
-		
-			
-	
+
 			objInfo.vInfo.push_back(tempVInfo);
 
 		}
@@ -521,6 +526,6 @@ void GraphicsHandler::render()
 	gDeviceContext->IASetInputLayout(this->vertexLayout);
 
 
-	gDeviceContext->Draw(6, 0);
+	gDeviceContext->Draw(this->objInfo.nrOfVertexcies, 0);
 	this->swapChain->Present(0, 0);
 }
