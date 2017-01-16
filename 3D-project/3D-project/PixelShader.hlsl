@@ -1,4 +1,4 @@
-SamplerState sSampler;
+SamplerState sSampler; //kan sätta fancy flaggor här
 texture2D tex : register(t0);
 
 struct VS_OUT
