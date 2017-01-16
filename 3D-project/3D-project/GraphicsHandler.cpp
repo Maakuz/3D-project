@@ -15,9 +15,9 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 	this->createShaders();
-	this->createTriangleData();
+	//this->createTriangleData();
 	this->createTexture();
-	/*this->objInfo = this->loadObj();
+	this->objInfo = this->loadObj();
 
 	this->vertexBuffer = this->bufferClass->createVertexBuffer(&this->objInfo.vInfo);
 	UINT32 vertexSize = sizeof(vertexInfo);
@@ -25,7 +25,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
 	this->matrixBuffer = bufferClass->createConstantBuffer();
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);*/
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -179,22 +179,9 @@ void GraphicsHandler::createShaders()
 void GraphicsHandler::createTexture()
 {
 
-	DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"skin.tif", &this->textureResoure, &this->textureView);
+	DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"../resource/Maps/skin.tif", &this->textureResoure, &this->textureView);
 
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
-	//D3D11_TEXTURE2D_DESC texDesc;
-
-	//texDesc.ArraySize = 1; //OKLART VAD I HELVETE dEN SKA HA
-	////texDesc.BindFlags = 
-	
-	//this->gDevice->CreateTexture2D();
-
-	D3D11_SUBRESOURCE_DATA sData;
-	
-
-	D3D11_SAMPLER_DESC sDesc;
-
-
 }
 
 void GraphicsHandler::createTriangleData()
@@ -527,7 +514,7 @@ objectInfo GraphicsHandler::loadObj()
 
 		}
 
-		objInfo.nrOfVertexcies = (int)(vp.size());
+		objInfo.nrOfVertices = (int)(vp.size());
 		objInfo.norOfIndexcies = (int)(f.size());
 
 		objInfo.iInfo = f;
