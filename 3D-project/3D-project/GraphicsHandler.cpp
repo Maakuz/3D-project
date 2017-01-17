@@ -510,6 +510,88 @@ objectInfo GraphicsHandler::loadObj()
 	return objInfo;
 }
 
+void GraphicsHandler::loadMtl()
+{
+	std::string fileName("../resource/Cube.mtl"), identifier;
+	std::string line;
+	std::ifstream file(fileName);
+	mtlInfo tempMInfo;
+	bool cont = true;
+
+	if (file.is_open() == false)
+	{
+		MessageBox(0, L"obj file failed to open", L"error", MB_OK);
+	}
+	else
+	{
+		std::istringstream inputString;
+		
+
+		while (std::getline(file, line))
+		{
+			inputString.str(line);
+
+			if (line.substr(0, 7) == "newmtl ")
+			{
+				inputString >> identifier >> tempMInfo.name;
+				cont = true;
+				inputString = std::istringstream();
+				while (cont)
+				{
+					std::getline(file, line);
+					inputString.str(line);
+					if (line.substr(0, 7) != "newmtl ")
+					{
+						if (line.substr(0, 2) == "Ka")
+						{
+							inputString >> identifier >>
+								tempMInfo.ambient.x >> tempMInfo.ambient.y >> tempMInfo.ambient.z;
+							inputString = std::istringstream();
+						}
+
+						if (line.substr(0, 2) == "Kd")
+						{
+							inputString >> identifier >>
+								tempMInfo.diffuse.x >> tempMInfo.diffuse.y >> tempMInfo.diffuse.z;
+							inputString = std::istringstream();
+						}
+						if (line.substr(0, 2) == "Ks")
+						{
+							inputString >> identifier >>
+								tempMInfo.specular.x >> tempMInfo.specular.y >> tempMInfo.specular.z;
+							inputString = std::istringstream();
+						}
+						if (line.substr(0, 2) == "Ns")
+						{
+							inputString >> identifier >> tempMInfo.specWeight;
+							inputString = std::istringstream();
+						}
+						if (line.substr(0, 6) == "illum ")
+						{
+							inputString >> identifier >> tempMInfo.illum;
+							inputString = std::istringstream();
+						}
+
+						if (line.substr(0, 7) == "map_Ks ")
+						{
+							inputString >> identifier >> tempMInfo.texture;
+							inputString = std::istringstream();
+						}
+					}
+					else
+					{
+						this->objInfo.mInfo.push_back(tempMInfo);
+						cont = false;
+					}
+
+				}
+			}
+		}
+
+	}
+
+}
+
 void GraphicsHandler::createVertexBuffer()
 {
 	D3D11_BUFFER_DESC bufferDesc;
@@ -518,7 +600,7 @@ void GraphicsHandler::createVertexBuffer()
 
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.ByteWidth = this->objInfo.vInfo.size() * sizeof(vertexInfo);
+	bufferDesc.ByteWidth = (UINT)(this->objInfo.vInfo.size() * sizeof(vertexInfo));
 
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));

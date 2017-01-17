@@ -34,6 +34,7 @@ private:
 
 
 	objectInfo loadObj();
+	void loadMtl();
 	void createTexture();
 	void createShaders();
 	void setViewPort(int heigth, int width);
