@@ -57,5 +57,6 @@
 3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/x64/Release/DirectXTKAudioDX.lib
 3D-project/packages/directxtk_desktop_2015.2016.12.5.1/build/native/lib/x64/Release/directxtkaudiodx.pdb
 3D-project/3D-project/3D-project.vcxproj
-3D-project/3D-project/3D-project.vcxproj.filters
+3D-project/3D-project/3D-project.vcxproj.filter
 3D-project/3D-project.sdf
+3D-project/3D-project/x64/Debug/3D-project.tlog/unsuccessfulbuild

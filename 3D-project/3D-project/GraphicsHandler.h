@@ -39,6 +39,10 @@ private:
 	ID3D11RenderTargetView* renderTargetViews[NROFBUFFERS];
 	ID3D11ShaderResourceView* shaderResourceViews[NROFBUFFERS];
 
+	ID3D11Texture2D* depthBuffer;
+	ID3D11DepthStencilState* dsState;
+	ID3D11DepthStencilView* DSV;
+
 	CameraClass* cameraClass;
 
 
@@ -52,6 +56,7 @@ private:
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void createVertexBuffer();
 	void createDefferedBuffers();
+	void createDepthBuffer();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
