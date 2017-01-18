@@ -10,11 +10,12 @@ struct VS_OUT
 
 struct PS_OUT
 {
-    float4 color : SV_Target0;
-    float4 normal : SV_Target1;
+    float4 position : SV_Target0;
+    float4 color : SV_Target1;
+    float4 normal : SV_Target2;
 };
 
-PS_OUT DeferredPixelShader(VS_OUT input) : SV_TARGET
+PS_OUT main(VS_OUT input)
 {
     PS_OUT outPut;
 
