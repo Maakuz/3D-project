@@ -21,10 +21,12 @@ private:
 	ID3D11RenderTargetView* rtvBackBuffer;
 	
 	ID3D11VertexShader* vertexShader;
+	ID3D11VertexShader* defferedVertexShader;
 	ID3D11PixelShader* pixelShader;
 	ID3D11PixelShader* defferedPixelShader;
 
 	ID3D11InputLayout* vertexLayout;
+	ID3D11InputLayout* defferedVertexLayout;
 	ID3D11Buffer* vertexBuffer;
 	objectInfo objInfo;
 	
@@ -63,6 +65,7 @@ public:
 	~GraphicsHandler();
 
 	void render();
+	void renderGeometry();
 };
 
 

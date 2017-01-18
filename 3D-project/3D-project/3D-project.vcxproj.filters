@@ -24,7 +24,7 @@
     <ClCompile Include="GraphicsHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BufferClass.cpp">
+    <ClCompile Include="CameraClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,7 +35,10 @@
     <ClInclude Include="GraphicsHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BufferClass.h">
+    <ClInclude Include="CameraClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,6 +47,12 @@
       <Filter>Source Files</Filter>
     </FxCompile>
     <FxCompile Include="PixelShader.hlsl">
+      <Filter>Source Files</Filter>
+    </FxCompile>
+    <FxCompile Include="DefferedPS.hlsl">
+      <Filter>Source Files</Filter>
+    </FxCompile>
+    <FxCompile Include="DefferedVS.hlsl">
       <Filter>Source Files</Filter>
     </FxCompile>
   </ItemGroup>

@@ -27,9 +27,11 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
+	
+	this->cameraClass = new CameraClass(this->gDevice);
+
 	this->createDepthBuffer();
 	this->createShaders();
-	//this->createTriangleData();
 	this->createTexture();
 	this->objInfo = this->loadObj();
 
@@ -58,7 +60,6 @@ GraphicsHandler::~GraphicsHandler()
 	this->depthBuffer->Release();
 	this->dsState->Release();
 	this->DSV->Release();
-	this->dsState->Release();
 	this->textureResoure->Release();
 	this->textureView->Release();
 
@@ -118,7 +119,6 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		//Lägg in depthviewsaken här i stället för nULL
 		gDeviceContext->OMSetRenderTargets(1, &rtvBackBuffer, this->DSV);
 
-		this->cameraClass = new CameraClass(this->gDevice);
 	}
 	return hr;
 }
@@ -165,8 +165,7 @@ void GraphicsHandler::createShaders()
 	D3D11_INPUT_ELEMENT_DESC inputDesc[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	hr = this->gDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &this->vertexLayout);
@@ -177,6 +176,47 @@ void GraphicsHandler::createShaders()
 	}
 
 	vsBlob->Release();
+
+	//Deffered VS
+	ID3DBlob* dvsBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"DefferedVS.hlsl",
+		nullptr,
+		nullptr,
+		"main",
+		"vs_5_0",
+		0,
+		0,
+		&dvsBlob,
+		nullptr);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"dvsblob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateVertexShader(dvsBlob->GetBufferPointer(), dvsBlob->GetBufferSize(), NULL, &this->defferedVertexShader);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"deffered vertex shader creation failed", L"error", MB_OK);
+	}
+
+	D3D11_INPUT_ELEMENT_DESC inputDescDeffered[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	hr = this->gDevice->CreateInputLayout(inputDescDeffered, ARRAYSIZE(inputDescDeffered), dvsBlob->GetBufferPointer(), dvsBlob->GetBufferSize(), &this->defferedVertexLayout);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"input desc creation failed", L"error", MB_OK);
+	}
+
+	dvsBlob->Release();
 
 	ID3DBlob *psBlob = nullptr;
 	hr = D3DCompileFromFile(
@@ -194,7 +234,7 @@ void GraphicsHandler::createShaders()
 		MessageBox(0, L"psBlob creation failed", L"error", MB_OK);
 	}
 
-	hr = this->gDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &this->defferedPixelShader);
+	hr = this->gDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &this->pixelShader);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"pixel shader creation failed", L"error", MB_OK);
@@ -211,14 +251,14 @@ void GraphicsHandler::createShaders()
 		"ps_5_0",
 		0,
 		0,
-		&psBlob,
+		&dpsBlob,
 		NULL);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"Deffered psBlob creation failed", L"error", MB_OK);
 	}
 
-	hr = this->gDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+	hr = this->gDevice->CreatePixelShader(dpsBlob->GetBufferPointer(), dpsBlob->GetBufferSize(), nullptr, &defferedPixelShader);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"Deffered pixel shader creation failed", L"error", MB_OK);
@@ -235,8 +275,6 @@ void GraphicsHandler::createTexture()
 	 {
 		 MessageBox(0, L"texture creation failed", L"error", MB_OK);
 	 }
-
-	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 
 }
 
@@ -725,12 +763,15 @@ void GraphicsHandler::createDepthBuffer()
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	ZeroMemory(&dsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
 
-	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 	dsvDesc.Texture2D.MipSlice = 0;
 
 	hr = gDevice->CreateDepthStencilView(this->depthBuffer, &dsvDesc, &this->DSV);
-
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"depth stencil view creation failed", L"error", MB_OK);
+	}
 
 }
 
@@ -789,9 +830,17 @@ void GraphicsHandler::createDefferedBuffers()
 void GraphicsHandler::render()
 {
 	float clearColor[] = { 0, 0, 0, 1 };
+
+	this->renderGeometry();
+
 	this->gDeviceContext->ClearRenderTargetView(rtvBackBuffer, clearColor);
 	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1, 0);
 	//Clear depth stencil here
+
+	//Borde gå att göra i en forloop för finhet
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->shaderResourceViews[0]);
+	this->gDeviceContext->PSSetShaderResources(1, 1, &this->shaderResourceViews[1]);
+	this->gDeviceContext->PSSetShaderResources(2, 1, &this->shaderResourceViews[2]);
 
 	this->gDeviceContext->VSSetShader(this->vertexShader, nullptr, 0);
 	this->gDeviceContext->HSSetShader(nullptr, nullptr, 0);
@@ -807,4 +856,29 @@ void GraphicsHandler::render()
 
 	this->gDeviceContext->Draw(36, 0);
 	this->swapChain->Present(0, 0);
+}
+
+void GraphicsHandler::renderGeometry()
+{
+	//Kanske en specifik viwport for quadsaken
+	float clearColor[] = { 0, 0, 0, 1 };
+
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
+	}
+
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+
+
+	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
+	this->gDeviceContext->HSSetShader(nullptr, nullptr, 0);
+	this->gDeviceContext->DSSetShader(nullptr, nullptr, 0);
+	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
+	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
+
+	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
+
+
+
 }

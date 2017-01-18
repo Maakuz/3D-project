@@ -139,8 +139,12 @@ matrixStruct CameraClass::initiateMatrices()
 	DirectX::XMVector3Normalize(right);
 
 	DirectX::XMStoreFloat3(&this->mRight, right);
-	DirectX::XMStoreFloat4x4(&this->mViewMatrix, matrices.view);
-	DirectX::XMStoreFloat4x4(&this->mProjectionMatrix, matrices.projection);
+
+	temp = matrices.view;
+	DirectX::XMStoreFloat4x4(&this->mViewMatrix, temp);
+
+	temp = matrices.projection;
+	DirectX::XMStoreFloat4x4(&this->mProjectionMatrix, temp);
 
 	DirectX::XMStoreFloat3(&this->standardPosition, eyePosition);
 	DirectX::XMStoreFloat3(&this->standardUp, upDirection);

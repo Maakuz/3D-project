@@ -19,6 +19,7 @@ PS_OUT main(VS_OUT input)
 {
     PS_OUT outPut;
 
+    outPut.position = input.pos;
     outPut.color = tex.Sample(sSampler, input.uv);
     outPut.normal = input.norm;
 
