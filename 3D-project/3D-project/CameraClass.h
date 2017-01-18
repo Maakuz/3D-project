@@ -68,11 +68,4 @@ public:
 	//initiate ska också sätta mMouse och mKeyboard
 };
 
-
-
-
-
-
-
-
 #endif
