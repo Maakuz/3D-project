@@ -29,6 +29,10 @@ private:
 	ID3D11Resource* textureResoure;
 	ID3D11ShaderResourceView* textureView;
 
+	ID3D11Texture2D* depthBuffer;
+	ID3D11DepthStencilState* dsState;
+	ID3D11DepthStencilView* DSV;
+
 	CameraClass* cameraClass;
 
 
@@ -41,6 +45,7 @@ private:
 	void createTriangleData();
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void createVertexBuffer();
+	void createDepthBuffer(int height, int width);
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
