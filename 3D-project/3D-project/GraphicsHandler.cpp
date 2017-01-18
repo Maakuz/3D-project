@@ -2,6 +2,9 @@
 
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
+	this->height = height;
+	this->width = width;
+
 	this->gDevice = nullptr;
 	this->gDeviceContext = nullptr;
 	this->rtvBackBuffer = nullptr;
@@ -11,6 +14,13 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->vertexBuffer = nullptr;
 	this->pixelShader = nullptr;
 	this->cameraClass = nullptr;
+
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		this->renderTargets[i] = nullptr;
+		this->renderTargetViews[i] = nullptr;
+		this->shaderResourceViews[i] = nullptr;
+	}
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
@@ -36,8 +46,11 @@ GraphicsHandler::~GraphicsHandler()
 	this->rtvBackBuffer->Release();
 	this->swapChain->Release();
 	this->vertexLayout->Release();
+
+	this->defferedPixelShader->Release();
 	this->vertexShader->Release();
 	this->pixelShader->Release();
+	
 	this->gDevice->Release();
 	this->gDeviceContext->Release();
 }
@@ -71,6 +84,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 	if (SUCCEEDED(hr))
 	{
 		//Depth buffer borde nog hända här
+		this->createDefferedBuffers();
 
 
 		ID3D11Texture2D* backBuffer = nullptr;
@@ -168,21 +182,46 @@ void GraphicsHandler::createShaders()
 		MessageBox(0, L"psBlob creation failed", L"error", MB_OK);
 	}
 
-	hr = this->gDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+	hr = this->gDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &this->defferedPixelShader);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"pixel shader creation failed", L"error", MB_OK);
 	}
 
+	psBlob->Release();
+
+	ID3DBlob *dpsBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"DefferedPS.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"ps_5_0",
+		0,
+		0,
+		&psBlob,
+		NULL);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"Deffered psBlob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"Deffered pixel shader creation failed", L"error", MB_OK);
+	}
+
+	dpsBlob->Release();
 
 }
 
 void GraphicsHandler::createTexture()
 {
-
 	DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"../resource/Maps/kung.png", &this->textureResoure, &this->textureView);
 
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+
 }
 
 void GraphicsHandler::createTriangleData()
@@ -615,6 +654,58 @@ void GraphicsHandler::createVertexBuffer()
 	UINT32 vertexSize = sizeof(vertexInfo);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+}
+
+void GraphicsHandler::createDefferedBuffers()
+{
+	D3D11_TEXTURE2D_DESC desc;
+
+	desc.ArraySize = 1;
+	desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = 0;
+	desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	desc.Height = this->height;
+	desc.Width = this->width;
+	desc.MipLevels = 1;
+	desc.MiscFlags = 0;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+	ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+
+	rtvDesc.Format = desc.Format;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+
+	srvDesc.Format = desc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+
+
+	HRESULT hr;
+
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		hr = this->gDevice->CreateTexture2D(&desc, NULL, &this->renderTargets[i]);
+		if (FAILED(hr))
+			MessageBox(0, L"Render target failed!", L"error", MB_OK);
+
+		hr = this->gDevice->CreateRenderTargetView(this->renderTargets[i], &rtvDesc, &this->renderTargetViews[i]);
+		if (FAILED(hr))
+			MessageBox(0, L"Render target view failed!", L"error", MB_OK);
+
+		hr = this->gDevice->CreateShaderResourceView(renderTargets[i], &srvDesc, &this->shaderResourceViews[i]);
+		if (FAILED(hr))
+			MessageBox(0, L"Shader resource view failed!", L"error", MB_OK);
+	}
+
+	gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
+	
+
 }
 
 void GraphicsHandler::render()

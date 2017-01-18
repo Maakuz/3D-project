@@ -7,11 +7,14 @@
 #include "WICTextureLoader.h"
 
 
+const int NROFBUFFERS = 3;
 
 
 class GraphicsHandler
 {
 private:
+	unsigned int height, width;
+
 	IDXGISwapChain* swapChain;
 	ID3D11Device* gDevice;
 	ID3D11DeviceContext* gDeviceContext;
@@ -19,6 +22,8 @@ private:
 	
 	ID3D11VertexShader* vertexShader;
 	ID3D11PixelShader* pixelShader;
+	ID3D11PixelShader* defferedPixelShader;
+
 	ID3D11InputLayout* vertexLayout;
 	ID3D11Buffer* vertexBuffer;
 	objectInfo objInfo;
@@ -28,6 +33,11 @@ private:
 	//texture things
 	ID3D11Resource* textureResoure;
 	ID3D11ShaderResourceView* textureView;
+
+	//Deffered things
+	ID3D11Texture2D* renderTargets[NROFBUFFERS];
+	ID3D11RenderTargetView* renderTargetViews[NROFBUFFERS];
+	ID3D11ShaderResourceView* shaderResourceViews[NROFBUFFERS];
 
 	CameraClass* cameraClass;
 
@@ -41,6 +51,7 @@ private:
 	void createTriangleData();
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void createVertexBuffer();
+	void createDefferedBuffers();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
