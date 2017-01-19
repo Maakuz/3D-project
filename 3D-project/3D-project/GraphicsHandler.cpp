@@ -795,13 +795,13 @@ void GraphicsHandler::createDefferedBuffers()
 	ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
 
 	rtvDesc.Format = desc.Format;
-	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
 
 	srvDesc.Format = desc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
 	srvDesc.Texture2D.MipLevels = 1;
 
 
@@ -822,8 +822,34 @@ void GraphicsHandler::createDefferedBuffers()
 			MessageBox(0, L"Shader resource view failed!", L"error", MB_OK);
 	}
 
-	gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
-	
+
+	//Move this shizzo
+	D3D11_DEPTH_STENCIL_DESC disabledDepthDesc;
+	ZeroMemory(&disabledDepthDesc, sizeof(disabledDepthDesc));
+
+	// Now create a second depth stencil state which turns off the Z buffer for 2D rendering.  The only difference is 
+	// that DepthEnable is set to false, all other parameters are the same as the other depth stencil state.
+	disabledDepthDesc.DepthEnable = false;
+	disabledDepthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	disabledDepthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	disabledDepthDesc.StencilEnable = true;
+	disabledDepthDesc.StencilReadMask = 0xFF;
+	disabledDepthDesc.StencilWriteMask = 0xFF;
+
+	disabledDepthDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	disabledDepthDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	disabledDepthDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	disabledDepthDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Create the state using the device.
+	hr = gDevice->CreateDepthStencilState(&disabledDepthDesc, &this->disableDepthState);
+	if (FAILED(hr))
+		MessageBox(0, L"stensil state failed!", L"error", MB_OK);
 
 }
 
@@ -833,28 +859,39 @@ void GraphicsHandler::render()
 
 	this->renderGeometry();
 
-	this->gDeviceContext->ClearRenderTargetView(rtvBackBuffer, clearColor);
-	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1, 0);
+	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
+	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.f, 0);
 	//Clear depth stencil here
+
+	//disable depth stencil
+	this->gDeviceContext->OMSetDepthStencilState(this->disableDepthState, 1);
+
+	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+
+	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 
 	//Borde gå att göra i en forloop för finhet
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->shaderResourceViews[0]);
 	this->gDeviceContext->PSSetShaderResources(1, 1, &this->shaderResourceViews[1]);
 	this->gDeviceContext->PSSetShaderResources(2, 1, &this->shaderResourceViews[2]);
 
+	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
+
+
 	this->gDeviceContext->VSSetShader(this->vertexShader, nullptr, 0);
 	this->gDeviceContext->HSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->pixelShader, nullptr, 0);
-	
-
-
-	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
-
 
 	this->gDeviceContext->Draw(36, 0);
+
+	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
+
 	this->swapChain->Present(0, 0);
 }
 
@@ -863,22 +900,33 @@ void GraphicsHandler::renderGeometry()
 	//Kanske en specifik viwport for quadsaken
 	float clearColor[] = { 0, 0, 0, 1 };
 
+	gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
+	
+	//kanske ska vara andra tal, troligtvis inte
+	this->setViewPort(480, 640);
+
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
 		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
 	}
 
+	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	
+	gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
-
-
-	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
-	this->gDeviceContext->HSSetShader(nullptr, nullptr, 0);
-	this->gDeviceContext->DSSetShader(nullptr, nullptr, 0);
-	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
-	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
 
 	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
 
+
+	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
+	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
+
+	//Kanskse borde vara drawindexed
+	this->gDeviceContext->Draw(36, 0);
+
+	//Reset
+	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
 
 }

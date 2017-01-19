@@ -41,6 +41,8 @@ private:
 	ID3D11RenderTargetView* renderTargetViews[NROFBUFFERS];
 	ID3D11ShaderResourceView* shaderResourceViews[NROFBUFFERS];
 
+	ID3D11DepthStencilState* disableDepthState;
+
 	ID3D11Texture2D* depthBuffer;
 	ID3D11DepthStencilState* dsState;
 	ID3D11DepthStencilView* DSV;
