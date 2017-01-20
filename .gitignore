@@ -60,3 +60,5 @@
 3D-project/3D-project/3D-project.vcxproj.filter
 3D-project/3D-project.sdf
 3D-project/3D-project/x64/Debug/3D-project.tlog/unsuccessfulbuild
+3D-project/x64/Debug/DefferedPS.cso
+3D-project/x64/Debug/DefferedVS.cso
