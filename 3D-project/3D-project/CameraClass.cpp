@@ -179,3 +179,8 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 	return (pBuffer);
 }
 
+matrixStruct CameraClass::getMatrix() const
+{
+	return this->matrices;
+}
+
