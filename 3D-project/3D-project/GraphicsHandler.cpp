@@ -18,6 +18,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->dsState = nullptr;
 	this->defferedVertexBuffer = nullptr;
 	this->DSV = nullptr;
+	this->mtlLightbuffer = nullptr;
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -35,9 +36,11 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createTexture();
 	this->createSamplers();
 	this->objInfo = this->loadObj();
+	this->loadMtl();
 	this->createTriangleData();
 
-	createVertexBuffer();
+	this->createVertexBuffer();
+	this->createMtlLightBuffer();
 	
 
 
@@ -69,6 +72,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->disableDepthState->Release();
 	this->matrixBuffer->Release();
 	this->lightbuffer->Release();
+	this->mtlLightbuffer->Release();
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -100,7 +104,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		D3D11_CREATE_DEVICE_DEBUG, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
+		NULL, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -639,56 +643,87 @@ void GraphicsHandler::loadMtl()
 				inputString = std::istringstream();
 				while (cont)
 				{
-					std::getline(file, line);
-					inputString.str(line);
-					if (line.substr(0, 7) != "newmtl ")
+					
+					if (std::getline(file, line))
 					{
-						if (line.substr(0, 2) == "Ka")
+						inputString.str(line);
+						if (line.substr(0, 7) != "newmtl ")
 						{
-							inputString >> identifier >>
-								tempMInfo.ambient.x >> tempMInfo.ambient.y >> tempMInfo.ambient.z;
-							inputString = std::istringstream();
+							if (line.substr(0, 2) == "Ka")
+							{
+								inputString >> identifier >>
+									tempMInfo.ambient.x >> tempMInfo.ambient.y >> tempMInfo.ambient.z;
+								inputString = std::istringstream();
+							}
+
+							if (line.substr(0, 2) == "Kd")
+							{
+								inputString >> identifier >>
+									tempMInfo.diffuse.x >> tempMInfo.diffuse.y >> tempMInfo.diffuse.z;
+								inputString = std::istringstream();
+							}
+							if (line.substr(0, 2) == "Ks")
+							{
+								inputString >> identifier >>
+									tempMInfo.specular.x >> tempMInfo.specular.y >> tempMInfo.specular.z;
+								inputString = std::istringstream();
+							}
+							if (line.substr(0, 2) == "Ns")
+							{
+								inputString >> identifier >> tempMInfo.specWeight;
+								inputString = std::istringstream();
+							}
+							if (line.substr(0, 7) == "map_Ks ")
+							{
+								inputString >> identifier >> tempMInfo.texture;
+								inputString = std::istringstream();
+							}
+						}
+						else
+						{
+							this->objInfo.mInfo.push_back(tempMInfo);
+							cont = false;
 						}
 
-						if (line.substr(0, 2) == "Kd")
-						{
-							inputString >> identifier >>
-								tempMInfo.diffuse.x >> tempMInfo.diffuse.y >> tempMInfo.diffuse.z;
-							inputString = std::istringstream();
-						}
-						if (line.substr(0, 2) == "Ks")
-						{
-							inputString >> identifier >>
-								tempMInfo.specular.x >> tempMInfo.specular.y >> tempMInfo.specular.z;
-							inputString = std::istringstream();
-						}
-						if (line.substr(0, 2) == "Ns")
-						{
-							inputString >> identifier >> tempMInfo.specWeight;
-							inputString = std::istringstream();
-						}
-						if (line.substr(0, 6) == "illum ")
-						{
-							inputString >> identifier >> tempMInfo.illum;
-							inputString = std::istringstream();
-						}
-
-						if (line.substr(0, 7) == "map_Ks ")
-						{
-							inputString >> identifier >> tempMInfo.texture;
-							inputString = std::istringstream();
-						}
 					}
 					else
 					{
 						this->objInfo.mInfo.push_back(tempMInfo);
 						cont = false;
 					}
-
 				}
 			}
 		}
 
+	}
+
+}
+
+void GraphicsHandler::createMtlLightBuffer()
+{
+	mtLight ml;
+	ml.ambient = this->objInfo.mInfo.at(0).ambient;
+	ml.diffuse = this->objInfo.mInfo.at(0).diffuse;
+	//ml.specular = this->objInfo.mInfo.at(0).specular;
+	//ml.specWeight = this->objInfo.mInfo.at(0).specWeight;
+
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+
+	desc.ByteWidth = sizeof(mtLight);
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	data.pSysMem = &ml;
+
+	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->mtlLightbuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"mtl light buffer creation failed!", L"error", MB_OK);
 	}
 
 }
@@ -969,6 +1004,7 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
 
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 

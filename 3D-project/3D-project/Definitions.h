@@ -40,7 +40,6 @@ struct vertexInfo
 struct mtlInfo
 {
 	std::string name;
-	int illum;
 	DirectX::XMFLOAT3 ambient;
 	DirectX::XMFLOAT3 diffuse;
 	DirectX::XMFLOAT3 specular;
@@ -48,6 +47,14 @@ struct mtlInfo
 
 	std::string texture;
 };
+struct mtLight
+{
+	DirectX::XMFLOAT3 ambient;
+	DirectX::XMFLOAT3 diffuse;
+	/*DirectX::XMFLOAT3 specular;
+	float specWeight;*/
+};
+
 
 struct objectInfo
 {
@@ -78,7 +85,6 @@ struct lightStruct
 	DirectX::XMFLOAT3 lightDir;
 	DirectX::XMFLOAT2 lightAngle;
 	DirectX::XMFLOAT4 lightRange;
-	
 };
 
 

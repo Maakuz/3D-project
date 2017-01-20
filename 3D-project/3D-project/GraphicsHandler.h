@@ -33,6 +33,7 @@ private:
 	
 	ID3D11Buffer* matrixBuffer;
 	ID3D11Buffer* lightbuffer;
+	ID3D11Buffer* mtlLightbuffer;
 
 	//texture things
 	ID3D11Resource* textureResoure;
@@ -67,6 +68,7 @@ private:
 	void createDepthBuffer();
 	void createSamplers();
 	void createLightBuffer();
+	void createMtlLightBuffer();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);

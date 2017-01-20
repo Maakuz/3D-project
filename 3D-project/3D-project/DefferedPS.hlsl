@@ -15,12 +15,19 @@ struct PS_OUT
     float4 normal : SV_Target2;
 };
 
+cbuffer mtlLightBuffer
+{
+    float3 ambient;
+    float3 diffuse;
+};
+
 PS_OUT main(VS_OUT input)
 {
     PS_OUT outPut;
 
     outPut.position = input.pos;
     outPut.color = tex.Sample(sSampler, input.uv);
+    outPut.color = saturate(mul(outPut.color, diffuse) + mul(outPut.color, ambient));
     outPut.normal = input.norm;
 
     return outPut;
