@@ -16,6 +16,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->cameraClass = nullptr;
 	this->depthBuffer = nullptr;
 	this->dsState = nullptr;
+	this->defferedVertexBuffer = nullptr;
 	this->DSV = nullptr;
 
 	for (int i = 0; i < NROFBUFFERS; i++)
@@ -30,10 +31,11 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	
 	this->cameraClass = new CameraClass(this->gDevice);
 
-	this->createDepthBuffer();
 	this->createShaders();
 	this->createTexture();
+	this->createSamplers();
 	this->objInfo = this->loadObj();
+	this->createTriangleData();
 
 	createVertexBuffer();
 	
@@ -62,6 +64,17 @@ GraphicsHandler::~GraphicsHandler()
 	this->DSV->Release();
 	this->textureResoure->Release();
 	this->textureView->Release();
+	this->defferedVertexLayout->Release();
+	this->defferedVertexShader->Release();
+	this->disableDepthState->Release();
+	this->matrixBuffer->Release();
+
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		this->renderTargets[i]->Release();
+		this->renderTargetViews[i]->Release();
+		this->shaderResourceViews[i]->Release();
+	}
 
 	this->gDevice->Release();
 	this->gDeviceContext->Release();
@@ -79,6 +92,8 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 	desc.OutputWindow = wHandler;
 	desc.SampleDesc.Count = 1;
 	desc.Windowed = true;
+	desc.BufferDesc.Height = this->height;
+	desc.BufferDesc.Width = this->width;
 	
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(
 		NULL,
@@ -97,9 +112,9 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 	if (SUCCEEDED(hr))
 	{
 		//Depth buffer borde nog hända här
+		this->createDepthBuffer();
 		this->createDefferedBuffers();
 
-		this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 		ID3D11Texture2D* backBuffer = nullptr;
 		hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
 		if (FAILED(hr))
@@ -117,7 +132,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		backBuffer->Release();
 
 		//Lägg in depthviewsaken här i stället för nULL
-		gDeviceContext->OMSetRenderTargets(1, &rtvBackBuffer, this->DSV);
+		gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
 	}
 	return hr;
@@ -280,39 +295,26 @@ void GraphicsHandler::createTexture()
 
 void GraphicsHandler::createTriangleData()
 {
-	struct TriangleVertex
-	{
-		float x, y, z;
-		float r, g, b;
-		float u, v;
-		//float pad;
-	};
 
 	TriangleVertex triangleVertices[6] =
 	{
-		0.5f, -0.5f, 0.0f,	//v0 pos
-		0.0f, 0.0f,	1.0f,   //v0 color
+		1.f, -1.f, 0.0f,	//v0 pos
 		1.0f, 1.0f,
 
-		-0.5f, -0.5f, 0.0f,	//v1
-		0.0f, 0.0f,	1.0f,   //v1 color
+		-1.f, -1.f, 0.0f,	//v1
 		0.0f, 1.0f,
 
-		-0.5f, 0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f, //v2 color
+		-1.f, 1.f, 0.0f, //v2
 		0.0f,  0.0f,
 
 		//t2
-		-0.5f, 0.5f, 0.0f,	//v0 pos
-		0.0f, 0.0f,	1.0f,   //v0 color
+		-1.f, 1.f, 0.0f,	//v0 pos
 		0.0f, 0.0f,
 
-		0.5f, 0.5f, 0.0f,	//v1
-		0.0f, 0.0f,	1.0f,   //v1 color
+		1.f, 1.f, 0.0f,	//v1
 		1.0f, 0.0f,
 
-		0.5f, -0.5f, 0.0f, //v2
-		0.0f, 0.0f, 1.0f, //v2 color
+		1.f, -1.f, 0.0f, //v2
 		1.0f, 1.0f
 	};
 
@@ -700,9 +702,9 @@ void GraphicsHandler::createVertexBuffer()
 
 	data.pSysMem = this->objInfo.vInfo.data();
 
-	ZeroMemory(&this->vertexBuffer, sizeof(ID3D11Buffer));
+	ZeroMemory(&this->defferedVertexBuffer, sizeof(ID3D11Buffer));
 
-	HRESULT hr =  this->gDevice->CreateBuffer(&bufferDesc, &data, &this->vertexBuffer);
+	HRESULT hr =  this->gDevice->CreateBuffer(&bufferDesc, &data, &this->defferedVertexBuffer);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"vertex buffer creation failed", L"error", MB_OK);
@@ -711,7 +713,7 @@ void GraphicsHandler::createVertexBuffer()
 
 	UINT32 vertexSize = sizeof(vertexInfo);
 	UINT32 offset = 0;
-	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
 	
 }
 
@@ -731,9 +733,7 @@ void GraphicsHandler::createDepthBuffer()
 	dDesc.MiscFlags = 0;
 	HRESULT hr = this->gDevice->CreateTexture2D(&dDesc, NULL, &this->depthBuffer);
 	if (FAILED(hr))
-	{
 		MessageBox(0, L"depth stencil resource creation failed", L"error", MB_OK);
-	}
 
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
 	dsDesc.DepthEnable = true;
@@ -743,7 +743,7 @@ void GraphicsHandler::createDepthBuffer()
 	dsDesc.StencilEnable = true;
 	dsDesc.StencilReadMask = 0xFF;
 	dsDesc.StencilWriteMask = 0xFF;
-
+	
 	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
@@ -763,15 +763,34 @@ void GraphicsHandler::createDepthBuffer()
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	ZeroMemory(&dsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
 
-	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.Format = dDesc.Format;
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 	dsvDesc.Texture2D.MipSlice = 0;
+	dsvDesc.Flags = 0;
 
 	hr = gDevice->CreateDepthStencilView(this->depthBuffer, &dsvDesc, &this->DSV);
 	if (FAILED(hr))
-	{
 		MessageBox(0, L"depth stencil view creation failed", L"error", MB_OK);
-	}
+
+}
+
+void GraphicsHandler::createSamplers()
+{
+	ID3D11SamplerState* sState = nullptr;
+	D3D11_SAMPLER_DESC sDesc;
+	sDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+
+	sDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	sDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	sDesc.MaxAnisotropy = 1;
+	sDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	sDesc.MinLOD = 0;
+	sDesc.MipLODBias = 0;
+
+	this->gDevice->CreateSamplerState(&sDesc, &sState);
+	this->gDeviceContext->PSSetSamplers(0, 1, &sState);
 
 }
 
@@ -859,14 +878,11 @@ void GraphicsHandler::render()
 
 	this->renderGeometry();
 
-	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
-	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.f, 0);
-	//Clear depth stencil here
 
 	//disable depth stencil
 	this->gDeviceContext->OMSetDepthStencilState(this->disableDepthState, 1);
 
-	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 vertexSize = sizeof(TriangleVertex);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
@@ -875,12 +891,13 @@ void GraphicsHandler::render()
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 
 	//Borde gå att göra i en forloop för finhet
-	this->gDeviceContext->PSSetShaderResources(0, 1, &this->shaderResourceViews[0]);
-	this->gDeviceContext->PSSetShaderResources(1, 1, &this->shaderResourceViews[1]);
-	this->gDeviceContext->PSSetShaderResources(2, 1, &this->shaderResourceViews[2]);
+	//this->gDeviceContext->PSSetShaderResources(0, 1, &this->shaderResourceViews[0]);
+	//this->gDeviceContext->PSSetShaderResources(1, 1, &this->shaderResourceViews[1]);
+	//this->gDeviceContext->PSSetShaderResources(2, 1, &this->shaderResourceViews[2]);
+
+	this->gDeviceContext->PSSetShaderResources(0, 3, this->shaderResourceViews);
 
 	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
-
 
 	this->gDeviceContext->VSSetShader(this->vertexShader, nullptr, 0);
 	this->gDeviceContext->HSSetShader(nullptr, nullptr, 0);
@@ -888,9 +905,16 @@ void GraphicsHandler::render()
 	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->pixelShader, nullptr, 0);
 
-	this->gDeviceContext->Draw(36, 0);
 
 	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
+
+	//Clear depth stencil here
+	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
+	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.f, 0);
+
+	this->gDeviceContext->Draw(6, 0);
+
+	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 
 	this->swapChain->Present(0, 0);
 }
@@ -900,19 +924,13 @@ void GraphicsHandler::renderGeometry()
 	//Kanske en specifik viwport for quadsaken
 	float clearColor[] = { 0, 0, 0, 1 };
 
-	gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
-	
-	//kanske ska vara andra tal, troligtvis inte
-	this->setViewPort(480, 640);
-
-	for (int i = 0; i < NROFBUFFERS; i++)
-	{
-		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
-	}
-
 	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
-	gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
+
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 
@@ -922,11 +940,29 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
 
+	//kanske ska vara andra tal, troligtvis inte
+	this->setViewPort(480, 640);
+
+	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
+
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
+	}
+
 	//Kanskse borde vara drawindexed
 	this->gDeviceContext->Draw(36, 0);
 
 	//Reset
-	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
+	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 
+	//Null stuff
+	ID3D11RenderTargetView* temp[NROFBUFFERS];
 
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		temp[i] = NULL;
+	}
+
+	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, temp, NULL);
 }

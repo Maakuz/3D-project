@@ -12,6 +12,12 @@
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
+struct TriangleVertex
+{
+	float x, y, z;
+	float u, v;
+};
+
 struct indexInfo
 {
 	int a1, b1, c1;

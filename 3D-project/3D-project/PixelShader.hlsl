@@ -14,5 +14,5 @@ float4 main(VS_OUT input) : SV_TARGET
     //Kanskse borde ändras lite
     //float4 color = tex.Sample(sSampler, input.uv);
 
-    return float4(input.uv, 1, 1);
+    return float4(1, 0, 1, 1);
 }

@@ -28,6 +28,7 @@ private:
 	ID3D11InputLayout* vertexLayout;
 	ID3D11InputLayout* defferedVertexLayout;
 	ID3D11Buffer* vertexBuffer;
+	ID3D11Buffer* defferedVertexBuffer;
 	objectInfo objInfo;
 	
 	ID3D11Buffer* matrixBuffer;
@@ -61,6 +62,7 @@ private:
 	void createVertexBuffer();
 	void createDefferedBuffers();
 	void createDepthBuffer();
+	void createSamplers();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
