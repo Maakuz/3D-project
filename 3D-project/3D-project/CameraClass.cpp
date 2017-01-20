@@ -105,7 +105,7 @@ D3D11_SUBRESOURCE_DATA CameraClass::getMatricesSubresource()
 matrixStruct CameraClass::initiateMatrices()
 {
 	this->fovAngleY = 3.14 * 0.45;
-	this->aspectRatio = 640 / 480;
+	this->aspectRatio = 640.f / 480.f;
 	this->zNear = 0.1;
 	this->zFar = 20;
 

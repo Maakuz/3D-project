@@ -8,6 +8,7 @@ struct VS_IN
 struct VS_OUT
 {
     float4 pos : SV_Position;
+    float4 wPos : WPOS;
     float4 norm : NORMAL;
     float2 uv : TEXCOORD;
 };
@@ -24,9 +25,13 @@ VS_OUT main(VS_IN input)
     VS_OUT output = (VS_OUT) 0;
 
     output.pos = float4(input.pos, 1);
+
+    output.wPos = float4(input.pos, 1);
+    output.wPos = mul(output.wPos, world);
+
     
     output.norm = float4(input.norm, 0);
-    output.norm = mul(output.norm, world);
+    output.norm = normalize(mul(output.norm, world));
 
     output.uv = input.uv;
 
