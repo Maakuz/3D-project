@@ -842,7 +842,7 @@ void GraphicsHandler::createLightBuffer()
 	
 	temp = DirectX::XMLoadFloat4(&this->light.lightPos);
 
-	temp = DirectX::XMVector4Transform(temp, this->cameraClass->getMatrix().world);
+	//temp = DirectX::XMVector4Transform(temp, this->cameraClass->getMatrix().world);
 
 	DirectX::XMStoreFloat4(&this->light.lightPos, temp);
 
