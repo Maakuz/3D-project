@@ -1,6 +1,6 @@
 #include "CameraClass.h"
 
-CameraClass::CameraClass(ID3D11Device* gDevice)
+CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext)
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(1.0f);
 	this->defaultMovementRate = 10.0f;
@@ -8,6 +8,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice)
 
 	this->initiateMatrices();
 	this->gDevice = gDevice;
+	this->gDeviceContext = gDeviceContext;
 }
 
 CameraClass::~CameraClass()
@@ -52,12 +53,12 @@ void CameraClass::updateProjectionMatrix()
 
 void CameraClass::resetAll()
 {
-	//kan vara rätt
+	//kan vara rätt //var helpers i exemplet
 	this->mPosition = this->standardPosition;
 	this->mUp = this->standardUp;
 	this->mLook = this->standardLook;
 	this->mRight = this->standardRight;
-
+	
 	this->updateViewMatrix();
 }
 
@@ -172,5 +173,67 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 		return 0;
 	}
 	return (pBuffer);
+}
+
+void CameraClass::updateConstantBuffer(ID3D11Buffer * VSConstantBuffer)
+{
+	D3D11_MAPPED_SUBRESOURCE dataPtr;
+	//Låser buffern för GPU:n och hämtar den till CPU
+	this->gDeviceContext->Map(VSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &dataPtr);
+
+	this->matrices.projection = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
+
+	this->matrices.view = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
+
+	memcpy(dataPtr.pData, &matrices, sizeof(matrices));
+
+	//Ger GPU:n tillgång till datan igen
+	this->gDeviceContext->Unmap(VSConstantBuffer, 0);
+
+	this->gDeviceContext->GSSetConstantBuffers(0, 1, &VSConstantBuffer);
+}
+
+void CameraClass::update()
+{
+	DirectX::XMFLOAT2 keyboardAmount = DirectX::XMFLOAT2(0, 0);
+	DirectX::XMFLOAT2 mouseAmount = DirectX::XMFLOAT2(0, 0);
+
+	auto kb = this->m_keyboard->GetState();
+	if (kb.W)
+	{
+		keyboardAmount.y = 1.f;
+	}
+	if (kb.S)
+	{
+		keyboardAmount.y = -1.f;
+	}
+	if (kb.A)
+	{
+		keyboardAmount.x = -1.f;
+	}
+	if (kb.D)
+	{
+		keyboardAmount.x = 1.f;
+	}
+
+	DirectX::XMVECTOR position = DirectX::XMLoadFloat3(&this->mPosition);
+	DirectX::XMFLOAT3 movement;
+	movement.x = (keyboardAmount.x * this->defaultMovementRate); // * elapsed game time
+	movement.y = (keyboardAmount.y * this->defaultMovementRate); // * elapsed game time
+	movement.z = 0;
+	
+	DirectX::XMFLOAT3 floatStrafe;
+	floatStrafe.x = this->mRight.x * movement.x;
+	floatStrafe.y = this->mRight.y * movement.y;
+	floatStrafe.z = this->mRight.z * movement.z;
+
+	DirectX::XMVECTOR strafe = DirectX::XMLoadFloat3(&floatStrafe);
+	//position += strafe;
+	
+
+
+	auto ms = this->m_mouse->GetState();
+	mouseAmount.x = kb.X * this->defaultMouseSensitivity;
+	mouseAmount.y = kb.Y * this->defaultMouseSensitivity;
 }
 

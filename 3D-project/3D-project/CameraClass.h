@@ -2,7 +2,8 @@
 #define CAMERACLASS_H
 
 #include "Definitions.h"
-
+#include "Keyboard.h"
+#include "Mouse.h"
 
 //http://www.toymaker.info/Games/html/camera.html
 //https://books.google.se/books?id=GY-AAwAAQBAJ&pg=PA279&lpg=PA279&dq=DirectX::XMMATRIX+yawMatrix+%3D+DirectX::XMMatrixRotationAxis()&source=bl&ots=q9ZMKlgRDw&sig=ntfQbxD_FG2SzkIqrnMKVmrwvuM&hl=sv&sa=X&ved=0ahUKEwi4nceHs7_RAhXJiiwKHdeaAEAQ6AEIODAC#v=onepage&q=DirectX%3A%3AXMMATRIX%20yawMatrix%20%3D%20DirectX%3A%3AXMMatrixRotationAxis()&f=false
@@ -10,15 +11,18 @@
 class CameraClass
 {
 private: 
-	// Keyboard
-	// Mouse
+	DirectX::Keyboard* m_keyboard;
+	DirectX::Mouse* m_mouse;
 
-	matrixStruct matrices;
+	matrixStruct matrices; //buffern
 	ID3D11Device* gDevice;
+	ID3D11DeviceContext* gDeviceContext;
 
 	float defaultRotationRate;
 	float defaultMovementRate;
 	float defaultMouseSensitivity;
+
+	//matrices.view = 
 
 	float fovAngleY;
 	float aspectRatio;
@@ -40,13 +44,12 @@ private:
 	DirectX::XMFLOAT4X4 mViewMatrix;		//sparad viewmatrix
 	DirectX::XMFLOAT4X4 mProjectionMatrix;	//sparad projectionmatris
 
-
 	//DirectX::XMMATRIX view;
 	//float pitch; //rotation RUNT x/right
 	//float yaw;	//rotation RUNT y/up
 	//float roll;	//rotation RUNT z/look
 public:
-	CameraClass(ID3D11Device* gDevice);
+	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext);
 
 	virtual ~CameraClass();
 	DirectX::XMMATRIX viewProjectionMatrix(); //kan va bra att ha
@@ -63,6 +66,10 @@ public:
 	D3D11_SUBRESOURCE_DATA getMatricesSubresource();
 	matrixStruct initiateMatrices();
 	ID3D11Buffer* createConstantBuffer();
+	void updateConstantBuffer(ID3D11Buffer * VSConstantBuffer);
+
+
+	void update();
 
 	//en update som hanterar WASD och mouse movement
 	//initiate ska också sätta mMouse och mKeyboard
@@ -72,6 +79,9 @@ public:
 
 
 
+this->matrices.projection = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
+
+this->matrices.view = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
 
 
 
