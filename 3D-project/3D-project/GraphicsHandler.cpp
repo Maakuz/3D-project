@@ -68,6 +68,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->defferedVertexShader->Release();
 	this->disableDepthState->Release();
 	this->matrixBuffer->Release();
+	this->lightbuffer->Release();
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -135,6 +136,11 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
 	}
+	else
+	{
+		MessageBox(0, L"remove debug flag", L"error", MB_OK);
+	}
+	
 	return hr;
 }
 
@@ -772,6 +778,35 @@ void GraphicsHandler::createDepthBuffer()
 	if (FAILED(hr))
 		MessageBox(0, L"depth stencil view creation failed", L"error", MB_OK);
 
+	
+	D3D11_DEPTH_STENCIL_DESC disabledDepthDesc;
+	ZeroMemory(&disabledDepthDesc, sizeof(disabledDepthDesc));
+
+	// Now create a second depth stencil state which turns off the Z buffer for 2D rendering.  The only difference is 
+	// that DepthEnable is set to false, all other parameters are the same as the other depth stencil state.
+	disabledDepthDesc.DepthEnable = false;
+	disabledDepthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	disabledDepthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	disabledDepthDesc.StencilEnable = true;
+	disabledDepthDesc.StencilReadMask = 0xFF;
+	disabledDepthDesc.StencilWriteMask = 0xFF;
+
+	disabledDepthDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	disabledDepthDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	disabledDepthDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	disabledDepthDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	disabledDepthDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Create the state using the device.
+	hr = gDevice->CreateDepthStencilState(&disabledDepthDesc, &this->disableDepthState);
+	if (FAILED(hr))
+		MessageBox(0, L"stensil state failed!", L"error", MB_OK);
+
+
 }
 
 void GraphicsHandler::createSamplers()
@@ -791,6 +826,35 @@ void GraphicsHandler::createSamplers()
 
 	this->gDevice->CreateSamplerState(&sDesc, &sState);
 	this->gDeviceContext->PSSetSamplers(0, 1, &sState);
+
+}
+
+void GraphicsHandler::createLightBuffer()
+{
+	this->light.lightColor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	this->light.lightPos = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->light.lightAngle = DirectX::XMFLOAT2(1.0f, 1.0f);
+	this->light.lightDir = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
+	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+
+	desc.ByteWidth = sizeof(lightStruct);
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	data.pSysMem = &this->light;
+
+	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->lightbuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"light buffer creation failed!", L"error", MB_OK);
+	}
 
 }
 
@@ -842,34 +906,7 @@ void GraphicsHandler::createDefferedBuffers()
 	}
 
 
-	//Move this shizzo
-	D3D11_DEPTH_STENCIL_DESC disabledDepthDesc;
-	ZeroMemory(&disabledDepthDesc, sizeof(disabledDepthDesc));
-
-	// Now create a second depth stencil state which turns off the Z buffer for 2D rendering.  The only difference is 
-	// that DepthEnable is set to false, all other parameters are the same as the other depth stencil state.
-	disabledDepthDesc.DepthEnable = false;
-	disabledDepthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	disabledDepthDesc.DepthFunc = D3D11_COMPARISON_LESS;
-	disabledDepthDesc.StencilEnable = true;
-	disabledDepthDesc.StencilReadMask = 0xFF;
-	disabledDepthDesc.StencilWriteMask = 0xFF;
-
-	disabledDepthDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	disabledDepthDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-	disabledDepthDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	disabledDepthDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-	disabledDepthDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	disabledDepthDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-	disabledDepthDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	disabledDepthDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-
-	// Create the state using the device.
-	hr = gDevice->CreateDepthStencilState(&disabledDepthDesc, &this->disableDepthState);
-	if (FAILED(hr))
-		MessageBox(0, L"stensil state failed!", L"error", MB_OK);
-
+	
 }
 
 void GraphicsHandler::render()
@@ -889,6 +926,7 @@ void GraphicsHandler::render()
 	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
 
 	//Borde gå att göra i en forloop för finhet
 	//this->gDeviceContext->PSSetShaderResources(0, 1, &this->shaderResourceViews[0]);

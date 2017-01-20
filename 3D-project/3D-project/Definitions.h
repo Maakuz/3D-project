@@ -71,5 +71,15 @@ struct matrixStruct
 	DirectX::XMMATRIX projection;
 };
 
+struct lightStruct
+{
+	DirectX::XMFLOAT4 lightPos;
+	DirectX::XMFLOAT3 lightColor;
+	DirectX::XMFLOAT3 lightDir;
+	DirectX::XMFLOAT2 lightAngle;
+	DirectX::XMFLOAT4 lightRange;
+	
+};
+
 
 #endif

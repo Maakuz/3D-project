@@ -32,6 +32,7 @@ private:
 	objectInfo objInfo;
 	
 	ID3D11Buffer* matrixBuffer;
+	ID3D11Buffer* lightbuffer;
 
 	//texture things
 	ID3D11Resource* textureResoure;
@@ -50,6 +51,8 @@ private:
 
 	CameraClass* cameraClass;
 
+	lightStruct light;
+
 
 
 	objectInfo loadObj();
@@ -63,6 +66,7 @@ private:
 	void createDefferedBuffers();
 	void createDepthBuffer();
 	void createSamplers();
+	void createLightBuffer();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);

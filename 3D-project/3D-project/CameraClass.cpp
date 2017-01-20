@@ -172,7 +172,8 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 	HRESULT hr = this->gDevice->CreateBuffer(&description, &matriceResource, &pBuffer);
 	if (FAILED(hr))
 	{
-		//error
+		if (FAILED(hr))
+			MessageBox(0, L"matrix resource creation failed!", L"error", MB_OK);
 		return 0;
 	}
 	return (pBuffer);
