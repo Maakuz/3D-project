@@ -38,6 +38,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->objInfo = this->loadObj();
 	this->loadMtl();
 	this->createTriangleData();
+	this->createLightBuffer();
 
 	this->createLightBuffer();
 	this->createVertexBuffer();
@@ -872,6 +873,15 @@ void GraphicsHandler::createLightBuffer()
 	this->light.lightDir = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
 	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
+	DirectX::XMVECTOR temp;
+	
+	temp = DirectX::XMLoadFloat4(&this->light.lightPos);
+
+	//temp = DirectX::XMVector4Transform(temp, this->cameraClass->getMatrix().world);
+
+	DirectX::XMStoreFloat4(&this->light.lightPos, temp);
+
+
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
@@ -960,14 +970,6 @@ void GraphicsHandler::render()
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
-	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
-
-	//Borde gå att göra i en forloop för finhet
-	//this->gDeviceContext->PSSetShaderResources(0, 1, &this->shaderResourceViews[0]);
-	//this->gDeviceContext->PSSetShaderResources(1, 1, &this->shaderResourceViews[1]);
-	//this->gDeviceContext->PSSetShaderResources(2, 1, &this->shaderResourceViews[2]);
-
 	this->gDeviceContext->PSSetShaderResources(0, 3, this->shaderResourceViews);
 
 	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
@@ -978,6 +980,8 @@ void GraphicsHandler::render()
 	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->pixelShader, nullptr, 0);
 
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
 
 	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
