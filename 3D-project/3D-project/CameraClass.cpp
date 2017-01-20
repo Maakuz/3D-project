@@ -165,8 +165,8 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 	description.MiscFlags = 0;
 	description.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
-	ID3D11Buffer* pBuffer = 0;
-	ZeroMemory(&pBuffer, sizeof(ID3D11Buffer));
+	ID3D11Buffer* pBuffer = nullptr;
+	
 
 	D3D11_SUBRESOURCE_DATA matriceResource = getMatricesSubresource();
 	HRESULT hr = this->gDevice->CreateBuffer(&description, &matriceResource, &pBuffer);

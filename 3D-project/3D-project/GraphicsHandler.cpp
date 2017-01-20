@@ -39,6 +39,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->loadMtl();
 	this->createTriangleData();
 
+	this->createLightBuffer();
 	this->createVertexBuffer();
 	this->createMtlLightBuffer();
 	
@@ -725,7 +726,6 @@ void GraphicsHandler::createMtlLightBuffer()
 	{
 		MessageBox(0, L"mtl light buffer creation failed!", L"error", MB_OK);
 	}
-
 }
 
 void GraphicsHandler::createVertexBuffer()
@@ -876,7 +876,7 @@ void GraphicsHandler::createLightBuffer()
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
 	desc.ByteWidth = sizeof(lightStruct);
-	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 

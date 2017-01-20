@@ -51,6 +51,7 @@ struct mtLight
 {
 	DirectX::XMFLOAT3 ambient;
 	DirectX::XMFLOAT3 diffuse;
+	DirectX::XMFLOAT2 padding;
 	/*DirectX::XMFLOAT3 specular;
 	float specWeight;*/
 };
