@@ -64,8 +64,6 @@ public:
 	matrixStruct initiateMatrices();
 	ID3D11Buffer* createConstantBuffer();
 
-	matrixStruct getMatrix() const;
-
 	//en update som hanterar WASD och mouse movement
 	//initiate ska också sätta mMouse och mKeyboard
 };
