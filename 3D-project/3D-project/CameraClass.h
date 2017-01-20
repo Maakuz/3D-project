@@ -71,18 +71,13 @@ public:
 
 	void update();
 
+	matrixStruct getMatrix() const;
+
 	//en update som hanterar WASD och mouse movement
 	//initiate ska också sätta mMouse och mKeyboard
 };
 
-
-
-
-
 this->matrices.projection = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
 
 this->matrices.view = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
-
-
-
 #endif

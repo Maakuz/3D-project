@@ -106,12 +106,12 @@ D3D11_SUBRESOURCE_DATA CameraClass::getMatricesSubresource()
 matrixStruct CameraClass::initiateMatrices()
 {
 	this->fovAngleY = 3.14 * 0.45;
-	this->aspectRatio = 640 / 480;
+	this->aspectRatio = 640.f / 480.f;
 	this->zNear = 0.1;
 	this->zFar = 20;
 
-	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(M_PI / 6, 0, 0);
-	this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
+	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(M_PI / 6, M_PI / 6, 0);
+	//this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
 
 	DirectX::XMVECTOR eyePosition;
 	eyePosition = DirectX::XMVectorSet(0, 0, -2, 0);
@@ -140,8 +140,12 @@ matrixStruct CameraClass::initiateMatrices()
 	DirectX::XMVector3Normalize(right);
 
 	DirectX::XMStoreFloat3(&this->mRight, right);
-	DirectX::XMStoreFloat4x4(&this->mViewMatrix, matrices.view);
-	DirectX::XMStoreFloat4x4(&this->mProjectionMatrix, matrices.projection);
+
+	temp = matrices.view;
+	DirectX::XMStoreFloat4x4(&this->mViewMatrix, temp);
+
+	temp = matrices.projection;
+	DirectX::XMStoreFloat4x4(&this->mProjectionMatrix, temp);
 
 	DirectX::XMStoreFloat3(&this->standardPosition, eyePosition);
 	DirectX::XMStoreFloat3(&this->standardUp, upDirection);
@@ -162,14 +166,14 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 	description.MiscFlags = 0;
 	description.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
-	ID3D11Buffer* pBuffer = 0;
-	ZeroMemory(&pBuffer, sizeof(ID3D11Buffer));
+	ID3D11Buffer* pBuffer = nullptr;
+	
 
 	D3D11_SUBRESOURCE_DATA matriceResource = getMatricesSubresource();
 	HRESULT hr = this->gDevice->CreateBuffer(&description, &matriceResource, &pBuffer);
 	if (FAILED(hr))
 	{
-		//error
+		MessageBox(0, L"matrix resource creation failed!", L"error", MB_OK);
 		return 0;
 	}
 	return (pBuffer);
@@ -221,7 +225,7 @@ void CameraClass::update()
 	movement.x = (keyboardAmount.x * this->defaultMovementRate); // * elapsed game time
 	movement.y = (keyboardAmount.y * this->defaultMovementRate); // * elapsed game time
 	movement.z = 0;
-	
+
 	DirectX::XMFLOAT3 floatStrafe;
 	floatStrafe.x = this->mRight.x * movement.x;
 	floatStrafe.y = this->mRight.y * movement.y;
@@ -229,11 +233,16 @@ void CameraClass::update()
 
 	DirectX::XMVECTOR strafe = DirectX::XMLoadFloat3(&floatStrafe);
 	//position += strafe;
-	
+
 
 
 	auto ms = this->m_mouse->GetState();
 	mouseAmount.x = kb.X * this->defaultMouseSensitivity;
 	mouseAmount.y = kb.Y * this->defaultMouseSensitivity;
+}
+
+matrixStruct CameraClass::getMatrix() const
+{
+	return this->matrices;
 }
 
