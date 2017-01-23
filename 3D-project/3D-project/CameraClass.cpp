@@ -200,8 +200,10 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer * VSConstantBuffer)
 void CameraClass::update()
 {
 	DirectX::XMFLOAT2 keyboardAmount = DirectX::XMFLOAT2(0, 0);
-	DirectX::XMFLOAT2 mouseAmount = DirectX::XMFLOAT2(0, 0);
 
+	//float elapsedTime = gameTime.ElapsedGameTime();	gametid
+	
+	//keyboard
 	auto kb = this->m_keyboard->GetState();
 	if (kb.W)
 	{
@@ -222,23 +224,54 @@ void CameraClass::update()
 
 	DirectX::XMVECTOR position = DirectX::XMLoadFloat3(&this->mPosition);
 	DirectX::XMFLOAT3 movement;
-	movement.x = (keyboardAmount.x * this->defaultMovementRate); // * elapsed game time
-	movement.y = (keyboardAmount.y * this->defaultMovementRate); // * elapsed game time
+	movement.x = (keyboardAmount.x * this->defaultMovementRate); // * elapsedTime
+	movement.y = (keyboardAmount.y * this->defaultMovementRate); // * elapsedTime
 	movement.z = 0;
 
 	DirectX::XMFLOAT3 floatStrafe;
 	floatStrafe.x = this->mRight.x * movement.x;
-	floatStrafe.y = this->mRight.y * movement.y;
-	floatStrafe.z = this->mRight.z * movement.z;
+	floatStrafe.y = this->mRight.y * movement.x;
+	floatStrafe.z = this->mRight.z * movement.x;
 
 	DirectX::XMVECTOR strafe = DirectX::XMLoadFloat3(&floatStrafe);
-	//position += strafe;
+	DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + DirectX::XMVectorGetX(strafe));
+	DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(strafe));
+	DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(strafe));
+	
+	DirectX::XMFLOAT3 floatForward;
+	floatForward.x = this->mLook.x * movement.y;
+	floatForward.y = this->mLook.y * movement.y;
+	floatForward.z = this->mLook.z * movement.y;
 
+	DirectX::XMVECTOR forward = DirectX::XMLoadFloat3(&floatForward);
+	DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + DirectX::XMVectorGetX(forward));
+	DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(forward));
+	DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(forward));
 
+	setPosition(position);
+
+	//mus
+	DirectX::XMFLOAT2 mouseAmount = DirectX::XMFLOAT2(0, 0);
 
 	auto ms = this->m_mouse->GetState();
-	mouseAmount.x = kb.X * this->defaultMouseSensitivity;
-	mouseAmount.y = kb.Y * this->defaultMouseSensitivity;
+	mouseAmount.x = ms.x * this->defaultMouseSensitivity;
+	mouseAmount.y = ms.y * this->defaultMouseSensitivity;
+
+	DirectX::XMFLOAT2 rotationAmount = DirectX::XMFLOAT2(0, 0);
+	DirectX::XMVECTOR rotationVector;
+	DirectX::XMVectorSetX(rotationVector, mouseAmount.x * this->defaultRotationRate); // * elapsedTime
+	DirectX::XMVectorSetY(rotationVector, mouseAmount.x * this->defaultRotationRate); // * elapsedTime
+
+	DirectX::XMVECTOR right = DirectX::XMLoadFloat3(&this->mRight);
+
+	DirectX::XMMATRIX pitchMatrix = DirectX::XMMatrixRotationAxis(right, DirectX::XMVectorGetY(rotationVector));
+	DirectX::XMMATRIX yawMatrix = DirectX::XMMatrixRotationY(DirectX::XMVectorGetX(rotationVector));
+
+	DirectX::XMMATRIX yawXPitch = DirectX::XMMatrixMultiply(pitchMatrix, yawMatrix);
+	DirectX::XMFLOAT4X4 floatYawXPitch;
+	DirectX::XMStoreFloat4x4(&floatYawXPitch, yawXPitch);
+
+	this->rotation(floatYawXPitch);
 }
 
 matrixStruct CameraClass::getMatrix() const
