@@ -867,11 +867,11 @@ void GraphicsHandler::createSamplers()
 
 void GraphicsHandler::createLightBuffer()
 {
-	this->light.lightColor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	this->light.lightPos = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	this->light.lightAngle = DirectX::XMFLOAT2(1.0f, 1.0f);
-	this->light.lightDir = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->light.lightColor = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->light.lightPos = DirectX::XMFLOAT4(0.0f, 0.0f, -3.0f, 1.0f);
+	this->light.lightAngle = DirectX::XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f);
+	this->light.lightDir = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 0.0f);
+	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 0.0f);
 
 	DirectX::XMVECTOR temp;
 	
@@ -954,11 +954,17 @@ void GraphicsHandler::createDefferedBuffers()
 	
 }
 
+void GraphicsHandler::update()
+{
+	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
+
+	this->renderGeometry();
+	this->render();
+}
+
 void GraphicsHandler::render()
 {
 	float clearColor[] = { 0, 0, 0, 1 };
-
-	this->renderGeometry();
 
 
 	//disable depth stencil

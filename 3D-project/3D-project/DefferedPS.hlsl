@@ -31,7 +31,7 @@ PS_OUT main(VS_OUT input)
     outPut.color = tex.Sample(sSampler, input.uv);
     outPut.color = float4(saturate((outPut.color.xyz  * diffuse) + (outPut.color.xyz * ambient)), 1.0f);
     outPut.position = input.wPos;
-    outPut.normal = input.norm;
+    outPut.normal = normalize(input.norm);
 
 
     return outPut;

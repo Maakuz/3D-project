@@ -69,13 +69,14 @@ private:
 	void createSamplers();
 	void createLightBuffer();
 	void createMtlLightBuffer();
+	void render();
+	void renderGeometry();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
 	~GraphicsHandler();
 
-	void render();
-	void renderGeometry();
+	void update();
 };
 
 
