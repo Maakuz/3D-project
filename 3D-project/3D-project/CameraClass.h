@@ -77,9 +77,7 @@ public:
 
 	//en update som hanterar WASD och mouse movement
 	//initiate ska också sätta mMouse och mKeyboard
+	//viewmatrix fuckar upp lite då och då, mLook e konstig, (kolla right och up)
 };
 
-//this->matrices.projection = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
-
-//this->matrices.view = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
 #endif

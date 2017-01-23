@@ -17,7 +17,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 
 CameraClass::~CameraClass()
 {
-	delete this->m_mouse;
+	delete this->m_mouse;	 //samma som keyboard
 }
 
 DirectX::XMMATRIX CameraClass::viewProjectionMatrix()
