@@ -5,6 +5,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 	this->defaultRotationRate = DirectX::XMConvertToRadians(1.0f);
 	this->defaultMovementRate = 10.0f;
 	this->defaultMouseSensitivity = 100.0f;
+	this->rotationValue = 0;
 
 	this->initiateMatrices();
 	this->gDevice = gDevice;
@@ -179,13 +180,23 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 	return (pBuffer);
 }
 
-void CameraClass::updateConstantBuffer(ID3D11Buffer * VSConstantBuffer)
+void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 {
 	D3D11_MAPPED_SUBRESOURCE dataPtr;
+
+	this->rotationValue += 0.005;
+	if (this->rotationValue == 100000)
+		this->rotationValue = 0;
+
 	//Låser buffern för GPU:n och hämtar den till CPU
 	this->gDeviceContext->Map(VSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &dataPtr);
+	
+	
+	DirectX::XMMATRIX temp = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
+	
+	temp = DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
 
-	this->matrices.projection = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
+	this->matrices.world = temp;
 
 	this->matrices.view = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
 

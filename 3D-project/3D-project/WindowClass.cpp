@@ -121,7 +121,7 @@ int WindowClass::run()
 		}
 		else
 		{
-			graphicsHandler->render();
+			graphicsHandler->update();
 		}
 			
 		

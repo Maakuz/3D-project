@@ -48,6 +48,8 @@ private:
 	//float pitch; //rotation RUNT x/right
 	//float yaw;	//rotation RUNT y/up
 	//float roll;	//rotation RUNT z/look
+
+	float rotationValue;
 public:
 	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext);
 
