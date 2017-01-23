@@ -11,7 +11,7 @@
 class CameraClass
 {
 private: 
-	DirectX::Keyboard* m_keyboard;
+	std::unique_ptr<DirectX::Keyboard> m_keyboard;
 	DirectX::Mouse* m_mouse;
 
 	matrixStruct matrices; //buffern

@@ -957,6 +957,8 @@ void GraphicsHandler::createDefferedBuffers()
 void GraphicsHandler::update()
 {
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
+	this->cameraClass->update();
+
 
 	this->renderGeometry();
 	this->render();

@@ -7,6 +7,9 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 	this->defaultMouseSensitivity = 100.0f;
 	this->rotationValue = 0;
 
+	m_keyboard = std::make_unique<DirectX::Keyboard>();
+	this->m_mouse = new DirectX::Mouse();
+
 	this->initiateMatrices();
 	this->gDevice = gDevice;
 	this->gDeviceContext = gDeviceContext;
@@ -14,7 +17,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 
 CameraClass::~CameraClass()
 {
-
+	delete this->m_mouse;
 }
 
 DirectX::XMMATRIX CameraClass::viewProjectionMatrix()
@@ -123,6 +126,9 @@ matrixStruct CameraClass::initiateMatrices()
 	DirectX::XMVECTOR upDirection;
 	upDirection = DirectX::XMVectorSet(0, 1, 0, 0);
 
+	DirectX::XMVECTOR lookDirecton;
+	lookDirecton = DirectX::XMVectorSet(0, 0, 1, 0);
+
 	matrices.view = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
 
 	DirectX::XMMATRIX temp = matrices.view;
@@ -135,9 +141,9 @@ matrixStruct CameraClass::initiateMatrices()
 
 	DirectX::XMStoreFloat3(&this->mPosition, eyePosition);
 	DirectX::XMStoreFloat3(&this->mUp, upDirection);
-	DirectX::XMStoreFloat3(&this->mLook, focusPosition);
+	DirectX::XMStoreFloat3(&this->mLook, lookDirecton);
 
-	DirectX::XMVECTOR right = DirectX::XMVector3Cross(upDirection, focusPosition);
+	DirectX::XMVECTOR right = DirectX::XMVector3Cross(upDirection, lookDirecton);
 	DirectX::XMVector3Normalize(right);
 
 	DirectX::XMStoreFloat3(&this->mRight, right);
@@ -272,18 +278,23 @@ void CameraClass::update()
 	DirectX::XMVECTOR rotationVector = DirectX::XMVectorZero();
 
 	DirectX::XMVectorSetX(rotationVector, mouseAmount.x * this->defaultRotationRate); // * elapsedTime
-	DirectX::XMVectorSetY(rotationVector, mouseAmount.x * this->defaultRotationRate); // * elapsedTime
+	DirectX::XMVectorSetY(rotationVector, mouseAmount.y * this->defaultRotationRate); // * elapsedTime
 
 	DirectX::XMVECTOR right = DirectX::XMLoadFloat3(&this->mRight);
 
-	DirectX::XMMATRIX pitchMatrix = DirectX::XMMatrixRotationAxis(right, DirectX::XMVectorGetY(rotationVector));
+	float temp = DirectX::XMVectorGetY(rotationVector);
+
+	DirectX::XMMATRIX pitchMatrix = DirectX::XMMatrixRotationAxis(right, temp);
 	DirectX::XMMATRIX yawMatrix = DirectX::XMMatrixRotationY(DirectX::XMVectorGetX(rotationVector));
 
 	DirectX::XMMATRIX yawXPitch = DirectX::XMMatrixMultiply(pitchMatrix, yawMatrix);
 	DirectX::XMFLOAT4X4 floatYawXPitch;
 	DirectX::XMStoreFloat4x4(&floatYawXPitch, yawXPitch);
 
+
 	this->rotation(floatYawXPitch);
+
+	this->updateViewMatrix();
 }
 
 matrixStruct CameraClass::getMatrix() const
