@@ -35,6 +35,8 @@ struct vertexInfo
 
 	//uv coords
 	float u, v;
+
+	int mtlType;
 };
 
 struct mtlInfo
@@ -44,6 +46,7 @@ struct mtlInfo
 	DirectX::XMFLOAT4 diffuse;
 	DirectX::XMFLOAT4 specular;
 	float specWeight;
+	int mtlType;
 
 	std::string name;
 	std::string texture;
@@ -52,8 +55,10 @@ struct mtLight
 {
 	DirectX::XMFLOAT4 ambient;
 	DirectX::XMFLOAT4 diffuse;
-	/*DirectX::XMFLOAT3 specular;
-	float specWeight;*/
+	DirectX::XMFLOAT4 specular;
+	float specWeight;
+	int mtlType;
+	DirectX::XMFLOAT2 padding;
 };
 
 
@@ -61,6 +66,7 @@ struct objectInfo
 {
 	int nrOfVertices;
 	int norOfIndexcies;
+	int nrOfMaterials;
 
 	//VertexInfo is located in BufferClass.h
 	std::vector<vertexInfo> vInfo;

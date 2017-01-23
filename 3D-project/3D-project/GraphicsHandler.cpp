@@ -19,6 +19,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->defferedVertexBuffer = nullptr;
 	this->DSV = nullptr;
 	this->mtlLightbuffer = nullptr;
+	
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -624,6 +625,7 @@ void GraphicsHandler::loadMtl()
 	std::ifstream file(fileName);
 	mtlInfo tempMInfo;
 	bool cont = true;
+	bool eof = false;
 
 	if (file.is_open() == false)
 	{
@@ -634,66 +636,74 @@ void GraphicsHandler::loadMtl()
 		std::istringstream inputString;
 		
 
-		while (std::getline(file, line))
+		while (!eof)
 		{
-			inputString.str(line);
-
-			if (line.substr(0, 7) == "newmtl ")
+			if ( line.substr(0, 7) == "newmtl " || std::getline(file, line))
 			{
-				inputString >> identifier >> tempMInfo.name;
-				cont = true;
-				inputString = std::istringstream();
-				while (cont)
+				inputString.str(line);
+
+				if (line.substr(0, 7) == "newmtl ")
 				{
-					
-					if (std::getline(file, line))
+					inputString >> identifier >> tempMInfo.name;
+					cont = true;
+					inputString = std::istringstream();
+					while (cont)
 					{
-						inputString.str(line);
-						if (line.substr(0, 7) != "newmtl ")
+
+						if (std::getline(file, line))
 						{
-							if (line.substr(0, 2) == "Ka")
+							inputString.str(line);
+							if (line.substr(0, 7) != "newmtl ")
 							{
-								inputString >> identifier >>
-									tempMInfo.ambient.x >> tempMInfo.ambient.y >> tempMInfo.ambient.z;
-								inputString = std::istringstream();
+								if (line.substr(0, 2) == "Ka")
+								{
+									inputString >> identifier >>
+										tempMInfo.ambient.x >> tempMInfo.ambient.y >> tempMInfo.ambient.z;
+									inputString = std::istringstream();
+								}
+
+								if (line.substr(0, 2) == "Kd")
+								{
+									inputString >> identifier >>
+										tempMInfo.diffuse.x >> tempMInfo.diffuse.y >> tempMInfo.diffuse.z;
+									inputString = std::istringstream();
+								}
+								if (line.substr(0, 2) == "Ks")
+								{
+									inputString >> identifier >>
+										tempMInfo.specular.x >> tempMInfo.specular.y >> tempMInfo.specular.z;
+									inputString = std::istringstream();
+								}
+								if (line.substr(0, 2) == "Ns")
+								{
+									inputString >> identifier >> tempMInfo.specWeight;
+									inputString = std::istringstream();
+								}
+								if (line.substr(0, 7) == "map_Ks ")
+								{
+									inputString >> identifier >> tempMInfo.texture;
+									inputString = std::istringstream();
+								}
+							}
+							else
+							{
+								this->objInfo.mInfo.push_back(tempMInfo);
+								cont = false;
 							}
 
-							if (line.substr(0, 2) == "Kd")
-							{
-								inputString >> identifier >>
-									tempMInfo.diffuse.x >> tempMInfo.diffuse.y >> tempMInfo.diffuse.z;
-								inputString = std::istringstream();
-							}
-							if (line.substr(0, 2) == "Ks")
-							{
-								inputString >> identifier >>
-									tempMInfo.specular.x >> tempMInfo.specular.y >> tempMInfo.specular.z;
-								inputString = std::istringstream();
-							}
-							if (line.substr(0, 2) == "Ns")
-							{
-								inputString >> identifier >> tempMInfo.specWeight;
-								inputString = std::istringstream();
-							}
-							if (line.substr(0, 7) == "map_Ks ")
-							{
-								inputString >> identifier >> tempMInfo.texture;
-								inputString = std::istringstream();
-							}
 						}
 						else
 						{
 							this->objInfo.mInfo.push_back(tempMInfo);
 							cont = false;
+							eof = true;
 						}
-
-					}
-					else
-					{
-						this->objInfo.mInfo.push_back(tempMInfo);
-						cont = false;
 					}
 				}
+			}
+			else
+			{
+				eof = true;
 			}
 		}
 
@@ -704,10 +714,16 @@ void GraphicsHandler::loadMtl()
 void GraphicsHandler::createMtlLightBuffer()
 {
 	mtLight ml;
-	ml.ambient = this->objInfo.mInfo.at(0).ambient;
-	ml.diffuse = this->objInfo.mInfo.at(0).diffuse;
-	//ml.specular = this->objInfo.mInfo.at(0).specular;
-	//ml.specWeight = this->objInfo.mInfo.at(0).specWeight;
+
+	for (size_t i = 0; i < this->objInfo.nrOfMaterials; i++)
+	{
+		ml.ambient = this->objInfo.mInfo.at(i).ambient;
+		ml.diffuse = this->objInfo.mInfo.at(i).diffuse;
+		ml.specular = this->objInfo.mInfo.at(i).specular;
+		ml.ambient.w = this->objInfo.mInfo.at(i).mtlType;
+		ml.specular.w = this->objInfo.mInfo.at(i).specWeight;
+	}
+	
 
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
