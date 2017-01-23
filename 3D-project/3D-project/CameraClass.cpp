@@ -258,7 +258,8 @@ void CameraClass::update()
 	mouseAmount.y = ms.y * this->defaultMouseSensitivity;
 
 	DirectX::XMFLOAT2 rotationAmount = DirectX::XMFLOAT2(0, 0);
-	DirectX::XMVECTOR rotationVector;
+	DirectX::XMVECTOR rotationVector = DirectX::XMVectorZero();
+
 	DirectX::XMVectorSetX(rotationVector, mouseAmount.x * this->defaultRotationRate); // * elapsedTime
 	DirectX::XMVectorSetY(rotationVector, mouseAmount.x * this->defaultRotationRate); // * elapsedTime
 

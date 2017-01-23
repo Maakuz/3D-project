@@ -4,8 +4,6 @@
 #include "Definitions.h"
 #include "Keyboard.h"
 #include "Mouse.h"
-#include <Windows.h>
-#include "StepTimer"
 
 //http://www.toymaker.info/Games/html/camera.html
 //https://books.google.se/books?id=GY-AAwAAQBAJ&pg=PA279&lpg=PA279&dq=DirectX::XMMATRIX+yawMatrix+%3D+DirectX::XMMatrixRotationAxis()&source=bl&ots=q9ZMKlgRDw&sig=ntfQbxD_FG2SzkIqrnMKVmrwvuM&hl=sv&sa=X&ved=0ahUKEwi4nceHs7_RAhXJiiwKHdeaAEAQ6AEIODAC#v=onepage&q=DirectX%3A%3AXMMATRIX%20yawMatrix%20%3D%20DirectX%3A%3AXMMatrixRotationAxis()&f=false
