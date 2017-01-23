@@ -622,8 +622,10 @@ void GraphicsHandler::loadMtl()
 {
 	std::string fileName("../resource/Cube.mtl"), identifier;
 	std::string line;
+	std::string prev = "";
 	std::ifstream file(fileName);
 	mtlInfo tempMInfo;
+	tempMInfo.mtlType = 0;
 	bool cont = true;
 	bool eof = false;
 
@@ -638,72 +640,78 @@ void GraphicsHandler::loadMtl()
 
 		while (!eof)
 		{
-			if ( line.substr(0, 7) == "newmtl " || std::getline(file, line))
+
+
+			if (prev.substr(0, 7) == "newmtl ")
 			{
-				inputString.str(line);
+				line = prev;
+				prev = "";
+			}
+			else
+			{
+				std::getline(file, line);
+			}
+			inputString.str(line);
 
-				if (line.substr(0, 7) == "newmtl ")
+			if (line.substr(0, 7) == "newmtl ")
+			{
+				inputString >> identifier >> tempMInfo.name;
+				cont = true;
+				tempMInfo.mtlType++;
+				inputString = std::istringstream();
+				while (cont)
 				{
-					inputString >> identifier >> tempMInfo.name;
-					cont = true;
-					inputString = std::istringstream();
-					while (cont)
+
+					if (std::getline(file, line))
 					{
-
-						if (std::getline(file, line))
+						inputString.str(line);
+						if (line.substr(0, 7) != "newmtl ")
 						{
-							inputString.str(line);
-							if (line.substr(0, 7) != "newmtl ")
+							if (line.substr(0, 2) == "Ka")
 							{
-								if (line.substr(0, 2) == "Ka")
-								{
-									inputString >> identifier >>
-										tempMInfo.ambient.x >> tempMInfo.ambient.y >> tempMInfo.ambient.z;
-									inputString = std::istringstream();
-								}
-
-								if (line.substr(0, 2) == "Kd")
-								{
-									inputString >> identifier >>
-										tempMInfo.diffuse.x >> tempMInfo.diffuse.y >> tempMInfo.diffuse.z;
-									inputString = std::istringstream();
-								}
-								if (line.substr(0, 2) == "Ks")
-								{
-									inputString >> identifier >>
-										tempMInfo.specular.x >> tempMInfo.specular.y >> tempMInfo.specular.z;
-									inputString = std::istringstream();
-								}
-								if (line.substr(0, 2) == "Ns")
-								{
-									inputString >> identifier >> tempMInfo.specWeight;
-									inputString = std::istringstream();
-								}
-								if (line.substr(0, 7) == "map_Ks ")
-								{
-									inputString >> identifier >> tempMInfo.texture;
-									inputString = std::istringstream();
-								}
-							}
-							else
-							{
-								this->objInfo.mInfo.push_back(tempMInfo);
-								cont = false;
+								inputString >> identifier >>
+									tempMInfo.ambient.x >> tempMInfo.ambient.y >> tempMInfo.ambient.z;
+								inputString = std::istringstream();
 							}
 
+							if (line.substr(0, 2) == "Kd")
+							{
+								inputString >> identifier >>
+									tempMInfo.diffuse.x >> tempMInfo.diffuse.y >> tempMInfo.diffuse.z;
+								inputString = std::istringstream();
+							}
+							if (line.substr(0, 2) == "Ks")
+							{
+								inputString >> identifier >>
+									tempMInfo.specular.x >> tempMInfo.specular.y >> tempMInfo.specular.z;
+								inputString = std::istringstream();
+							}
+							if (line.substr(0, 2) == "Ns")
+							{
+								inputString >> identifier >> tempMInfo.specWeight;
+								inputString = std::istringstream();
+							}
+							if (line.substr(0, 7) == "map_Ks ")
+							{
+								inputString >> identifier >> tempMInfo.texture;
+								inputString = std::istringstream();
+							}
 						}
 						else
 						{
 							this->objInfo.mInfo.push_back(tempMInfo);
 							cont = false;
-							eof = true;
 						}
+
+					}
+					else
+					{
+						prev = line;
+						this->objInfo.mInfo.push_back(tempMInfo);
+						cont = false;
+						eof = true;
 					}
 				}
-			}
-			else
-			{
-				eof = true;
 			}
 		}
 
