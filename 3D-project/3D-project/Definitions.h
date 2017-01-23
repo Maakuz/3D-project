@@ -56,9 +56,6 @@ struct mtLight
 	DirectX::XMFLOAT4 ambient;
 	DirectX::XMFLOAT4 diffuse;
 	DirectX::XMFLOAT4 specular;
-	float specWeight;
-	int mtlType;
-	DirectX::XMFLOAT2 padding;
 };
 
 
