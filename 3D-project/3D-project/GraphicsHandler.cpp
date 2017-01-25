@@ -36,8 +36,9 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createShaders();
 	this->createTexture();
 	this->createSamplers();
-	this->objInfo = this->loadObj();
 	this->loadMtl();
+	this->loadObj();
+	
 	this->createTriangleData();
 	this->createLightBuffer();
 
@@ -234,7 +235,8 @@ void GraphicsHandler::createShaders()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "MTLNR", 0, DXGI_FORMAT_R32_UINT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	hr = this->gDevice->CreateInputLayout(inputDescDeffered, ARRAYSIZE(inputDescDeffered), dvsBlob->GetBufferPointer(), dvsBlob->GetBufferSize(), &this->defferedVertexLayout);
@@ -350,12 +352,12 @@ void GraphicsHandler::createTriangleData()
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
-objectInfo GraphicsHandler::loadObj()
+void GraphicsHandler::loadObj()
 {
 	std::string fileName("../resource/Cube.obj"), identifier;
 	std::string line;
 	std::ifstream file(fileName);
-	objectInfo objInfo;
+	
 	if (file.is_open() == false)
 	{
 		MessageBox(0, L"obj file failed to open", L"error", MB_OK);
@@ -387,6 +389,8 @@ objectInfo GraphicsHandler::loadObj()
 		std::string temp1;
 		std::string temp2;
 		std::string temp3;
+		std::string mtlName;
+		int mtlNr = 0;
 		int i = 0;
 		int counter = 0;
 		bool cont = true;
@@ -425,6 +429,20 @@ objectInfo GraphicsHandler::loadObj()
 				inputString >> identifier >>
 					uvTemp.u >> uvTemp.v;
 				uv.push_back(uvTemp);
+				inputString = std::istringstream();
+			}
+			//sets mtl
+			else if (line.substr(0, 7) == "usemtl ")
+			{
+				inputString >> identifier >> mtlName;
+				for (size_t i = 0; i < this->objInfo.nrOfMaterials; i++)
+				{
+					if (mtlName == this->objInfo.mInfo.at(i).name)
+					{
+						mtlNr = this->objInfo.mInfo.at(i).mtlType;
+					}
+				}
+
 				inputString = std::istringstream();
 			}
 			//fills faces
@@ -537,6 +555,7 @@ objectInfo GraphicsHandler::loadObj()
 				cont = true;
 				i = 0;
 				counter = 0;
+				fTemp.mtlNr = mtlNr;
 				f.push_back(fTemp);
 				inputString = std::istringstream();
 			}
@@ -567,8 +586,8 @@ objectInfo GraphicsHandler::loadObj()
 
 		
 		
-
-			objInfo.vInfo.push_back(tempVInfo);
+			tempVInfo.mtlType = f.at(i).mtlNr;
+			this->objInfo.vInfo.push_back(tempVInfo);
 
 			// vertex 2 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a2 - 1).x;
@@ -587,8 +606,8 @@ objectInfo GraphicsHandler::loadObj()
 		
 				
 			
-
-			objInfo.vInfo.push_back(tempVInfo);
+			tempVInfo.mtlType = f.at(i).mtlNr;
+			this->objInfo.vInfo.push_back(tempVInfo);
 
 			// vertex 3 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a3 - 1).x;
@@ -605,17 +624,17 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vnz = vn.at(f.at(i).c3 - 1).z;
 			
 			
-
-			objInfo.vInfo.push_back(tempVInfo);
+			tempVInfo.mtlType = f.at(i).mtlNr;
+			this->objInfo.vInfo.push_back(tempVInfo);
 
 		}
 
-		objInfo.nrOfVertices = (int)(vp.size());
-		objInfo.norOfIndexcies = (int)(f.size());
+		this->objInfo.nrOfVertices = (int)(vp.size());
+		this->objInfo.norOfIndexcies = (int)(f.size());
 
-		objInfo.iInfo = f;
+		this->objInfo.iInfo = f;
 	}
-	return objInfo;
+
 }
 
 void GraphicsHandler::loadMtl()
@@ -624,6 +643,7 @@ void GraphicsHandler::loadMtl()
 	std::string line;
 	std::string prev = "";
 	std::ifstream file(fileName);
+	this->objInfo.nrOfMaterials = 0;
 	mtlInfo tempMInfo;
 	tempMInfo.mtlType = 0;
 	bool cont = true;
@@ -700,6 +720,7 @@ void GraphicsHandler::loadMtl()
 						else
 						{
 							this->objInfo.mInfo.push_back(tempMInfo);
+							this->objInfo.nrOfMaterials++;
 							cont = false;
 						}
 
@@ -708,6 +729,7 @@ void GraphicsHandler::loadMtl()
 					{
 						prev = line;
 						this->objInfo.mInfo.push_back(tempMInfo);
+						this->objInfo.nrOfMaterials++;
 						cont = false;
 						eof = true;
 					}
@@ -717,6 +739,33 @@ void GraphicsHandler::loadMtl()
 
 	}
 
+}
+
+std::vector<mtlVertex> GraphicsHandler::linkObjNMtl()
+{
+	std::vector<mtlVertex> vertices;
+	mtlVertex temp;
+
+	for (size_t i = 0; i < this->objInfo.nrOfVertices; i++)
+	{
+		temp.pos = DirectX::XMFLOAT4(this->objInfo.vInfo.at(i).vpx, this->objInfo.vInfo.at(i).vpy, this->objInfo.vInfo.at(i).vpz, 0.0f);
+		temp.normal = DirectX::XMFLOAT4(this->objInfo.vInfo.at(i).vnx, this->objInfo.vInfo.at(i).vny, this->objInfo.vInfo.at(i).vnz, 0.0f);
+		temp.uv = DirectX::XMFLOAT2(this->objInfo.vInfo.at(i).u, this->objInfo.vInfo.at(i).v);
+
+		for (size_t j = 0; j < this->objInfo.nrOfMaterials; i++)
+		{
+			if (this->objInfo.mInfo.at(j).mtlType == this->objInfo.vInfo.at(i).mtlType)
+			{
+				temp.ambient = this->objInfo.mInfo.at(j).ambient;
+				temp.ambient.w = this->objInfo.mInfo.at(j).mtlType;
+				temp.diffuse = this->objInfo.mInfo.at(j).diffuse;
+				temp.specular = this->objInfo.mInfo.at(j).specular;
+				temp.specular.w = this->objInfo.mInfo.at(j).specWeight;
+			}
+		}
+		vertices.push_back(temp);
+	}
+	return vertices;
 }
 
 void GraphicsHandler::createMtlLightBuffer()
