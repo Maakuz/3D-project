@@ -7,6 +7,7 @@ struct VS_OUT
     float4 wPos : WPOS;
     float4 norm : NORMAL;
     float2 uv : TEXCOORD;
+    int mtl : MTLNR;
 };
 
 
@@ -19,8 +20,9 @@ struct PS_OUT
 
 cbuffer mtlLightBuffer
 {
-    float3 ambient;
+    float4 ambient;
     float3 diffuse;
+    float4 specular;
 };
 
 PS_OUT main(VS_OUT input)
@@ -29,7 +31,7 @@ PS_OUT main(VS_OUT input)
 
     outPut.position = input.pos;
     outPut.color = tex.Sample(sSampler, input.uv);
-    outPut.color = float4(saturate((outPut.color.xyz  * diffuse) + (outPut.color.xyz * ambient)), 1.0f);
+    outPut.color = float4(saturate((outPut.color.xyz * diffuse) + (outPut.color.xyz * ambient)), 1.0f);
     outPut.position = input.wPos;
     outPut.normal = input.norm;
 

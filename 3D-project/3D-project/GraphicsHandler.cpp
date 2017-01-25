@@ -19,7 +19,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->defferedVertexBuffer = nullptr;
 	this->DSV = nullptr;
 	this->mtlLightbuffer = nullptr;
-	
+
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -30,21 +30,22 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
-	
+
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
 
 	this->createShaders();
 	this->createTexture();
 	this->createSamplers();
-	this->objInfo = this->loadObj();
 	this->loadMtl();
+	this->loadObj();
+
 	this->createTriangleData();
 	this->createLightBuffer();
 
 	this->createLightBuffer();
 	this->createVertexBuffer();
 	this->createMtlLightBuffer();
-	
+
 
 
 
@@ -86,7 +87,7 @@ GraphicsHandler::~GraphicsHandler()
 
 	this->gDevice->Release();
 	this->gDeviceContext->Release();
-	
+
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
@@ -102,7 +103,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 	desc.Windowed = true;
 	desc.BufferDesc.Height = this->height;
 	desc.BufferDesc.Width = this->width;
-	
+
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
@@ -147,7 +148,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 	{
 		MessageBox(0, L"remove debug flag", L"error", MB_OK);
 	}
-	
+
 	return hr;
 }
 
@@ -234,7 +235,8 @@ void GraphicsHandler::createShaders()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "MTLNR", 0, DXGI_FORMAT_R32_UINT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	hr = this->gDevice->CreateInputLayout(inputDescDeffered, ARRAYSIZE(inputDescDeffered), dvsBlob->GetBufferPointer(), dvsBlob->GetBufferSize(), &this->defferedVertexLayout);
@@ -298,11 +300,11 @@ void GraphicsHandler::createShaders()
 
 void GraphicsHandler::createTexture()
 {
-	 HRESULT hr = DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"../resource/Maps/kung.png", &this->textureResoure, &this->textureView);
-	 if (FAILED(hr))
-	 {
-		 MessageBox(0, L"texture creation failed", L"error", MB_OK);
-	 }
+	HRESULT hr = DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"../resource/Maps/kung.png", &this->textureResoure, &this->textureView);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"texture creation failed", L"error", MB_OK);
+	}
 
 }
 
@@ -350,12 +352,12 @@ void GraphicsHandler::createTriangleData()
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
-objectInfo GraphicsHandler::loadObj()
+void GraphicsHandler::loadObj()
 {
 	std::string fileName("../resource/Cube.obj"), identifier;
 	std::string line;
 	std::ifstream file(fileName);
-	objectInfo objInfo;
+
 	if (file.is_open() == false)
 	{
 		MessageBox(0, L"obj file failed to open", L"error", MB_OK);
@@ -387,6 +389,8 @@ objectInfo GraphicsHandler::loadObj()
 		std::string temp1;
 		std::string temp2;
 		std::string temp3;
+		std::string mtlName;
+		int mtlNr = 0;
 		int i = 0;
 		int counter = 0;
 		bool cont = true;
@@ -427,11 +431,25 @@ objectInfo GraphicsHandler::loadObj()
 				uv.push_back(uvTemp);
 				inputString = std::istringstream();
 			}
+			//sets mtl
+			else if (line.substr(0, 7) == "usemtl ")
+			{
+				inputString >> identifier >> mtlName;
+				for (size_t i = 0; i < this->objInfo.nrOfMaterials; i++)
+				{
+					if (mtlName == this->objInfo.mInfo.at(i).name)
+					{
+						mtlNr = this->objInfo.mInfo.at(i).mtlType;
+					}
+				}
+
+				inputString = std::istringstream();
+			}
 			//fills faces
 			else if (line.substr(0, 2) == "f ")
 			{
-				
-				inputString >> identifier >> 
+
+				inputString >> identifier >>
 					temp1 >> temp2 >> temp3;
 				temp1 += 'e';
 				temp2 += 'e';
@@ -497,7 +515,7 @@ objectInfo GraphicsHandler::loadObj()
 							cont = false;
 						}
 					}
-				
+
 					i++;
 				}
 				i = 0;
@@ -537,17 +555,18 @@ objectInfo GraphicsHandler::loadObj()
 				cont = true;
 				i = 0;
 				counter = 0;
+				fTemp.mtlNr = mtlNr;
 				f.push_back(fTemp);
 				inputString = std::istringstream();
 			}
-			
+
 		}
 		file.close();
 
 		//fill objInfo with the data
 		vertexInfo tempVInfo;
 
-	
+
 		for (size_t i = 0; i < f.size(); i++)
 		{
 			// vertex 1 in face i
@@ -563,12 +582,12 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vnx = vn.at(f.at(i).c1 - 1).x;
 			tempVInfo.vny = vn.at(f.at(i).c1 - 1).y;
 			tempVInfo.vnz = vn.at(f.at(i).c1 - 1).z;
-			
 
-		
-		
 
-			objInfo.vInfo.push_back(tempVInfo);
+
+
+			tempVInfo.mtlType = f.at(i).mtlNr;
+			this->objInfo.vInfo.push_back(tempVInfo);
 
 			// vertex 2 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a2 - 1).x;
@@ -583,12 +602,12 @@ objectInfo GraphicsHandler::loadObj()
 			tempVInfo.vnx = vn.at(f.at(i).c2 - 1).x;
 			tempVInfo.vny = vn.at(f.at(i).c2 - 1).y;
 			tempVInfo.vnz = vn.at(f.at(i).c2 - 1).z;
-			
-		
-				
-			
 
-			objInfo.vInfo.push_back(tempVInfo);
+
+
+
+			tempVInfo.mtlType = f.at(i).mtlNr;
+			this->objInfo.vInfo.push_back(tempVInfo);
 
 			// vertex 3 in face i
 			tempVInfo.vpx = vp.at(f.at(i).a3 - 1).x;
@@ -598,24 +617,24 @@ objectInfo GraphicsHandler::loadObj()
 			//uv 3 in face i
 			tempVInfo.u = uv.at(f.at(i).b3 - 1).u;
 			tempVInfo.v = uv.at(f.at(i).b3 - 1).v;
-			
+
 			//normal 1 in face i 
 			tempVInfo.vnx = vn.at(f.at(i).c3 - 1).x;
 			tempVInfo.vny = vn.at(f.at(i).c3 - 1).y;
 			tempVInfo.vnz = vn.at(f.at(i).c3 - 1).z;
-			
-			
 
-			objInfo.vInfo.push_back(tempVInfo);
+
+			tempVInfo.mtlType = f.at(i).mtlNr;
+			this->objInfo.vInfo.push_back(tempVInfo);
 
 		}
 
-		objInfo.nrOfVertices = (int)(vp.size());
-		objInfo.norOfIndexcies = (int)(f.size());
+		this->objInfo.nrOfVertices = (int)(vp.size());
+		this->objInfo.norOfIndexcies = (int)(f.size());
 
-		objInfo.iInfo = f;
+		this->objInfo.iInfo = f;
 	}
-	return objInfo;
+
 }
 
 void GraphicsHandler::loadMtl()
@@ -624,6 +643,7 @@ void GraphicsHandler::loadMtl()
 	std::string line;
 	std::string prev = "";
 	std::ifstream file(fileName);
+	this->objInfo.nrOfMaterials = 0;
 	mtlInfo tempMInfo;
 	tempMInfo.mtlType = 0;
 	bool cont = true;
@@ -636,7 +656,7 @@ void GraphicsHandler::loadMtl()
 	else
 	{
 		std::istringstream inputString;
-		
+
 
 		while (!eof)
 		{
@@ -700,6 +720,7 @@ void GraphicsHandler::loadMtl()
 						else
 						{
 							this->objInfo.mInfo.push_back(tempMInfo);
+							this->objInfo.nrOfMaterials++;
 							cont = false;
 						}
 
@@ -708,6 +729,7 @@ void GraphicsHandler::loadMtl()
 					{
 						prev = line;
 						this->objInfo.mInfo.push_back(tempMInfo);
+						this->objInfo.nrOfMaterials++;
 						cont = false;
 						eof = true;
 					}
@@ -717,6 +739,33 @@ void GraphicsHandler::loadMtl()
 
 	}
 
+}
+
+std::vector<mtlVertex> GraphicsHandler::linkObjNMtl()
+{
+	std::vector<mtlVertex> vertices;
+	mtlVertex temp;
+
+	for (size_t i = 0; i < this->objInfo.nrOfVertices; i++)
+	{
+		temp.pos = DirectX::XMFLOAT4(this->objInfo.vInfo.at(i).vpx, this->objInfo.vInfo.at(i).vpy, this->objInfo.vInfo.at(i).vpz, 0.0f);
+		temp.normal = DirectX::XMFLOAT4(this->objInfo.vInfo.at(i).vnx, this->objInfo.vInfo.at(i).vny, this->objInfo.vInfo.at(i).vnz, 0.0f);
+		temp.uv = DirectX::XMFLOAT2(this->objInfo.vInfo.at(i).u, this->objInfo.vInfo.at(i).v);
+
+		for (size_t j = 0; j < this->objInfo.nrOfMaterials; i++)
+		{
+			if (this->objInfo.mInfo.at(j).mtlType == this->objInfo.vInfo.at(i).mtlType)
+			{
+				temp.ambient = this->objInfo.mInfo.at(j).ambient;
+				temp.ambient.w = this->objInfo.mInfo.at(j).mtlType;
+				temp.diffuse = this->objInfo.mInfo.at(j).diffuse;
+				temp.specular = this->objInfo.mInfo.at(j).specular;
+				temp.specular.w = this->objInfo.mInfo.at(j).specWeight;
+			}
+		}
+		vertices.push_back(temp);
+	}
+	return vertices;
 }
 
 void GraphicsHandler::createMtlLightBuffer()
@@ -731,7 +780,7 @@ void GraphicsHandler::createMtlLightBuffer()
 		ml.ambient.w = this->objInfo.mInfo.at(i).mtlType;
 		ml.specular.w = this->objInfo.mInfo.at(i).specWeight;
 	}
-	
+
 
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
@@ -770,7 +819,7 @@ void GraphicsHandler::createVertexBuffer()
 
 	ZeroMemory(&this->defferedVertexBuffer, sizeof(ID3D11Buffer));
 
-	HRESULT hr =  this->gDevice->CreateBuffer(&bufferDesc, &data, &this->defferedVertexBuffer);
+	HRESULT hr = this->gDevice->CreateBuffer(&bufferDesc, &data, &this->defferedVertexBuffer);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"vertex buffer creation failed", L"error", MB_OK);
@@ -780,7 +829,7 @@ void GraphicsHandler::createVertexBuffer()
 	UINT32 vertexSize = sizeof(vertexInfo);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
-	
+
 }
 
 void GraphicsHandler::createDepthBuffer()
@@ -809,7 +858,7 @@ void GraphicsHandler::createDepthBuffer()
 	dsDesc.StencilEnable = true;
 	dsDesc.StencilReadMask = 0xFF;
 	dsDesc.StencilWriteMask = 0xFF;
-	
+
 	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
 	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
@@ -838,7 +887,7 @@ void GraphicsHandler::createDepthBuffer()
 	if (FAILED(hr))
 		MessageBox(0, L"depth stencil view creation failed", L"error", MB_OK);
 
-	
+
 	D3D11_DEPTH_STENCIL_DESC disabledDepthDesc;
 	ZeroMemory(&disabledDepthDesc, sizeof(disabledDepthDesc));
 
@@ -898,7 +947,7 @@ void GraphicsHandler::createLightBuffer()
 	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	DirectX::XMVECTOR temp;
-	
+
 	temp = DirectX::XMLoadFloat4(&this->light.lightPos);
 
 	//temp = DirectX::XMVector4Transform(temp, this->cameraClass->getMatrix().world);
@@ -975,7 +1024,7 @@ void GraphicsHandler::createDefferedBuffers()
 	}
 
 
-	
+
 }
 
 void GraphicsHandler::render()
@@ -1026,7 +1075,7 @@ void GraphicsHandler::renderGeometry()
 	float clearColor[] = { 0, 0, 0, 1 };
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
+
 	UINT32 vertexSize = sizeof(vertexInfo);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);

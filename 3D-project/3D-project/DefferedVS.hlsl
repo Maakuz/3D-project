@@ -3,6 +3,7 @@ struct VS_IN
     float3 pos : POSITION;
     float3 norm : NORMAL;
     float2 uv : TEXCOORD;
+    int mtl : MTLNR;
 };
 
 struct VS_OUT
@@ -11,6 +12,7 @@ struct VS_OUT
     float4 wPos : WPOS;
     float4 norm : NORMAL;
     float2 uv : TEXCOORD;
+    int mtl : MTLNR;
 };
 
 cbuffer WVPMatrixBuffer

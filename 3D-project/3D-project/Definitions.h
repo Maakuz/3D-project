@@ -23,6 +23,7 @@ struct indexInfo
 	int a1, b1, c1;
 	int a2, b2, c2;
 	int a3, b3, c3;
+	int mtlNr;
 };
 
 struct vertexInfo
@@ -41,7 +42,7 @@ struct vertexInfo
 
 struct mtlInfo
 {
-	
+
 	DirectX::XMFLOAT4 ambient;
 	DirectX::XMFLOAT4 diffuse;
 	DirectX::XMFLOAT4 specular;
@@ -89,6 +90,16 @@ struct lightStruct
 	DirectX::XMFLOAT3 lightDir;
 	DirectX::XMFLOAT2 lightAngle;
 	DirectX::XMFLOAT4 lightRange;
+};
+
+struct mtlVertex
+{
+	DirectX::XMFLOAT4 pos;
+	DirectX::XMFLOAT4 normal;
+	DirectX::XMFLOAT2 uv;
+	DirectX::XMFLOAT4 ambient;
+	DirectX::XMFLOAT4 diffuse;
+	DirectX::XMFLOAT4 specular;
 };
 
 

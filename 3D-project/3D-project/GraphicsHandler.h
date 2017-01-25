@@ -19,7 +19,7 @@ private:
 	ID3D11Device* gDevice;
 	ID3D11DeviceContext* gDeviceContext;
 	ID3D11RenderTargetView* rtvBackBuffer;
-	
+
 	ID3D11VertexShader* vertexShader;
 	ID3D11VertexShader* defferedVertexShader;
 	ID3D11PixelShader* pixelShader;
@@ -30,11 +30,11 @@ private:
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* defferedVertexBuffer;
 	objectInfo objInfo;
-	
+
 	ID3D11Buffer* matrixBuffer;
 	ID3D11Buffer* lightbuffer;
 	ID3D11Buffer* mtlLightbuffer;
-	
+
 
 	//texture things
 	ID3D11Resource* textureResoure;
@@ -57,8 +57,9 @@ private:
 
 
 
-	objectInfo loadObj();
+	void loadObj();
 	void loadMtl();
+	std::vector<mtlVertex> linkObjNMtl();
 	void createTexture();
 	void createShaders();
 	void setViewPort(int heigth, int width);
