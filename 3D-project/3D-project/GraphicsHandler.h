@@ -5,6 +5,7 @@
 #include <sstream>
 #include "CameraClass.h"
 #include "WICTextureLoader.h"
+#include "TerrainHandler.h"
 
 
 const int NROFBUFFERS = 3;
@@ -51,6 +52,7 @@ private:
 	ID3D11DepthStencilView* DSV;
 
 	CameraClass* cameraClass;
+	TerrainHandler* terrainHandler;
 
 	lightStruct light;
 

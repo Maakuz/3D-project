@@ -31,6 +31,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->setViewPort(height, width);
 	
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
+	this->terrainHandler = new TerrainHandler(this->gDevice, "../resource/maps/heightmapTest.bmp");
 
 	this->createShaders();
 	this->createTexture();
@@ -55,6 +56,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 GraphicsHandler::~GraphicsHandler()
 {
 	delete this->cameraClass;
+	delete this->terrainHandler;
+
 	this->vertexBuffer->Release();
 	this->rtvBackBuffer->Release();
 	this->swapChain->Release();
@@ -957,7 +960,7 @@ void GraphicsHandler::createDefferedBuffers()
 void GraphicsHandler::update()
 {
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-	this->cameraClass->update();
+	//this->cameraClass->update();
 
 
 	this->renderGeometry();
@@ -969,14 +972,14 @@ void GraphicsHandler::render()
 	float clearColor[] = { 0, 0, 0, 1 };
 
 
-	//disable depth stencil
+	//disable depth stencil. Anledningen till det är för att vi nu renderar i 2D på en stor quad, det finns inget djup längre
 	this->gDeviceContext->OMSetDepthStencilState(this->disableDepthState, 1);
 
 	UINT32 vertexSize = sizeof(TriangleVertex);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
-	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	this->gDeviceContext->PSSetShaderResources(0, 3, this->shaderResourceViews);
 
