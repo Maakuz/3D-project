@@ -55,7 +55,6 @@ private:
 	lightStruct light;
 
 
-
 	objectInfo loadObj();
 	void loadMtl();
 	void createTexture();
