@@ -7,7 +7,6 @@ struct VS_OUT
     float4 wPos : WPOS;
     float4 norm : NORMAL;
     float2 uv : TEXCOORD;
-    int mtl : MTLNR;
 };
 
 
@@ -20,9 +19,8 @@ struct PS_OUT
 
 cbuffer mtlLightBuffer
 {
-    float4 ambient;
+    float3 ambient;
     float3 diffuse;
-    float4 specular;
 };
 
 PS_OUT main(VS_OUT input)

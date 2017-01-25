@@ -57,9 +57,8 @@ private:
 
 
 
-	void loadObj();
+	objectInfo loadObj();
 	void loadMtl();
-	std::vector<mtlVertex> linkObjNMtl();
 	void createTexture();
 	void createShaders();
 	void setViewPort(int heigth, int width);
