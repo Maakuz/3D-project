@@ -29,6 +29,7 @@ DirectX::XMMATRIX CameraClass::viewProjectionMatrix()
 }
 
 void CameraClass::setPosition(float x, float y, float z)
+
 {
 	this->mPosition = DirectX::XMFLOAT3(x, y, z);
 }
@@ -78,18 +79,16 @@ void CameraClass::rotation(DirectX::XMFLOAT4X4 &transform)
 
 	DirectX::XMVECTOR up = DirectX::XMLoadFloat3(&this->mUp);
 
-	DirectX::XMVECTOR look = DirectX::XMLoadFloat3(&this->mLook);
+ 	DirectX::XMVECTOR look = DirectX::XMLoadFloat3(&this->mLook);
 
 	up = DirectX::XMVector3TransformNormal(up, tranformMatrix);
-	DirectX::XMVector3Normalize(up);
+	DirectX::XMVector4Normalize(up);
 
 	look = DirectX::XMVector3TransformNormal(look, tranformMatrix);
-	DirectX::XMVector3Normalize(look);
+	DirectX::XMVector4Normalize(look);
 
 	DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, look);
-	DirectX::XMVector3Normalize(right);
-
-	up = DirectX::XMVector3Cross(right, look);
+	DirectX::XMVector4Normalize(right);
 
 	DirectX::XMStoreFloat3(&mUp, up);
 	DirectX::XMStoreFloat3(&mLook, look);
@@ -190,7 +189,7 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 {
 	D3D11_MAPPED_SUBRESOURCE dataPtr;
 
-	this->rotationValue += 0.005;
+	//this->rotationValue += 0.0004;
 	if (this->rotationValue == 100000)
 		this->rotationValue = 0;
 
@@ -198,13 +197,16 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 	this->gDeviceContext->Map(VSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &dataPtr);
 	
 	
-	DirectX::XMMATRIX temp = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
+	DirectX::XMMATRIX wTemp = matrices.world;
 	
-	temp = DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
+	wTemp = DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
 
-	this->matrices.world = temp;
+	this->matrices.world = wTemp;
 
-	this->matrices.view = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
+	DirectX::XMMATRIX temp = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
+	temp = DirectX::XMMatrixTranspose(temp);
+	this->matrices.view = temp;
+
 
 	memcpy(dataPtr.pData, &matrices, sizeof(matrices));
 
@@ -224,19 +226,22 @@ void CameraClass::update()
 	auto kb = this->m_keyboard->GetState();
 	if (kb.W)
 	{
-		keyboardAmount.y = 1.f;
+		keyboardAmount.y = 0.00003f;
 	}
 	if (kb.S)
 	{
-		keyboardAmount.y = -1.f;
+		keyboardAmount.y = -0.00003f;
 	}
 	if (kb.A)
 	{
-		keyboardAmount.x = -1.f;
+		keyboardAmount.x = -0.00003f;
+		this->mLook.x = this->mLook.x + -0.00003f;
+
 	}
 	if (kb.D)
 	{
-		keyboardAmount.x = 1.f;
+		keyboardAmount.x = 0.00003f;
+		this->mLook.x = this->mLook.x + 0.00003f;
 	}
 
 	DirectX::XMVECTOR position = DirectX::XMLoadFloat3(&this->mPosition);
@@ -245,28 +250,35 @@ void CameraClass::update()
 	movement.y = (keyboardAmount.y * this->defaultMovementRate); // * elapsedTime
 	movement.z = 0;
 
-	DirectX::XMFLOAT3 floatStrafe;
+	DirectX::XMFLOAT3 floatStrafe; //hmm snurrar runt
 	floatStrafe.x = this->mRight.x * movement.x;
 	floatStrafe.y = this->mRight.y * movement.x;
 	floatStrafe.z = this->mRight.z * movement.x;
 
 	DirectX::XMVECTOR strafe = DirectX::XMLoadFloat3(&floatStrafe);
-	DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + DirectX::XMVectorGetX(strafe));
-	DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(strafe));
-	DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(strafe));
+
+	position = DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + DirectX::XMVectorGetX(strafe)); //bara denna behövs?
+	position = DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(strafe));
+	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(strafe));
 	
-	DirectX::XMFLOAT3 floatForward;
+	DirectX::XMFLOAT3 floatForward;	//funkar?
 	floatForward.x = this->mLook.x * movement.y;
 	floatForward.y = this->mLook.y * movement.y;
 	floatForward.z = this->mLook.z * movement.y;
 
 	DirectX::XMVECTOR forward = DirectX::XMLoadFloat3(&floatForward);
-	DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + DirectX::XMVectorGetX(forward));
-	DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(forward));
-	DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(forward));
 
-	setPosition(position);
+	position = DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + DirectX::XMVectorGetX(forward));
+	position = DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(forward));
+	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(forward)); //bara denna behövs
 
+	setPosition(position); //sparar den i mPosition
+
+
+
+
+
+	/*
 	//mus
 	DirectX::XMFLOAT2 mouseAmount = DirectX::XMFLOAT2(0, 0);
 
@@ -291,10 +303,10 @@ void CameraClass::update()
 	DirectX::XMFLOAT4X4 floatYawXPitch;
 	DirectX::XMStoreFloat4x4(&floatYawXPitch, yawXPitch);
 
+	*/
+	//this->rotation(floatYawXPitch);	//rotationen
 
-	this->rotation(floatYawXPitch);
-
-	this->updateViewMatrix();
+	this->updateViewMatrix(); //view matrixen
 }
 
 matrixStruct CameraClass::getMatrix() const
