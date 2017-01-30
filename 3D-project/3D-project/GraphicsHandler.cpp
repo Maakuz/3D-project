@@ -741,8 +741,11 @@ void GraphicsHandler::loadMtl()
 
 }
 
+//ignore this////////////////////////
 std::vector<mtlVertex> GraphicsHandler::linkObjNMtl()
 {
+
+	
 	std::vector<mtlVertex> vertices;
 	mtlVertex temp;
 
@@ -767,18 +770,17 @@ std::vector<mtlVertex> GraphicsHandler::linkObjNMtl()
 	}
 	return vertices;
 }
-
+///////////////////////////////////
 void GraphicsHandler::createMtlLightBuffer()
 {
-	mtLight ml;
+	mtLight *ml = new mtLight[this->objInfo.nrOfMaterials];
 
 	for (size_t i = 0; i < this->objInfo.nrOfMaterials; i++)
 	{
-		ml.ambient = this->objInfo.mInfo.at(i).ambient;
-		ml.diffuse = this->objInfo.mInfo.at(i).diffuse;
-		ml.specular = this->objInfo.mInfo.at(i).specular;
-		ml.ambient.w = this->objInfo.mInfo.at(i).mtlType;
-		ml.specular.w = this->objInfo.mInfo.at(i).specWeight;
+		ml[i].ambient = this->objInfo.mInfo.at(i).ambient;
+		ml[i].diffuse = this->objInfo.mInfo.at(i).diffuse;
+		ml[i].specular = this->objInfo.mInfo.at(i).specular;
+		ml[i].specular.w = this->objInfo.mInfo.at(i).specWeight;
 	}
 
 
@@ -800,6 +802,8 @@ void GraphicsHandler::createMtlLightBuffer()
 	{
 		MessageBox(0, L"mtl light buffer creation failed!", L"error", MB_OK);
 	}
+
+	delete[] ml;
 }
 
 void GraphicsHandler::createVertexBuffer()
@@ -1055,6 +1059,7 @@ void GraphicsHandler::render()
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
+	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
 
 	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
@@ -1081,7 +1086,7 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
-	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
+	
 
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 
