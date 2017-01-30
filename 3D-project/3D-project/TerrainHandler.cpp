@@ -1,7 +1,11 @@
 #include "TerrainHandler.h"
+#include "WICTextureLoader.h"
 
 TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 {
+	this->heigth = 0;
+	this->width = 0;
+	this->heightMap = nullptr;
 	this->loadHeightMap(path);
 }
 
@@ -18,28 +22,51 @@ void TerrainHandler::loadHeightMap(std::string path)
 	std::ifstream file(path, std::ios::binary);
 	if (file.is_open())
 	{
-		PBITMAPFILEHEADER fHeader;
-		PBITMAPINFOHEADER bmpInfo;
+		BITMAPFILEHEADER* fHeader = nullptr;
+		BITMAPINFOHEADER* bmpInfo = nullptr;
 
-		char* headers[2] = {nullptr};
-		int* colors = nullptr;
+		UINT8* headers[2] = {nullptr};
+		UINT8* colors = nullptr;
 
-		headers[0] = new char[sizeof(PBITMAPFILEHEADER)];
-		headers[1] = new char[sizeof(PBITMAPINFOHEADER)];
+		headers[0] = new UINT8[sizeof(BITMAPFILEHEADER)];
+		headers[1] = new UINT8[sizeof(BITMAPINFOHEADER)];
 
-		file.read(headers[0], sizeof(PBITMAPFILEHEADER));
-		file.read(headers[1], sizeof(PBITMAPINFOHEADER));
+		file.read((char*)headers[0], sizeof(BITMAPFILEHEADER));
+		file.read((char*)headers[1], sizeof(BITMAPINFOHEADER));
 
-		fHeader = (PBITMAPFILEHEADER)headers[0];
-		bmpInfo = (PBITMAPINFOHEADER)headers[1];
+		fHeader = (BITMAPFILEHEADER*)headers[0];
+		bmpInfo = (BITMAPINFOHEADER*)headers[1];
 
 
-
+		
 		if (fHeader->bfType == 0x4D42)
 		{
-			bmpInfo = bmpInfo;
-			colors = new int[bmpInfo->biSizeImage];
+			
+			colors = new UINT8[800 * 600 * 3 * 8];
+			this->heightMap = new HeightMap*[bmpInfo->biWidth];
+			
+			for (size_t i = 0; i < bmpInfo->biWidth; i++)
+			{
+				this->heightMap[i] = new HeightMap[bmpInfo->biHeight];
+			}
 
+			file.seekg(fHeader->bfOffBits);
+			file.read((char*)colors, 800 * 600 * 3 * 8);
+
+			//BAH
+			for (size_t i = 0; i < bmpInfo->biSizeImage; i+=3)
+			{
+			}
+
+			int temp = 0;
+
+			for (size_t i = 0; i < bmpInfo->biHeight; i++)
+			{
+				for (size_t j = 0; j < bmpInfo->biWidth; j++)
+				{
+					this->heightMap[i][j].z = colors[j * 3 + i];
+				}
+			}
 		}
 
 		delete headers[0];
