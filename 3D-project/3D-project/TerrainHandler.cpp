@@ -38,33 +38,34 @@ void TerrainHandler::loadHeightMap(std::string path)
 		bmpInfo = (BITMAPINFOHEADER*)headers[1];
 
 
-		
+		//Check if it is a .bmp file
 		if (fHeader->bfType == 0x4D42)
 		{
 			
-			colors = new UINT8[800 * 600 * 3 * 8];
+			colors = new UINT8[bmpInfo->biSizeImage];
+
+			//Create a grid of vectors
 			this->heightMap = new HeightMap*[bmpInfo->biWidth];
-			
 			for (size_t i = 0; i < bmpInfo->biWidth; i++)
 			{
 				this->heightMap[i] = new HeightMap[bmpInfo->biHeight];
 			}
 
+			//Find the end of the header
 			file.seekg(fHeader->bfOffBits);
-			file.read((char*)colors, 800 * 600 * 3 * 8);
 
-			//BAH
-			for (size_t i = 0; i < bmpInfo->biSizeImage; i+=3)
-			{
-			}
+			//Read all the bits into the color array
+			file.read((char*)colors, bmpInfo->biSizeImage);
 
-			int temp = 0;
-
+			//Create vectors from the color array
 			for (size_t i = 0; i < bmpInfo->biHeight; i++)
 			{
 				for (size_t j = 0; j < bmpInfo->biWidth; j++)
 				{
-					this->heightMap[i][j].z = colors[j * 3 + i];
+					this->heightMap[i][j].x = 1;
+					this->heightMap[i][j].y = colors[j * 3 + i];
+					this->heightMap[i][j].z = 1;
+
 				}
 			}
 		}
