@@ -21,7 +21,7 @@ cbuffer cameraPos : register(b1)
 struct mtlStruct
 {
     float4 ambient;
-    float3 diffuse;
+    float3 diff;
     float4 specular;
 };
 
@@ -39,9 +39,9 @@ struct VS_OUT
 
 float4 main(VS_OUT input) : SV_TARGET
 {
-    int mtl = positions.sample(sSampler, input.uv);
+    int mtl = positions.Sample(sSampler, input.uv);
     float4 difLightDir = normalize(positions.Sample(sSampler, input.uv) - lightPos);
     float diffuse = saturate(dot(difLightDir, normals.Sample(sSampler, input.uv)));
 
-    return colors.Sample(sSampler, input.uv) * diffuse;
+    return colors.Sample(sSampler, input.uv);
 }
