@@ -92,14 +92,11 @@ struct lightStruct
 	DirectX::XMFLOAT4 lightRange;
 };
 
-struct mtlVertex
+struct Particle
 {
-	DirectX::XMFLOAT4 pos;
-	DirectX::XMFLOAT4 normal;
-	DirectX::XMFLOAT2 uv;
-	DirectX::XMFLOAT4 ambient;
-	DirectX::XMFLOAT4 diffuse;
-	DirectX::XMFLOAT4 specular;
+	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT3 velocity;
+	float age;
 };
 
 

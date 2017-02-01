@@ -24,9 +24,14 @@ private:
 	ID3D11VertexShader* defferedVertexShader;
 	ID3D11PixelShader* pixelShader;
 	ID3D11PixelShader* defferedPixelShader;
+	ID3D11ComputeShader* computeShader;
+	ID3D11PixelShader* particlePixel;
+	ID3D11VertexShader* particleVertex;
+	ID3D11GeometryShader* particleGeometry;
 
 	ID3D11InputLayout* vertexLayout;
 	ID3D11InputLayout* defferedVertexLayout;
+	ID3D11InputLayout* partilceVertexLayout;
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* defferedVertexBuffer;
 	objectInfo objInfo;
@@ -51,15 +56,19 @@ private:
 	ID3D11DepthStencilState* dsState;
 	ID3D11DepthStencilView* DSV;
 
+	ID3D11RenderTargetView* particleRenderTarget;
+
+
 	CameraClass* cameraClass;
 
 	lightStruct light;
+
+	ID3D11Buffer* emitterlocation;
 
 
 
 	void loadObj();
 	void loadMtl();
-	std::vector<mtlVertex> linkObjNMtl();
 	void createTexture();
 	void createShaders();
 	void setViewPort(int heigth, int width);
@@ -71,6 +80,7 @@ private:
 	void createSamplers();
 	void createLightBuffer();
 	void createMtlLightBuffer();
+	void createParticleBuffers();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
@@ -78,6 +88,7 @@ public:
 
 	void render();
 	void renderGeometry();
+	void renderParticles();
 };
 
 

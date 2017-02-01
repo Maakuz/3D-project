@@ -15,10 +15,21 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->pixelShader = nullptr;
 	this->cameraClass = nullptr;
 	this->depthBuffer = nullptr;
+	this->particleRenderTarget = nullptr;
+
+	this->computeShader = nullptr;
+	this->particleGeometry = nullptr;
+	this->particlePixel = nullptr;
+	this->particleVertex = nullptr;
+	this->partilceVertexLayout = nullptr;
+
+	this->defferedPixelShader = nullptr;
+	this->defferedVertexShader = nullptr;
 	this->dsState = nullptr;
 	this->defferedVertexBuffer = nullptr;
 	this->DSV = nullptr;
 	this->mtlLightbuffer = nullptr;
+	this->emitterlocation = nullptr;
 
 
 	for (int i = 0; i < NROFBUFFERS; i++)
@@ -65,6 +76,12 @@ GraphicsHandler::~GraphicsHandler()
 	this->defferedPixelShader->Release();
 	this->vertexShader->Release();
 	this->pixelShader->Release();
+	this->particleGeometry->Release();
+	this->particleVertex->Release();
+	this->particlePixel->Release();
+	this->partilceVertexLayout->Release();
+	this->particleRenderTarget->Release();
+	this->emitterlocation->Release();
 
 	this->depthBuffer->Release();
 	this->dsState->Release();
@@ -128,7 +145,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
 		if (FAILED(hr))
 		{
-			MessageBox(0, L"getBuffer failed", L"error", MB_OK);
+			MessageBox(0, L"swap chain getBuffer failed", L"error", MB_OK);
 			return hr;
 		}
 
@@ -288,13 +305,121 @@ void GraphicsHandler::createShaders()
 		MessageBox(0, L"Deffered psBlob creation failed", L"error", MB_OK);
 	}
 
-	hr = this->gDevice->CreatePixelShader(dpsBlob->GetBufferPointer(), dpsBlob->GetBufferSize(), nullptr, &defferedPixelShader);
+	hr = this->gDevice->CreatePixelShader(dpsBlob->GetBufferPointer(), dpsBlob->GetBufferSize(), nullptr, &this->defferedPixelShader);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"Deffered pixel shader creation failed", L"error", MB_OK);
 	}
 
 	dpsBlob->Release();
+
+	ID3D10Blob *csBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"ComputeShader.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"cs_5_0",
+		0,
+		0,
+		&csBlob,
+		NULL);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"compute shader compile failed", L"error", MB_OK);
+	}
+	hr = this->gDevice->CreateComputeShader(csBlob->GetBufferPointer(), csBlob->GetBufferSize(), nullptr, &this->computeShader);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"compute Shader creation failed", L"error", MB_OK);
+	}
+	csBlob->Release();
+
+	ID3DBlob* pvsBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"particleVertex.hlsl",
+		nullptr,
+		nullptr,
+		"main",
+		"vs_5_0",
+		0,
+		0,
+		&pvsBlob,
+		nullptr);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"pvsblob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateVertexShader(pvsBlob->GetBufferPointer(), pvsBlob->GetBufferSize(), NULL, &this->particleVertex);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"particle vertex shader creation failed", L"error", MB_OK);
+	}
+
+	//this is wrong should be nothing
+	D3D11_INPUT_ELEMENT_DESC paricleInputDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	hr = this->gDevice->CreateInputLayout(paricleInputDesc, ARRAYSIZE(paricleInputDesc), pvsBlob->GetBufferPointer(), pvsBlob->GetBufferSize(), &this->partilceVertexLayout);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L" pixel input desc creation failed", L"error", MB_OK);
+	}
+
+	pvsBlob->Release();
+
+	ID3DBlob* pgsBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"ParticleGeometry.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"gs_5_0",
+		0,
+		0,
+		&pgsBlob,
+		NULL);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"paricle geometry shader compile failed", L"error", MB_OK);
+	}
+	hr = this->gDevice->CreateGeometryShader(pgsBlob->GetBufferPointer(), pgsBlob->GetBufferSize(), nullptr, &this->particleGeometry);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"paricle Geometry shader creation failed", L"error", MB_OK);
+		pgsBlob->Release();
+	}
+
+	ID3DBlob *ppsBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"ParticlePixel.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"ps_5_0",
+		0,
+		0,
+		&ppsBlob,
+		NULL);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"particle psBlob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreatePixelShader(ppsBlob->GetBufferPointer(), ppsBlob->GetBufferSize(), nullptr, &this->particlePixel);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"paricle pixel shader creation failed", L"error", MB_OK);
+	}
+
+	ppsBlob->Release();
 
 }
 
@@ -741,36 +866,6 @@ void GraphicsHandler::loadMtl()
 
 }
 
-//ignore this////////////////////////
-std::vector<mtlVertex> GraphicsHandler::linkObjNMtl()
-{
-
-	
-	std::vector<mtlVertex> vertices;
-	mtlVertex temp;
-
-	for (size_t i = 0; i < this->objInfo.nrOfVertices; i++)
-	{
-		temp.pos = DirectX::XMFLOAT4(this->objInfo.vInfo.at(i).vpx, this->objInfo.vInfo.at(i).vpy, this->objInfo.vInfo.at(i).vpz, 0.0f);
-		temp.normal = DirectX::XMFLOAT4(this->objInfo.vInfo.at(i).vnx, this->objInfo.vInfo.at(i).vny, this->objInfo.vInfo.at(i).vnz, 0.0f);
-		temp.uv = DirectX::XMFLOAT2(this->objInfo.vInfo.at(i).u, this->objInfo.vInfo.at(i).v);
-
-		for (size_t j = 0; j < this->objInfo.nrOfMaterials; i++)
-		{
-			if (this->objInfo.mInfo.at(j).mtlType == this->objInfo.vInfo.at(i).mtlType)
-			{
-				temp.ambient = this->objInfo.mInfo.at(j).ambient;
-				temp.ambient.w = this->objInfo.mInfo.at(j).mtlType;
-				temp.diffuse = this->objInfo.mInfo.at(j).diffuse;
-				temp.specular = this->objInfo.mInfo.at(j).specular;
-				temp.specular.w = this->objInfo.mInfo.at(j).specWeight;
-			}
-		}
-		vertices.push_back(temp);
-	}
-	return vertices;
-}
-///////////////////////////////////
 void GraphicsHandler::createMtlLightBuffer()
 {
 	mtLight *ml = new mtLight[this->objInfo.nrOfMaterials];
@@ -804,6 +899,30 @@ void GraphicsHandler::createMtlLightBuffer()
 	}
 
 	delete[] ml;
+}
+
+void GraphicsHandler::createParticleBuffers()
+{
+	DirectX::XMFLOAT4 emitterLocation(0.0f, 0.0f, 0.0f, 1.0f);
+
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+
+	desc.ByteWidth = sizeof(DirectX::XMFLOAT4);
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	data.pSysMem = &emitterLocation;
+
+	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->emitterlocation);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"emitter creation failed", L"error", MB_OK);
+	}
 }
 
 void GraphicsHandler::createVertexBuffer()
@@ -1047,7 +1166,7 @@ void GraphicsHandler::render()
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	this->gDeviceContext->PSSetShaderResources(0, 3, this->shaderResourceViews);
+	this->gDeviceContext->PSSetShaderResources(0, NROFBUFFERS, this->shaderResourceViews);
 
 	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
 
@@ -1121,4 +1240,25 @@ void GraphicsHandler::renderGeometry()
 	}
 
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, temp, NULL);
+}
+
+void GraphicsHandler::renderParticles()
+{
+	float clearColor[] = { 0, 0, 0, 1 };
+
+	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+	this->setViewPort(this->height, this->width);
+	this->gDeviceContext->VSSetShader(this->particleVertex, nullptr, 0);
+	this->gDeviceContext->GSSetShader(this->particleGeometry, nullptr, 0);
+	this->gDeviceContext->PSSetShader(this->particlePixel, nullptr, 0);
+
+	this->gDeviceContext->GSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
+
+	this->gDeviceContext->OMSetRenderTargets(0, &this->rtvBackBuffer, this->DSV);
+
+	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
+	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
 }
