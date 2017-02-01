@@ -10,9 +10,10 @@ struct HeightMap { float x, y, z; };
 class TerrainHandler
 {
 private:
-	int heigth, width;
+	int height, width;
 	ID3D11Buffer* vertexBuffer;
-	HeightMap** heightMap;
+	HeightMap* heightMap;
+	vertexInfo* vertices;
 	int nrOfVertices;
 
 
@@ -22,6 +23,7 @@ public:
 
 	void renderTerrain(ID3D11DeviceContext* gDevice);
 	void loadHeightMap(std::string path);
+	void loadHeightMap(char* path);
 	void createVertices();
 
 };
