@@ -110,8 +110,8 @@ matrixStruct CameraClass::initiateMatrices()
 {
 	this->fovAngleY = 3.14 * 0.45;
 	this->aspectRatio = 640.f / 480.f;
-	this->zNear = 0.1;
-	this->zFar = 20;
+	this->zNear = 0.1f;
+	this->zFar = 20.f;
 
 	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(M_PI / 6, M_PI / 6, 0);
 	//this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
@@ -235,13 +235,13 @@ void CameraClass::update()
 	if (kb.A)
 	{
 		keyboardAmount.x = -0.00003f;
-		this->mLook.x = this->mLook.x + -0.00003f;
+		//this->mLook.x = this->mLook.x + -0.00003f;
 
 	}
 	if (kb.D)
 	{
 		keyboardAmount.x = 0.00003f;
-		this->mLook.x = this->mLook.x + 0.00003f;
+		//this->mLook.x = this->mLook.x + 0.00003f;
 	}
 
 	DirectX::XMVECTOR position = DirectX::XMLoadFloat3(&this->mPosition);
@@ -274,7 +274,8 @@ void CameraClass::update()
 
 	setPosition(position); //sparar den i mPosition
 
-
+	//Set the look at to the same x coord as the camera
+	this->mLook.x = this->mPosition.x;
 
 
 
