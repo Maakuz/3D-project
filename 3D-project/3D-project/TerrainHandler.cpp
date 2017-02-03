@@ -6,8 +6,39 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 	this->height = 0;
 	this->width = 0;
 	this->heightMap = nullptr;
-	this->loadHeightMap(path);
+	//this->loadHeightMap(path);
+	//Hardcoded stuff because I'm tired of crap
+
+
+	this->heightMap = new HeightMap[16];
+	int heights[16] = 
+	{
+		0, 0, 50, 50, 
+		0, 50, 255, 50,
+		50, 255, 50, 0,
+		255, 50, 0, 0
+	};
+
+	this->height = 4;
+	this->width = 4;
+
+	int count = 0;
+	int pos = 0;
+	for (int j = 0; j < this->height; j++)
+	{
+		for (int i = 0; i < this->width; i++)
+		{
+			pos = (4 * j) + i;
+			this->heightMap[pos].x = j;
+			this->heightMap[pos].y = heights[count];
+			this->heightMap[pos].z = i;
+
+			count++;
+		}
+	}
+
 	this->createVertices();
+	this->createVertexBuffer(gDevice);
 }
 
 TerrainHandler::~TerrainHandler()
@@ -22,7 +53,7 @@ void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDevice)
 
 void TerrainHandler::loadHeightMap(std::string path)
 {
-	std::ifstream file(path, std::fstream::binary);
+	std::ifstream file(path, std::ios::binary);
 	if (file.is_open())
 	{
 		BITMAPFILEHEADER* fHeader = nullptr;
@@ -47,35 +78,53 @@ void TerrainHandler::loadHeightMap(std::string path)
 
 
 			colors = new UINT8[bmpInfo->biSizeImage];
+			
+			for (size_t i = 0; i < bmpInfo->biSizeImage; i++)
+			{
+				colors[i] = 0;
+			}
 
 
 			this->height = bmpInfo->biHeight;
 			this->width = bmpInfo->biWidth;
 			
-			this->heightMap = new HeightMap[bmpInfo->biSizeImage];
+			this->heightMap = new HeightMap[this->width * this->height];
 			
 			for (size_t i = 0; i < this->width * this->height; i++)
 			{
 				this->heightMap[i] = { 0 };
 			}
 
-
 			//Find the end of the header
 			file.seekg(fHeader->bfOffBits);
 
 			//Read all the bits into the color array
-			file.read((char*)colors, bmpInfo->biSizeImage);
+			file.read((char*)colors, 65656564656);
+
+			//for testing
+			std::ofstream ofile("../test.txt", std::ios::app);
+			ofile << colors << std::endl;
+			ofile.close();
 
 			//Create vectors from the color array
-			for (size_t i = 0; i < bmpInfo->biSizeImage; i+=3)
+			int count = 0;
+			int pos = 0;
+			for (size_t y = 0; y < this->height; y++)
 			{
-					this->heightMap[i].x = 1;
-					this->heightMap[i].y = colors[i];
-					this->heightMap[i].z = 1;
+				for (size_t x = 0; x < this->width; x++)
+				{
+					pos = (height * y) + x;
+					this->heightMap[pos].x = x;
+					this->heightMap[pos].y = colors[count];
+					this->heightMap[pos].z = y;
+					
+					count += 9;
+				}
 			}
 		}
 
 		file.close();
+
 		delete headers[0];
 		delete headers[1];
 		delete colors;
@@ -109,8 +158,93 @@ void TerrainHandler::createVertices()
 
 	float offset = 0.3;
 
-	for (size_t i = 0; i < this->height; i++)
+	//Maybe should have done this in 2D array
+	for (size_t i = 0; i < (this->height * this->width) - this->width - 1; i++)
 	{
+		//Create the first
+		this->vertices[i] = 
+		{
+			this->heightMap[i].x * offset,
+			this->heightMap[i].y,
+			this->heightMap[i].z * offset,
+
+			//Normals goes here later
+
+			//Vertex position
+			0, 0
+		};
+
+		//Create one to the right of the first
+		this->vertices[i] =
+		{
+			this->heightMap[i + 1].x * offset,
+			this->heightMap[i + 1].y,
+			this->heightMap[i + 1].z * offset,
+
+			//Normals goes here later
+
+			//Vertex position
+			1, 0
+		};
+
+		//Create one under the first
+		this->vertices[i] =
+		{
+			this->heightMap[i + this->width].x * offset,
+			this->heightMap[i + this->width].y,
+			this->heightMap[i + this->width].z * offset,
+
+			//Normals goes here later
+
+			//Vertex position
+			0, 1
+		};
 		
+		//Create the first vertex in the second triangle (Same as 2)
+		this->vertices[i] =
+		{
+			this->heightMap[i + 1].x * offset,
+			this->heightMap[i + 1].y,
+			this->heightMap[i + 1].z * offset,
+
+			//Normals goes here later
+
+			//Vertex position
+			1, 0
+		};
+
+		//Create one under the last one
+		this->vertices[i] =
+		{
+			this->heightMap[i + 1 + this->width].x * offset,
+			this->heightMap[i + 1 + this->width].y,
+			this->heightMap[i + 1 + this->width].z * offset,
+
+			//Normals goes here later
+
+			//Vertex position
+			1, 1
+		};
+
+		//Create one to the left of the last one (same as vertex 3)
+		this->vertices[i] =
+		{
+			this->heightMap[i + this->width].x * offset,
+			this->heightMap[i + this->width].y,
+			this->heightMap[i + this->width].z * offset,
+
+			//Normals goes here later
+
+			//Vertex position
+			0, 1
+		};
 	}
+}
+
+void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
+{
+}
+
+void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
+{
 }

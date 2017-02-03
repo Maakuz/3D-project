@@ -25,7 +25,8 @@ public:
 	void loadHeightMap(std::string path);
 	void loadHeightMap(char* path);
 	void createVertices();
-
+	void createVertexBuffer(ID3D11Device* gDevice);
+	void setShaderResources(ID3D11DeviceContext* gDeviceContext);
 };
 
 

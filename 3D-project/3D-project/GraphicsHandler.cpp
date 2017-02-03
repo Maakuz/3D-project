@@ -31,7 +31,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->setViewPort(height, width);
 	
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
-	this->terrainHandler = new TerrainHandler(this->gDevice, "../resource/maps/HeightMap.bmp");
+	this->terrainHandler = new TerrainHandler(this->gDevice, "../resource/maps/HeightMapSmall.bmp");
 
 	this->createShaders();
 	this->createTexture();
