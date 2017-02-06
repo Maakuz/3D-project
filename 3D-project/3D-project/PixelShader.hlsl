@@ -50,5 +50,6 @@ float4 main(VS_OUT input) : SV_TARGET
 
     lighting = float4(diffuse, 1);
 
+    return float4(normals.Sample(sSampler, input.uv).xyz, 1);
     return  lighting;
 }

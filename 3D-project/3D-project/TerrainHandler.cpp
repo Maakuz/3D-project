@@ -15,7 +15,7 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 	{
 		0, 0, 50, 50, 
 		0, 50, 255, 50,
-		50, 255, 50, 0,
+		50, 255, 75, 0,
 		255, 50, 0, 0
 	};
 
@@ -45,10 +45,12 @@ TerrainHandler::~TerrainHandler()
 {
 	delete[] this->heightMap;
 	delete[] this->vertices;
+	this->vertexBuffer->Release();
 }
 
-void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDevice)
+void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDeviceContext)
 {
+	gDeviceContext->Draw(nrOfVertices, 0);
 }
 
 void TerrainHandler::loadHeightMap(std::string path)
@@ -154,97 +156,134 @@ void TerrainHandler::loadHeightMap(char* path)
 
 void TerrainHandler::createVertices()
 {
-	this->vertices = new vertexInfo[this->height * this->width];
 
-	float offset = 0.3;
+	this->nrOfVertices = (this->height - 1) * (this->width - 1) * 6;
+	this->vertices = new vertexInfo[this->nrOfVertices];
 
-	//Maybe should have done this in 2D array
-	for (size_t i = 0; i < (this->height * this->width) - this->width - 1; i++)
+	float offset = 2.f;
+	int count = 0;
+
+	//Once for every quad plus the iterations we skip at the corner of the heightmap
+	for (size_t i = 0; i < (this->nrOfVertices / 6) + this->height - 2; i++)
 	{
+		if (count % (6 * (this->width - 1)) == 0 && count != 0)
+			i++;
+
 		//Create the first
-		this->vertices[i] = 
+		this->vertices[count] =
 		{
 			this->heightMap[i].x * offset,
 			this->heightMap[i].y,
 			this->heightMap[i].z * offset,
 
 			//Normals goes here later
-
+			0.f, 1.f, 0.f,
 			//Vertex position
-			0, 0
+			0.f, 0.f
 		};
+		count++;
 
 		//Create one to the right of the first
-		this->vertices[i] =
+		this->vertices[count] =
 		{
 			this->heightMap[i + 1].x * offset,
 			this->heightMap[i + 1].y,
 			this->heightMap[i + 1].z * offset,
 
 			//Normals goes here later
+			0.f, 1.f, 0.f,
 
 			//Vertex position
-			1, 0
+			1.f, 0.f
 		};
+		count++;
 
 		//Create one under the first
-		this->vertices[i] =
+		this->vertices[count] =
 		{
 			this->heightMap[i + this->width].x * offset,
 			this->heightMap[i + this->width].y,
 			this->heightMap[i + this->width].z * offset,
 
 			//Normals goes here later
+			0.f, 1.f, 0.f,
 
 			//Vertex position
-			0, 1
+			0.f, 1.f
 		};
-		
+		count++;
+
 		//Create the first vertex in the second triangle (Same as 2)
-		this->vertices[i] =
+		this->vertices[count] =
 		{
 			this->heightMap[i + 1].x * offset,
 			this->heightMap[i + 1].y,
 			this->heightMap[i + 1].z * offset,
 
 			//Normals goes here later
+			0.f, 1.f, 0.f,
 
 			//Vertex position
-			1, 0
+			1.f, 0.f
 		};
+		count++;
 
 		//Create one under the last one
-		this->vertices[i] =
+		this->vertices[count] =
 		{
 			this->heightMap[i + 1 + this->width].x * offset,
 			this->heightMap[i + 1 + this->width].y,
 			this->heightMap[i + 1 + this->width].z * offset,
 
 			//Normals goes here later
+			0.f, 1.f, 0.f,
 
 			//Vertex position
-			1, 1
+			1.f, 1.f
 		};
+		count++;
 
 		//Create one to the left of the last one (same as vertex 3)
-		this->vertices[i] =
+		this->vertices[count] =
 		{
 			this->heightMap[i + this->width].x * offset,
 			this->heightMap[i + this->width].y,
 			this->heightMap[i + this->width].z * offset,
 
 			//Normals goes here later
+			0.f, 1.f, 0.f,
 
 			//Vertex position
-			0, 1
+			0.f, 1.f
 		};
+		count++;
 	}
+
+
 }
 
 void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 {
+	D3D11_BUFFER_DESC desc;
+	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	desc.ByteWidth = sizeof(vertexInfo) * this->nrOfVertices;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = 0;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	data.pSysMem = this->vertices;
+
+	gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
 }
 
 void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
 {
+	UINT32 stride = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
+	gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }

@@ -1012,7 +1012,6 @@ void GraphicsHandler::renderGeometry()
 	//Kanske en specifik viwport for quadsaken
 	float clearColor[] = { 0, 0, 0, 1 };
 
-	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	UINT32 vertexSize = sizeof(vertexInfo);
 	UINT32 offset = 0;
@@ -1038,8 +1037,8 @@ void GraphicsHandler::renderGeometry()
 	{
 		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
 	}
+	this->terrainHandler->setShaderResources(this->gDeviceContext);
 
-	//Kanskse borde vara drawindexed
 	this->gDeviceContext->Draw(36, 0);
 
 	//Reset
