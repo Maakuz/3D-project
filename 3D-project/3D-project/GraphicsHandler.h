@@ -28,6 +28,7 @@ private:
 	ID3D11PixelShader* particlePixel;
 	ID3D11VertexShader* particleVertex;
 	ID3D11GeometryShader* particleGeometry;
+	ID3D11ComputeShader* particleInserter;
 
 	ID3D11InputLayout* vertexLayout;
 	ID3D11InputLayout* defferedVertexLayout;
@@ -56,7 +57,7 @@ private:
 	ID3D11DepthStencilState* dsState;
 	ID3D11DepthStencilView* DSV;
 
-	ID3D11RenderTargetView* particleRenderTarget;
+	//ID3D11RenderTargetView* particleRenderTarget;
 
 
 	CameraClass* cameraClass;
@@ -64,6 +65,15 @@ private:
 	lightStruct light;
 
 	ID3D11Buffer* emitterlocation;
+	ID3D11Buffer* structBuffer1;
+	ID3D11Buffer* structBuffer2;
+	ID3D11Buffer* particleCountBuffer;
+	ID3D11Buffer* IndirectArgsBuffer;
+	ID3D11Buffer* StagingBuffer;
+	ID3D11UnorderedAccessView* uav1;
+	ID3D11UnorderedAccessView* uav2;
+	ID3D11ShaderResourceView* srv1;
+	ID3D11ShaderResourceView* srv2;
 
 
 
@@ -80,7 +90,8 @@ private:
 	void createSamplers();
 	void createLightBuffer();
 	void createMtlLightBuffer();
-	void createParticleBuffers();
+	void createParticleBuffers(int nrOfPArticles);
+	
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
@@ -89,6 +100,7 @@ public:
 	void render();
 	void renderGeometry();
 	void renderParticles();
+	void updateParticles();
 };
 
 

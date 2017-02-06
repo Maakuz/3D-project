@@ -94,7 +94,7 @@ struct lightStruct
 
 struct Particle
 {
-	DirectX::XMFLOAT3 position;
+	DirectX::XMFLOAT4 position;
 	DirectX::XMFLOAT3 velocity;
 	float age;
 };

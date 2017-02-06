@@ -15,7 +15,17 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->pixelShader = nullptr;
 	this->cameraClass = nullptr;
 	this->depthBuffer = nullptr;
-	this->particleRenderTarget = nullptr;
+	//this->particleRenderTarget = nullptr;
+	this->structBuffer1 = nullptr;
+	this->structBuffer2 = nullptr;
+	this->particleCountBuffer = nullptr;
+	this->IndirectArgsBuffer = nullptr;
+	this->StagingBuffer = nullptr;
+	this->uav1 = nullptr;
+	this->uav2 = nullptr;
+	this->srv1 = nullptr;
+	this->srv2 = nullptr;
+	this->particleInserter = nullptr;
 
 	this->computeShader = nullptr;
 	this->particleGeometry = nullptr;
@@ -56,6 +66,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createLightBuffer();
 	this->createVertexBuffer();
 	this->createMtlLightBuffer();
+	this->createParticleBuffers(512);
 
 
 
@@ -80,8 +91,18 @@ GraphicsHandler::~GraphicsHandler()
 	this->particleVertex->Release();
 	this->particlePixel->Release();
 	this->partilceVertexLayout->Release();
-	this->particleRenderTarget->Release();
+	//this->particleRenderTarget->Release();
 	this->emitterlocation->Release();
+	this->structBuffer1->Release();
+	this->structBuffer2->Release();
+	this->particleCountBuffer->Release();
+	this->IndirectArgsBuffer->Release();
+	//this->StagingBuffer->Release();
+	this->uav1->Release();
+	this->uav2->Release();
+	this->srv1->Release();
+	this->srv2->Release();
+	this->particleInserter->Release();
 
 	this->depthBuffer->Release();
 	this->dsState->Release();
@@ -335,6 +356,28 @@ void GraphicsHandler::createShaders()
 	}
 	csBlob->Release();
 
+	ID3D10Blob *icsBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"ComputeShader.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"cs_5_0",
+		0,
+		0,
+		&icsBlob,
+		NULL);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"inserter compute shader compile failed", L"error", MB_OK);
+	}
+	hr = this->gDevice->CreateComputeShader(icsBlob->GetBufferPointer(), icsBlob->GetBufferSize(), nullptr, &this->particleInserter);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"inserter compute Shader creation failed", L"error", MB_OK);
+	}
+	icsBlob->Release();
+
 	ID3DBlob* pvsBlob = nullptr;
 	hr = D3DCompileFromFile(
 		L"particleVertex.hlsl",
@@ -370,7 +413,7 @@ void GraphicsHandler::createShaders()
 
 	if (FAILED(hr))
 	{
-		MessageBox(0, L" pixel input desc creation failed", L"error", MB_OK);
+		MessageBox(0, L" particle input desc creation failed", L"error", MB_OK);
 	}
 
 	pvsBlob->Release();
@@ -901,9 +944,17 @@ void GraphicsHandler::createMtlLightBuffer()
 	delete[] ml;
 }
 
-void GraphicsHandler::createParticleBuffers()
+void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 {
 	DirectX::XMFLOAT4 emitterLocation(0.0f, 0.0f, 0.0f, 1.0f);
+	Particle *particles = new Particle[nrOfPArticles];
+
+	for (size_t i = 0; i < nrOfPArticles; i++)
+	{
+		particles[i].position = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+		particles[i].velocity = DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f);
+		particles[i].age = 0.0f;
+	}
 
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
@@ -918,11 +969,150 @@ void GraphicsHandler::createParticleBuffers()
 
 	data.pSysMem = &emitterLocation;
 
+	//creates emitter lacation constant buffer
 	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->emitterlocation);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"emitter creation failed", L"error", MB_OK);
 	}
+
+	data.pSysMem = particles;
+
+	D3D11_BUFFER_DESC sDesc;
+	ZeroMemory(&sDesc, sizeof(D3D11_BUFFER_DESC));
+
+	sDesc.ByteWidth = nrOfPArticles * sizeof(Particle);
+	sDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	sDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	sDesc.StructureByteStride = sizeof(Particle);
+	sDesc.Usage = D3D11_USAGE_DEFAULT;
+	sDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+
+	//creates 2 structured buffers who si going to be used as append/consume buffers for the particle system
+	hr = this->gDevice->CreateBuffer(&sDesc, &data, &this->structBuffer1);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"struct buffer 1 creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateBuffer(&sDesc, &data, &this->structBuffer2);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"struct buffer 2 creation failed", L"error", MB_OK);
+	}
+	delete[] particles;
+
+
+	
+	D3D11_BUFFER_UAV uav;
+
+	uav.FirstElement = 0;
+	uav.NumElements = nrOfPArticles;
+	uav.Flags = D3D11_BUFFER_UAV_FLAG_APPEND;
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+	ZeroMemory(&uavDesc, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
+
+	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	uavDesc.Buffer = uav;
+
+	
+
+	D3D11_BUFFER_SRV srv;
+	ZeroMemory(&srv, sizeof(D3D11_BUFFER_SRV));
+	srv.FirstElement = 0;
+	srv.NumElements = nrOfPArticles;
+	
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+	srvDesc.Buffer = srv;
+
+	//uav and srv for first buffer
+	hr = this->gDevice->CreateUnorderedAccessView(this->structBuffer1, &uavDesc, &this->uav1);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"uav 1 creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateShaderResourceView(this->structBuffer1, &srvDesc, &this->srv1);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"srv 1 creation failed", L"error", MB_OK);
+	}
+
+	//uav and srv for second buffer
+	hr = this->gDevice->CreateUnorderedAccessView(this->structBuffer2, &uavDesc, &this->uav2);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"uav 2 creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateShaderResourceView(this->structBuffer2, &srvDesc, &this->srv2);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"srv 2 creation failed", L"error", MB_OK);
+	}
+
+	//create constant buffer who holds the nr of particles
+	D3D11_BUFFER_DESC nrBDesc;
+	ZeroMemory(&nrBDesc, sizeof(D3D11_BUFFER_DESC));
+	nrBDesc.ByteWidth = 4 * sizeof(UINT);
+	nrBDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	nrBDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	UINT* init = new UINT[8];
+	
+	
+	init[0] = 0;
+	init[1] = 0;
+	init[2] = 0;
+	init[3] = 0;
+	
+
+	data.pSysMem = init;
+
+	hr = this->gDevice->CreateBuffer(&nrBDesc, &data, &this->particleCountBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"particle count cbuffer creation failed", L"error", MB_OK);
+	}
+
+	//create indirect argument buffer used for the drawInstancedIndirect call
+	D3D11_BUFFER_DESC inDesc;
+	ZeroMemory(&inDesc, sizeof(D3D11_BUFFER_DESC));
+	inDesc.ByteWidth = 4 * sizeof(UINT);
+	inDesc.Usage = D3D11_USAGE_DEFAULT;
+	inDesc.MiscFlags = D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
+
+	init[1] = 1;
+	hr = this->gDevice->CreateBuffer(&inDesc, &data, &this->IndirectArgsBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"inirect args buffer creation failed", L"error", MB_OK);
+	}
+
+
+	//create stageing buffer used for copying data from gpu to cpu
+	/*D3D11_BUFFER_DESC stageDesc;
+	ZeroMemory(&inDesc, sizeof(D3D11_BUFFER_DESC));
+	stageDesc.ByteWidth = 8 * sizeof(UINT);
+	stageDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	stageDesc.Usage = D3D11_USAGE_STAGING;
+	
+
+	for (size_t i = 0; i < 8; i++)
+	{
+		init[i] = 0;
+	}
+	hr = this->gDevice->CreateBuffer(&stageDesc, &data, &this->StagingBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"STAGING BUFFER CREATION FAILED!", L"error", MB_OK);
+	}*/
 }
 
 void GraphicsHandler::createVertexBuffer()
@@ -1146,8 +1336,6 @@ void GraphicsHandler::createDefferedBuffers()
 			MessageBox(0, L"Shader resource view failed!", L"error", MB_OK);
 	}
 
-
-
 }
 
 void GraphicsHandler::render()
@@ -1260,5 +1448,10 @@ void GraphicsHandler::renderParticles()
 
 	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
 	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+}
+
+void GraphicsHandler::updateParticles()
+{
 
 }
