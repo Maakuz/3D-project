@@ -30,7 +30,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 	
-	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
+	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext, wHandler);
 
 	this->createShaders();
 	this->createTexture();

@@ -7,12 +7,13 @@
 
 //http://www.toymaker.info/Games/html/camera.html
 //https://books.google.se/books?id=GY-AAwAAQBAJ&pg=PA279&lpg=PA279&dq=DirectX::XMMATRIX+yawMatrix+%3D+DirectX::XMMatrixRotationAxis()&source=bl&ots=q9ZMKlgRDw&sig=ntfQbxD_FG2SzkIqrnMKVmrwvuM&hl=sv&sa=X&ved=0ahUKEwi4nceHs7_RAhXJiiwKHdeaAEAQ6AEIODAC#v=onepage&q=DirectX%3A%3AXMMATRIX%20yawMatrix%20%3D%20DirectX%3A%3AXMMatrixRotationAxis()&f=false
+//https://github.com/Microsoft/DirectXTK/wiki/Mouse
 
 class CameraClass
 {
 private: 
 	std::unique_ptr<DirectX::Keyboard> m_keyboard;
-	DirectX::Mouse* m_mouse;
+	std::unique_ptr<DirectX::Mouse> m_mouse;
 
 	matrixStruct matrices; //buffern
 	ID3D11Device* gDevice;
@@ -21,6 +22,7 @@ private:
 	float defaultRotationRate;
 	float defaultMovementRate;
 	float defaultMouseSensitivity;
+	DirectX::XMFLOAT2 previousMouseLocation;
 
 	//matrices.view = 
 
@@ -51,7 +53,7 @@ private:
 
 	float rotationValue;
 public:
-	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext);
+	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, HWND window);
 
 	virtual ~CameraClass();
 	DirectX::XMMATRIX viewProjectionMatrix(); //kan va bra att ha
