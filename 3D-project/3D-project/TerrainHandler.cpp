@@ -19,6 +19,11 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 		255, 50, 0, 0
 	};
 
+	for (size_t i = 0; i < 16; i++)
+	{
+		heights[i] /= 255.f;
+	}
+
 	this->height = 4;
 	this->width = 4;
 
