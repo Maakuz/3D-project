@@ -53,11 +53,6 @@ TerrainHandler::~TerrainHandler()
 	this->vertexBuffer->Release();
 }
 
-void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDeviceContext)
-{
-	gDeviceContext->Draw(nrOfVertices, 0);
-}
-
 void TerrainHandler::loadHeightMap(std::string path)
 {
 	std::ifstream file(path, std::ios::binary);
@@ -165,7 +160,7 @@ void TerrainHandler::createVertices()
 	this->nrOfVertices = (this->height - 1) * (this->width - 1) * 6;
 	this->vertices = new vertexInfo[this->nrOfVertices];
 
-	float offset = 2.f;
+	float length = 2.f;
 	int count = 0;
 
 	//Once for every quad plus the iterations we skip at the corner of the heightmap
@@ -177,9 +172,9 @@ void TerrainHandler::createVertices()
 		//Create the first
 		this->vertices[count] =
 		{
-			this->heightMap[i].x * offset,
+			this->heightMap[i].x * length,
 			this->heightMap[i].y,
-			this->heightMap[i].z * offset,
+			this->heightMap[i].z * length,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -191,9 +186,9 @@ void TerrainHandler::createVertices()
 		//Create one to the right of the first
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1].x * offset,
+			this->heightMap[i + 1].x * length,
 			this->heightMap[i + 1].y,
-			this->heightMap[i + 1].z * offset,
+			this->heightMap[i + 1].z * length,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -206,9 +201,9 @@ void TerrainHandler::createVertices()
 		//Create one under the first
 		this->vertices[count] =
 		{
-			this->heightMap[i + this->width].x * offset,
+			this->heightMap[i + this->width].x * length,
 			this->heightMap[i + this->width].y,
-			this->heightMap[i + this->width].z * offset,
+			this->heightMap[i + this->width].z * length,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -221,9 +216,9 @@ void TerrainHandler::createVertices()
 		//Create the first vertex in the second triangle (Same as 2)
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1].x * offset,
+			this->heightMap[i + 1].x * length,
 			this->heightMap[i + 1].y,
-			this->heightMap[i + 1].z * offset,
+			this->heightMap[i + 1].z * length,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -236,9 +231,9 @@ void TerrainHandler::createVertices()
 		//Create one under the last one
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1 + this->width].x * offset,
+			this->heightMap[i + 1 + this->width].x * length,
 			this->heightMap[i + 1 + this->width].y,
-			this->heightMap[i + 1 + this->width].z * offset,
+			this->heightMap[i + 1 + this->width].z * length,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -251,9 +246,9 @@ void TerrainHandler::createVertices()
 		//Create one to the left of the last one (same as vertex 3)
 		this->vertices[count] =
 		{
-			this->heightMap[i + this->width].x * offset,
+			this->heightMap[i + this->width].x * length,
 			this->heightMap[i + this->width].y,
-			this->heightMap[i + this->width].z * offset,
+			this->heightMap[i + this->width].z * length,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -285,10 +280,7 @@ void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 	gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
 }
 
-void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
+ID3D11Buffer* TerrainHandler::getVertexBuffer() const
 {
-	UINT32 stride = sizeof(vertexInfo);
-	UINT32 offset = 0;
-	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
-	gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	return this->vertexBuffer;
 }
