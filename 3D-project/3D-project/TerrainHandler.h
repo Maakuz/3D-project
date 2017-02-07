@@ -21,11 +21,12 @@ public:
 	TerrainHandler(ID3D11Device* gDevice, std::string path);
 	virtual ~TerrainHandler();
 
+	void renderTerrain(ID3D11DeviceContext* gDevice);
 	void loadHeightMap(std::string path);
 	void loadHeightMap(char* path);
 	void createVertices();
 	void createVertexBuffer(ID3D11Device* gDevice);
-	ID3D11Buffer* getVertexBuffer() const;
+	void setShaderResources(ID3D11DeviceContext* gDeviceContext);
 };
 
 

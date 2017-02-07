@@ -280,7 +280,10 @@ void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 	gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
 }
 
-ID3D11Buffer* TerrainHandler::getVertexBuffer() const
+void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
 {
-	return this->vertexBuffer;
+	UINT32 stride = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
+	gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }

@@ -1015,16 +1015,7 @@ void GraphicsHandler::renderGeometry()
 	
 	UINT32 vertexSize = sizeof(vertexInfo);
 	UINT32 offset = 0;
-
-
-	//Proof of concept
-	ID3D11Buffer* buffers[2] = {nullptr};
-
-	buffers[0] = this->defferedVertexBuffer;
-	buffers[1] = this->terrainHandler->getVertexBuffer();
-
-	this->terrainHandler->getVertexBuffer();
-	this->gDeviceContext->IASetVertexBuffers(0, 2, buffers, &vertexSize, &offset);
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
@@ -1046,7 +1037,7 @@ void GraphicsHandler::renderGeometry()
 	{
 		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
 	}
-	
+	this->terrainHandler->setShaderResources(this->gDeviceContext);
 
 	this->gDeviceContext->Draw(36, 0);
 
