@@ -5,6 +5,7 @@
 #include <sstream>
 #include "CameraClass.h"
 #include "WICTextureLoader.h"
+#include <time.h>
 
 
 const int NROFBUFFERS = 3;
@@ -75,6 +76,8 @@ private:
 	ID3D11ShaderResourceView* srv1;
 	ID3D11ShaderResourceView* srv2;
 
+	float deltaTime;
+	float currentTime;
 
 
 	void loadObj();
@@ -92,6 +95,7 @@ private:
 	void createMtlLightBuffer();
 	void createParticleBuffers(int nrOfPArticles);
 	
+	
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
@@ -100,7 +104,9 @@ public:
 	void render();
 	void renderGeometry();
 	void renderParticles();
+	void update();
 	void updateParticles();
+
 };
 
 

@@ -1,7 +1,10 @@
 #include "GraphicsHandler.h"
 
+
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
+	srand(time(NULL));
+	this->currentTime = time(NULL);
 	this->height = height;
 	this->width = width;
 
@@ -946,8 +949,20 @@ void GraphicsHandler::createMtlLightBuffer()
 
 void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 {
-	DirectX::XMFLOAT4 emitterLocation(0.0f, 0.0f, 0.0f, 1.0f);
+	
 	Particle *particles = new Particle[nrOfPArticles];
+	EmitterLocation emitterLocation;
+	emitterLocation.emitterLocation = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	float x, y, z;
+	x = rand() % 2 - 1;
+	y = rand() % 2 - 1;
+	z = rand() % 2 - 1;
+	DirectX::XMVECTOR randVec = DirectX::XMVectorSet(x, y, z, 1.0f);
+	randVec = DirectX::XMVector4Normalize(randVec);
+	DirectX::XMFLOAT4 temp;
+	DirectX::XMStoreFloat4(&temp, randVec);
+	emitterLocation.randomVector = temp;
+	
 
 	for (size_t i = 0; i < nrOfPArticles; i++)
 	{
@@ -959,7 +974,7 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
-	desc.ByteWidth = sizeof(DirectX::XMFLOAT4);
+	desc.ByteWidth = sizeof(EmitterLocation);
 	desc.Usage = D3D11_USAGE_DYNAMIC;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -1449,6 +1464,13 @@ void GraphicsHandler::renderParticles()
 	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
 	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+}
+
+void GraphicsHandler::update()
+{
+	
+	this->deltaTime = time(NULL) - currentTime;
+	currentTime = time(NULL);
 }
 
 void GraphicsHandler::updateParticles()

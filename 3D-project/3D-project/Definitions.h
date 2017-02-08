@@ -99,5 +99,11 @@ struct Particle
 	float age;
 };
 
+struct EmitterLocation
+{
+	DirectX::XMFLOAT4 emitterLocation;
+	DirectX::XMFLOAT4 randomVector;
+};
+
 
 #endif
