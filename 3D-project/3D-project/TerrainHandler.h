@@ -12,6 +12,7 @@ class TerrainHandler
 {
 private:
 	int height, width;
+	float heightMultiple;
 	ID3D11Buffer* vertexBuffer;
 	HeightMap* heightMap;
 	vertexInfo* vertices;
@@ -19,7 +20,7 @@ private:
 
 
 public:
-	TerrainHandler(ID3D11Device* gDevice, std::string path);
+	TerrainHandler(ID3D11Device* gDevice, std::string path, float heightMultiple = 0);
 	virtual ~TerrainHandler();
 
 	void renderTerrain(ID3D11DeviceContext* gDeviceContext);

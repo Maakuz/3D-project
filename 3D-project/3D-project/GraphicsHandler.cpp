@@ -31,7 +31,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->setViewPort(height, width);
 	
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
-	this->terrainHandler = new TerrainHandler(this->gDevice, "../resource/maps/HeightMapSmall.bmp");
+	this->terrainHandler = new TerrainHandler(this->gDevice, "../resource/maps/HeightMap3.bmp", 50.f);
 
 	this->createShaders();
 	this->createTexture();
@@ -45,8 +45,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createVertexBuffer();
 	this->createMtlLightBuffer();
 	
-
-
 
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();

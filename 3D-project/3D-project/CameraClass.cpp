@@ -112,13 +112,13 @@ matrixStruct CameraClass::initiateMatrices()
 	this->fovAngleY = 3.14 * 0.45;
 	this->aspectRatio = 640.f / 480.f;
 	this->zNear = 0.1;
-	this->zFar = 20;
+	this->zFar = 200;
 
 	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(M_PI / 6, M_PI / 6, 0);
 	//this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
 
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(0, 0, -2, 0);
+	eyePosition = DirectX::XMVectorSet(0, 0, -30, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 0);
@@ -190,7 +190,7 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 {
 	D3D11_MAPPED_SUBRESOURCE dataPtr;
 
-	this->rotationValue += 0.005;
+	this->rotationValue += 0.00005;
 	if (this->rotationValue == 100000)
 		this->rotationValue = 0;
 
@@ -200,7 +200,7 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 	
 	DirectX::XMMATRIX temp = this->matrices.world;
 	
-	temp = DirectX::XMMatrixRotationRollPitchYaw(M_PI/3, rotationValue, 0);//DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
+	temp = DirectX::XMMatrixRotationRollPitchYaw(M_PI/5, rotationValue, 0);//DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
 	 
 	this->matrices.world = temp;
 

@@ -1,45 +1,13 @@
 #include "TerrainHandler.h"
 
-TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
+TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float heightMultiple)
 {
 	this->height = 0;
 	this->width = 0;
+	this->heightMultiple = heightMultiple;
 	this->heightMap = nullptr;
-	//this->loadHeightMap(gDevice, path);
+	this->loadHeightMap(gDevice, path);
 	
-	//Hardcoded stuff because I'm tired of crap
-	this->heightMap = new HeightMap[16];
-	float heights[16] = 
-	{
-		0, 0, 0, 0,
-		0, 255, 255, 0,
-		0, 255, 255, 0,
-		0, 0, 0, 0
-	};
-
-	for (size_t i = 0; i < 16; i++)
-	{
-		heights[i] /= 255.f;
-	}
-
-	this->height = 4;
-	this->width = 4;
-
-	int count = 0;
-	int pos = 0;
-	for (int j = 0; j < this->height; j++)
-	{
-		for (int i = 0; i < this->width; i++)
-		{
-			pos = (this->width * j) + i;
-			this->heightMap[pos].x = j;
-			this->heightMap[pos].y = heights[count];
-			this->heightMap[pos].z = i;
-
-			count++;
-		}
-	}
-
 	this->createVertices();
 	this->createVertexBuffer(gDevice);
 }
@@ -157,6 +125,8 @@ void TerrainHandler::createVertices()
 	}
 
 	float length = 0.3f;
+	float offsetX = ((this->width - 1) * length) / 2.f;
+	float offsetZ = ((this->height - 1) * length) / 2.f;
 	int count = 0;
 
 	DirectX::XMFLOAT3 edge1;
@@ -177,9 +147,9 @@ void TerrainHandler::createVertices()
 		//Create the first
 		this->vertices[count] =
 		{
-			this->heightMap[i].x * length,
-			this->heightMap[i].y,
-			this->heightMap[i].z * length,
+			this->heightMap[i].x * length - offsetX,
+			this->heightMap[i].y * this->heightMultiple,
+			this->heightMap[i].z * length - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -191,9 +161,9 @@ void TerrainHandler::createVertices()
 		//Create one to the right of the first
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1].x * length,
-			this->heightMap[i + 1].y,
-			this->heightMap[i + 1].z * length,
+			this->heightMap[i + 1].x * length - offsetX,
+			this->heightMap[i + 1].y * this->heightMultiple,
+			this->heightMap[i + 1].z * length - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -206,9 +176,9 @@ void TerrainHandler::createVertices()
 		//Create one under the first
 		this->vertices[count] =
 		{
-			this->heightMap[i + this->width].x * length,
-			this->heightMap[i + this->width].y,
-			this->heightMap[i + this->width].z * length,
+			this->heightMap[i + this->width].x * length - offsetX,
+			this->heightMap[i + this->width].y * this->heightMultiple,
+			this->heightMap[i + this->width].z * length - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -248,9 +218,9 @@ void TerrainHandler::createVertices()
 		//Create the first vertex in the second triangle (Same as 2)
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1].x * length,
-			this->heightMap[i + 1].y,
-			this->heightMap[i + 1].z * length,
+			this->heightMap[i + 1].x * length - offsetX,
+			this->heightMap[i + 1].y * this->heightMultiple,
+			this->heightMap[i + 1].z * length - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -263,9 +233,9 @@ void TerrainHandler::createVertices()
 		//Create one under the last one
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1 + this->width].x * length,
-			this->heightMap[i + 1 + this->width].y,
-			this->heightMap[i + 1 + this->width].z * length,
+			this->heightMap[i + 1 + this->width].x * length - offsetX,
+			this->heightMap[i + 1 + this->width].y * this->heightMultiple,
+			this->heightMap[i + 1 + this->width].z * length - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -278,9 +248,9 @@ void TerrainHandler::createVertices()
 		//Create one to the left of the last one (same as vertex 3)
 		this->vertices[count] =
 		{
-			this->heightMap[i + this->width].x * length,
-			this->heightMap[i + this->width].y,
-			this->heightMap[i + this->width].z * length,
+			this->heightMap[i + this->width].x * length - offsetX,
+			this->heightMap[i + this->width].y * this->heightMultiple,
+			this->heightMap[i + this->width].z * length - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
