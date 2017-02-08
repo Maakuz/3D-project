@@ -11,7 +11,7 @@
 class CameraClass
 {
 private: 
-	DirectX::Keyboard* m_keyboard;
+	std::unique_ptr<DirectX::Keyboard> m_keyboard;
 	DirectX::Mouse* m_mouse;
 
 	matrixStruct matrices; //buffern
@@ -39,7 +39,7 @@ private:
 
 	DirectX::XMFLOAT3 mPosition; //positin va kamera
 	DirectX::XMFLOAT3 mUp;		//up pekar upp y //XMFLOAT3 dessa ändras hela tiden
-	DirectX::XMFLOAT3 mLook;	//look pekar ner z
+	DirectX::XMFLOAT3 mLook;	//look pekar ner z	//direction
 	DirectX::XMFLOAT3 mRight;	//right pekar ner x			//cross produkt av de andra 2
 	DirectX::XMFLOAT4X4 mViewMatrix;		//sparad viewmatrix
 	DirectX::XMFLOAT4X4 mProjectionMatrix;	//sparad projectionmatris
@@ -48,6 +48,8 @@ private:
 	//float pitch; //rotation RUNT x/right
 	//float yaw;	//rotation RUNT y/up
 	//float roll;	//rotation RUNT z/look
+
+	float rotationValue;
 public:
 	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext);
 
@@ -75,9 +77,7 @@ public:
 
 	//en update som hanterar WASD och mouse movement
 	//initiate ska också sätta mMouse och mKeyboard
+	//viewmatrix fuckar upp lite då och då, mLook e konstig, (kolla right och up)
 };
 
-//this->matrices.projection = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
-
-//this->matrices.view = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
 #endif

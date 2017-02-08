@@ -7,23 +7,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+
 	case WM_KEYDOWN:
-		if (wparam == 'W')
-		{
-			//todo do stuff
-		}
-		if (wparam == 'S')
-		{
-			//todo do stuff
-		}
-		if (wparam == 'A')
-		{
-			//todo do stuff
-		}
-		if (wparam == 'D')
-		{
-			//todo do stuff
-		}
+	case WM_SYSKEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		DirectX::Keyboard::ProcessMessage(msg, wparam, lparam);
+		break;
 
 	default:
 		return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -121,7 +111,7 @@ int WindowClass::run()
 		}
 		else
 		{
-			graphicsHandler->render();
+			graphicsHandler->update();
 		}
 			
 		

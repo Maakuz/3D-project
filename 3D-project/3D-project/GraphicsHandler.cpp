@@ -32,6 +32,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->setViewPort(height, width);
 
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
+	this->terrainHandler = new TerrainHandler(this->gDevice, "../resource/maps/HeightMap3.bmp", 50.f);
 
 	this->createShaders();
 	this->createTexture();
@@ -47,8 +48,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createMtlLightBuffer();
 
 
-
-
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
@@ -57,6 +56,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 GraphicsHandler::~GraphicsHandler()
 {
 	delete this->cameraClass;
+	delete this->terrainHandler;
+
 	this->vertexBuffer->Release();
 	this->rtvBackBuffer->Release();
 	this->swapChain->Release();
@@ -944,11 +945,11 @@ void GraphicsHandler::createSamplers()
 
 void GraphicsHandler::createLightBuffer()
 {
-	this->light.lightColor = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	this->light.lightPos = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	this->light.lightAngle = DirectX::XMFLOAT2(1.0f, 1.0f);
-	this->light.lightDir = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->light.lightColor = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	this->light.lightPos = DirectX::XMFLOAT4(0.0f, 0.0f, -3.0f, 1.0f);
+	this->light.lightAngle = DirectX::XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f);
+	this->light.lightDir = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 0.0f);
+	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 0.0f);
 
 	DirectX::XMVECTOR temp;
 
@@ -1031,21 +1032,29 @@ void GraphicsHandler::createDefferedBuffers()
 
 }
 
+void GraphicsHandler::update()
+{
+	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
+	//this->cameraClass->update();
+
+
+	this->renderGeometry();
+	this->render();
+}
+
 void GraphicsHandler::render()
 {
 	float clearColor[] = { 0, 0, 0, 1 };
 
-	this->renderGeometry();
 
-
-	//disable depth stencil
+	//disable depth stencil. Anledningen till det är för att vi nu renderar i 2D på en stor quad, det finns inget djup längre
 	this->gDeviceContext->OMSetDepthStencilState(this->disableDepthState, 1);
 
 	UINT32 vertexSize = sizeof(TriangleVertex);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
-	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	this->gDeviceContext->PSSetShaderResources(0, 3, this->shaderResourceViews);
 
@@ -1076,29 +1085,7 @@ void GraphicsHandler::render()
 
 void GraphicsHandler::renderGeometry()
 {
-	//Kanske en specifik viwport for quadsaken
 	float clearColor[] = { 0, 0, 0, 1 };
-
-	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	UINT32 vertexSize = sizeof(vertexInfo);
-	UINT32 offset = 0;
-	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
-
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
-	
-
-	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
-
-	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
-
-
-	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
-	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
-
-	//kanske ska vara andra tal, troligtvis inte
-	this->setViewPort(480, 640);
-
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
 
 	for (int i = 0; i < NROFBUFFERS; i++)
@@ -1106,11 +1093,33 @@ void GraphicsHandler::renderGeometry()
 		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
 	}
 
-	//Kanskse borde vara drawindexed
-	this->gDeviceContext->Draw(36, 0);
+	//Set deffered shaders and resources
+	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
+	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
+
+	
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
+
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+
+	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
+
+	//Draw terrain
+	this->terrainHandler->setShaderResources(this->gDeviceContext);
+	this->terrainHandler->renderTerrain(this->gDeviceContext);
+	
+
+	//Draw objects
+	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	//this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
+	//this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//this->gDeviceContext->Draw(36, 0);
 
 	//Reset
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
+
 
 	//Null stuff
 	ID3D11RenderTargetView* temp[NROFBUFFERS];
