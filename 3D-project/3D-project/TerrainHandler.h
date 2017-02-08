@@ -1,6 +1,7 @@
 #ifndef TERRAINHANDLER_H
 #define TERRAINHANDLER_H
 #include "Definitions.h"
+#include "WICTextureLoader.h"
 #include <fstream>
 #include <String>
 
@@ -18,11 +19,11 @@ private:
 
 
 public:
-	TerrainHandler(ID3D11Device* gDevice, std::string path);
+	TerrainHandler(ID3D11Device* gDevice, std::wstring path);
 	virtual ~TerrainHandler();
 
-	void renderTerrain(ID3D11DeviceContext* gDevice);
-	void loadHeightMap(std::string path);
+	void renderTerrain(ID3D11DeviceContext* gDeviceContext);
+	void loadHeightMap(ID3D11Device* gDevice, std::wstring path);
 	void loadHeightMap(char* path);
 	void createVertices();
 	void createVertexBuffer(ID3D11Device* gDevice);

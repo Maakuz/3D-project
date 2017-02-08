@@ -190,7 +190,7 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 {
 	D3D11_MAPPED_SUBRESOURCE dataPtr;
 
-	//this->rotationValue += 0.005;
+	this->rotationValue += 0.005;
 	if (this->rotationValue == 100000)
 		this->rotationValue = 0;
 
@@ -198,9 +198,9 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 	this->gDeviceContext->Map(VSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &dataPtr);
 	
 	
-	DirectX::XMMATRIX temp = DirectX::XMLoadFloat4x4(&this->mProjectionMatrix);
+	DirectX::XMMATRIX temp = this->matrices.world;
 	
-	temp = DirectX::XMMatrixRotationX(M_PI / 6);//DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
+	temp = DirectX::XMMatrixRotationRollPitchYaw(M_PI / 3, rotationValue, 0);//DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
 
 	this->matrices.world = temp;
 

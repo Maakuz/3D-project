@@ -31,7 +31,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->setViewPort(height, width);
 	
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
-	this->terrainHandler = new TerrainHandler(this->gDevice, "../resource/maps/HeightMapSmall.bmp");
+	this->terrainHandler = new TerrainHandler(this->gDevice, L"../resource/maps/HeightMapSmall.bmp");
 
 	this->createShaders();
 	this->createTexture();
@@ -1009,40 +1009,38 @@ void GraphicsHandler::render()
 
 void GraphicsHandler::renderGeometry()
 {
-	//Kanske en specifik viwport for quadsaken
 	float clearColor[] = { 0, 0, 0, 1 };
-
-	
-	UINT32 vertexSize = sizeof(vertexInfo);
-	UINT32 offset = 0;
-	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
-
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
-	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
-
-	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
-
-	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
-
-
-	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
-	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
-
-	//kanske ska vara andra tal, troligtvis inte
-	this->setViewPort(480, 640);
-
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
 		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
 	}
-	this->terrainHandler->setShaderResources(this->gDeviceContext);
+	//Set deffered shaders and resources
+	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
+	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
 
-	this->gDeviceContext->Draw(36, 0);
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+
+	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
+
+	//Draw terrain
+	this->terrainHandler->setShaderResources(this->gDeviceContext);
+	this->terrainHandler->renderTerrain(this->gDeviceContext);
+	
+
+	//Draw objects
+	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 offset = 0;
+	//this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
+
+	//this->gDeviceContext->Draw(36, 0);
 
 	//Reset
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
+
 
 	//Null stuff
 	ID3D11RenderTargetView* temp[NROFBUFFERS];
