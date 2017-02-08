@@ -1,22 +1,20 @@
 #include "TerrainHandler.h"
 
-TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::wstring path)
+TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 {
 	this->height = 0;
 	this->width = 0;
 	this->heightMap = nullptr;
 	this->loadHeightMap(gDevice, path);
-	//this->loadHeightMap((char*)"../resource/maps/HeightMapSmall.bmp");
 	
 	//Hardcoded stuff because I'm tired of crap
 	/*this->heightMap = new HeightMap[30];
 	float heights[30] = 
 	{
-		0, 0, 0, 0, 0, 0,
-		0, 50, 255, 50, 0, 0,
-		0, 255, 75, 50, 0, 0,
-		0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0
+		0, 0, 0, 0,
+		0, 50, 255, 50,
+		0, 255, 75, 0,
+		0, 0, 0, 0
 	};
 
 	for (size_t i = 0; i < 30; i++)
@@ -24,8 +22,8 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::wstring path)
 		heights[i] /= 255.f;
 	}
 
-	this->height = 5;
-	this->width = 6;
+	this->height = 4;
+	this->width = 4;
 
 	int count = 0;
 	int pos = 0;
@@ -58,7 +56,7 @@ void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDeviceContext)
 	gDeviceContext->Draw(this->nrOfVertices, 0);
 }
 
-void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::wstring path)
+void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::string path)
 {
 
 	//Depricated maybe //No, not quite
@@ -84,17 +82,18 @@ void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::wstring path)
 		//Check if it is a .bmp file
 		if (fHeader->bfType == 0x4D42)
 		{
+			this->height = bmpInfo->biHeight;
+			this->width = bmpInfo->biWidth;
 
+			int size = this->width * this->height * 3;
 
-			colors = new UINT8[bmpInfo->biSizeImage];
+			colors = new UINT8[size];
 
-			for (size_t i = 0; i < bmpInfo->biSizeImage; i++)
+			for (size_t i = 0; i < size; i++)
 			{
 				colors[i] = 0;
 			}
 
-			this->height = bmpInfo->biHeight;
-			this->width = bmpInfo->biWidth;
 
 			this->heightMap = new HeightMap[this->width * this->height];
 
@@ -104,16 +103,17 @@ void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::wstring path)
 			}
 
 			//Find the end of the header
-			//file.seekg(fHeader->bfOffBits);
+			file.seekg(fHeader->bfOffBits);
 
 			//Read all the bits into the color array
-			file.read((char*)colors, bmpInfo->biSizeImage);
+			file.read((char*)colors, size);
 
-			//for testing
-			std::ofstream ofile("../test.txt", std::ios::app);
-			ofile << colors << std::endl;
-			ofile.close();
+			file.close();
 
+			/*for (size_t i = 0; i < size; i++)
+			{
+				colors[i] = 0;
+			}*/
 
 			//Create vectors from the color array
 			int count = 0;
@@ -127,7 +127,7 @@ void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::wstring path)
 					this->heightMap[pos].y = colors[count];
 					this->heightMap[pos].z = i;
 
-					count+=2;
+					count+=3;
 				}
 			}
 
@@ -136,13 +136,12 @@ void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::wstring path)
 			{
 				this->heightMap[i].y /= 255;
 			}
-
-			file.close();
-
-			delete headers[0];
-			delete headers[1];
-			delete colors;
 		}
+
+
+		delete headers[0];
+		delete headers[1];
+		delete colors;
 	}
 }
 

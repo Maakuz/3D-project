@@ -19,11 +19,11 @@ private:
 
 
 public:
-	TerrainHandler(ID3D11Device* gDevice, std::wstring path);
+	TerrainHandler(ID3D11Device* gDevice, std::string path);
 	virtual ~TerrainHandler();
 
 	void renderTerrain(ID3D11DeviceContext* gDeviceContext);
-	void loadHeightMap(ID3D11Device* gDevice, std::wstring path);
+	void loadHeightMap(ID3D11Device* gDevice, std::string path);
 	void loadHeightMap(char* path);
 	void createVertices();
 	void createVertexBuffer(ID3D11Device* gDevice);
