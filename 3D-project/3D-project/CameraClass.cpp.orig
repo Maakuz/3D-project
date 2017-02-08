@@ -248,13 +248,12 @@ void CameraClass::update()
 	if (ks.A)
 	{
 		keyboardAmount.x = -0.00003f;
-		this->mLook.x = this->mLook.x + -0.00003f;
-
+		//this->mLook.x = this->mLook.x + -0.00003f;
 	}
 	if (ks.D)
 	{
 		keyboardAmount.x = 0.00003f;
-		this->mLook.x = this->mLook.x + 0.00003f;
+		//this->mLook.x = this->mLook.x + 0.00003f;
 	}
 
 	DirectX::XMVECTOR position = DirectX::XMLoadFloat3(&this->mPosition);
@@ -289,17 +288,13 @@ void CameraClass::update()
 
 	//Set the look at to the same x coord as the camera
 
-	this->mLook.x = this->mPosition.x;
 	//this->mLook.x = this->mPosition.x;
-
+	this->mLook.x = this->mPosition.x;
 
 
 
 	
-
-	/*
 	//mus
-	DirectX::XMFLOAT2 mouseAmount = DirectX::XMFLOAT2(0, 0);
 
 	auto ms = this->m_mouse->GetState();
 	//ms.positionMode = DirectX::Mouse::MODE_RELATIVE; //system cursorn inte visible?
@@ -375,22 +370,11 @@ void CameraClass::update()
 
 
 
-	DirectX::XMFLOAT2 rotationAmount = DirectX::XMFLOAT2(0, 0);
-	DirectX::XMVECTOR rotationVector = DirectX::XMVectorZero();
 
-	DirectX::XMVectorSetX(rotationVector, mouseAmount.x * this->defaultRotationRate); // * elapsedTime
-	DirectX::XMVectorSetY(rotationVector, mouseAmount.y * this->defaultRotationRate); // * elapsedTime
 
-	DirectX::XMVECTOR right = DirectX::XMLoadFloat3(&this->mRight);
 
-	float temp = DirectX::XMVectorGetY(rotationVector);
 
-	DirectX::XMMATRIX pitchMatrix = DirectX::XMMatrixRotationAxis(right, temp);
-	DirectX::XMMATRIX yawMatrix = DirectX::XMMatrixRotationY(DirectX::XMVectorGetX(rotationVector));
 
-	DirectX::XMMATRIX yawXPitch = DirectX::XMMatrixMultiply(pitchMatrix, yawMatrix);
-	DirectX::XMFLOAT4X4 floatYawXPitch;
-	DirectX::XMStoreFloat4x4(&floatYawXPitch, yawXPitch);
 
 
 /*
