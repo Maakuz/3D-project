@@ -205,12 +205,14 @@ void TerrainHandler::createVertices()
 
 		DirectX::XMStoreFloat3(&normal, norm);
 		
-		//Set the normal for the first three vertices
+		//Set the normal for the first three vertices and the mtl
 		for (int i = 0; i < 3; i++)
 		{
 			this->vertices[count - i].vnx = normal.x;
 			this->vertices[count - i].vny = normal.y;
 			this->vertices[count - i].vnz = normal.z;
+
+			this->vertices[count - i].mtlType = 0;
 		}
 
 		count++;
@@ -283,6 +285,8 @@ void TerrainHandler::createVertices()
 			this->vertices[count - i].vnx = normal.x;
 			this->vertices[count - i].vny = normal.y;
 			this->vertices[count - i].vnz = normal.z;
+
+			this->vertices[count - i].mtlType = 0;
 		}
 
 		count++;

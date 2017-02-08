@@ -54,6 +54,7 @@ float4 main(VS_OUT input) : SV_TARGET
     //Light vector
     lVec = lightPos - positions.Sample(sSampler, input.uv);
 
+	//For directional lights only
     lVec = -lightDir;
 
     //  //attenuation here somewhere
@@ -69,6 +70,6 @@ float4 main(VS_OUT input) : SV_TARGET
 
     lighting = float4(diffuse, 1);
 
-    return float4(positions.Sample(sSampler, input.uv).xyz, 1);
+    return float4(colors.Sample(sSampler, input.uv).xyz, 1);
     return  lighting;
 }
