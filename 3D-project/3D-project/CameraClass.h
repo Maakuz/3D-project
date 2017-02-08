@@ -46,9 +46,14 @@ private:
 	DirectX::XMFLOAT4X4 mViewMatrix;		//sparad viewmatrix
 	DirectX::XMFLOAT4X4 mProjectionMatrix;	//sparad projectionmatris
 
+	bool mouseMove;
+	DirectX::XMFLOAT2 startMouse;
+	DirectX::XMFLOAT2 stopMouse;
+	DirectX::XMFLOAT2 totalMouse;
+
 	//DirectX::XMMATRIX view;
-	//float pitch; //rotation RUNT x/right
-	//float yaw;	//rotation RUNT y/up
+	float mPitch; //rotation RUNT x/right
+	float mYaw;	//rotation RUNT y/up
 	//float roll;	//rotation RUNT z/look
 
 	float rotationValue;
