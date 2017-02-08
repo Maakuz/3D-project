@@ -1,4 +1,5 @@
 #include "WindowClass.h"
+#include <time.h>
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -121,6 +122,7 @@ int WindowClass::run()
 		}
 		else
 		{
+			graphicsHandler->update(time(NULL));
 			graphicsHandler->render();
 		}
 			

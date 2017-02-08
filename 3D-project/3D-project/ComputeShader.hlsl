@@ -14,7 +14,7 @@ cbuffer currentTime
 
 cbuffer nrOfParticles
 {
-    uint4 nrOfParticles;
+    uint nrOfParticles;
 };
 
 
@@ -34,7 +34,7 @@ void main( uint3 DTID : SV_DispatchThreadID )
 
         currentParticle.time += time;
 
-        if(currentParticle.time < 100.0f)
+        if(currentParticle.time < 1000000.0f)
         {
             nextSimState.Append(currentParticle);
         }

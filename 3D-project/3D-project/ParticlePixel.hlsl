@@ -10,7 +10,7 @@ SamplerState sSampler : register(s0);
 
 float4 main(in GS_out input) : SV_TARGET
 {
-    float4 color = paricleTex.sample(sSampler, input.uv);
+    float4 color = paricleTex.Sample(sSampler, input.uv);
 
     return color;
 }

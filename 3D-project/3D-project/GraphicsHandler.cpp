@@ -29,6 +29,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->srv1 = nullptr;
 	this->srv2 = nullptr;
 	this->particleInserter = nullptr;
+	this->deltaTimeBuffer = nullptr;
 
 	this->computeShader = nullptr;
 	this->particleGeometry = nullptr;
@@ -118,6 +119,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->matrixBuffer->Release();
 	this->lightbuffer->Release();
 	this->mtlLightbuffer->Release();
+	this->deltaTimeBuffer->Release();
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -991,6 +993,13 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 		MessageBox(0, L"emitter creation failed", L"error", MB_OK);
 	}
 
+	data.SysMemPitch = this->deltaTime;
+	hr = this->gDevice->CreateBuffer(&desc, &data, &this->deltaTimeBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"deltaTimeBuffer creation failed", L"error", MB_OK);
+	}
+
 	data.pSysMem = particles;
 
 	D3D11_BUFFER_DESC sDesc;
@@ -1466,11 +1475,11 @@ void GraphicsHandler::renderParticles()
 
 }
 
-void GraphicsHandler::update()
+void GraphicsHandler::update(float currentTime)
 {
-	
-	this->deltaTime = time(NULL) - currentTime;
-	currentTime = time(NULL);
+	this->deltaTime = currentTime - this->currentTime;
+	this->currentTime = currentTime;
+	this->updateParticles();
 }
 
 void GraphicsHandler::updateParticles()

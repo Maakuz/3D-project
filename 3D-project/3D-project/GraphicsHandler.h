@@ -71,6 +71,7 @@ private:
 	ID3D11Buffer* particleCountBuffer;
 	ID3D11Buffer* IndirectArgsBuffer;
 	ID3D11Buffer* StagingBuffer;
+	ID3D11Buffer* deltaTimeBuffer;
 	ID3D11UnorderedAccessView* uav1;
 	ID3D11UnorderedAccessView* uav2;
 	ID3D11ShaderResourceView* srv1;
@@ -94,6 +95,9 @@ private:
 	void createLightBuffer();
 	void createMtlLightBuffer();
 	void createParticleBuffers(int nrOfPArticles);
+	void renderGeometry();
+	void renderParticles();
+	void updateParticles();
 	
 	
 
@@ -102,10 +106,8 @@ public:
 	~GraphicsHandler();
 
 	void render();
-	void renderGeometry();
-	void renderParticles();
-	void update();
-	void updateParticles();
+	void update(float currentTime);
+	
 
 };
 

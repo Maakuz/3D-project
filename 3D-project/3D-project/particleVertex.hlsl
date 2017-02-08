@@ -21,4 +21,6 @@ VS_OUT main( in VS_IN input)
     VS_OUT output;
 	
     output.position = currentSimState[input.vertexID].position;
+
+    return output;
 }
