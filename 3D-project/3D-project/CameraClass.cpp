@@ -200,7 +200,7 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 	
 	DirectX::XMMATRIX temp = this->matrices.world;
 	
-	temp = DirectX::XMMatrixRotationRollPitchYaw(M_PI / 2, rotationValue, 0);//DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
+	temp = DirectX::XMMatrixRotationRollPitchYaw(M_PI/3, rotationValue, 0);//DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
 	 
 	this->matrices.world = temp;
 

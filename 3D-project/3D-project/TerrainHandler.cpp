@@ -5,19 +5,19 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 	this->height = 0;
 	this->width = 0;
 	this->heightMap = nullptr;
-	this->loadHeightMap(gDevice, path);
+	//this->loadHeightMap(gDevice, path);
 	
 	//Hardcoded stuff because I'm tired of crap
-	/*this->heightMap = new HeightMap[30];
-	float heights[30] = 
+	this->heightMap = new HeightMap[16];
+	float heights[16] = 
 	{
 		0, 0, 0, 0,
-		0, 50, 255, 50,
-		0, 255, 75, 0,
+		0, 255, 255, 0,
+		0, 255, 255, 0,
 		0, 0, 0, 0
 	};
 
-	for (size_t i = 0; i < 30; i++)
+	for (size_t i = 0; i < 16; i++)
 	{
 		heights[i] /= 255.f;
 	}
@@ -39,7 +39,7 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 			count++;
 		}
 	}
-*/
+
 	this->createVertices();
 	this->createVertexBuffer(gDevice);
 }
@@ -143,29 +143,6 @@ void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::string path)
 		delete headers[1];
 		delete colors;
 	}
-}
-
-void TerrainHandler::loadHeightMap(char* path)
-{
-	FILE* f;
-	fopen_s(&f, path, "rb");
-	char header[54];
-	fread(header, sizeof(char), 54, f);
-	
-	int height = *(int*)&header[22];
-	int width = *(int*)&header[18];
-
-	UINT8 colors[20000];
-	fread(colors, sizeof(char), 3 * width * height, f);
-
-	fclose(f);
-
-	for (int i = 0; i < height * width * 3; i++)
-	{
-		colors[i] = 0;
-	}
-	
-	delete colors;
 }
 
 void TerrainHandler::createVertices()

@@ -24,7 +24,6 @@ public:
 
 	void renderTerrain(ID3D11DeviceContext* gDeviceContext);
 	void loadHeightMap(ID3D11Device* gDevice, std::string path);
-	void loadHeightMap(char* path);
 	void createVertices();
 	void createVertexBuffer(ID3D11Device* gDevice);
 	void setShaderResources(ID3D11DeviceContext* gDeviceContext);
