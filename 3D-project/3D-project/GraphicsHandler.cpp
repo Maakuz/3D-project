@@ -24,10 +24,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->particleCountBuffer = nullptr;
 	this->IndirectArgsBuffer = nullptr;
 	this->StagingBuffer = nullptr;
-	this->uav1 = nullptr;
-	this->uav2 = nullptr;
-	this->srv1 = nullptr;
-	this->srv2 = nullptr;
 	this->particleInserter = nullptr;
 	this->deltaTimeBuffer = nullptr;
 
@@ -44,6 +40,12 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->DSV = nullptr;
 	this->mtlLightbuffer = nullptr;
 	this->emitterlocation = nullptr;
+
+	this->UAVS[0] = nullptr;
+	this->UAVS[1] = nullptr;
+	this->SRVS[0] = nullptr;
+	this->SRVS[1] = nullptr;
+	
 
 
 	for (int i = 0; i < NROFBUFFERS; i++)
@@ -71,6 +73,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createVertexBuffer();
 	this->createMtlLightBuffer();
 	this->createParticleBuffers(512);
+	this->particleFirstTimeInit();
 
 
 
@@ -94,7 +97,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->particleGeometry->Release();
 	this->particleVertex->Release();
 	this->particlePixel->Release();
-	this->partilceVertexLayout->Release();
+	//this->partilceVertexLayout->Release();
 	//this->particleRenderTarget->Release();
 	this->emitterlocation->Release();
 	this->structBuffer1->Release();
@@ -102,10 +105,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->particleCountBuffer->Release();
 	this->IndirectArgsBuffer->Release();
 	//this->StagingBuffer->Release();
-	this->uav1->Release();
-	this->uav2->Release();
-	this->srv1->Release();
-	this->srv2->Release();
+	
 	this->particleInserter->Release();
 
 	this->depthBuffer->Release();
@@ -120,6 +120,11 @@ GraphicsHandler::~GraphicsHandler()
 	this->lightbuffer->Release();
 	this->mtlLightbuffer->Release();
 	this->deltaTimeBuffer->Release();
+
+	this->UAVS[0]->Release();
+	this->UAVS[1]->Release();
+	this->SRVS[0]->Release();
+	this->SRVS[1]->Release();
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -407,19 +412,7 @@ void GraphicsHandler::createShaders()
 		MessageBox(0, L"particle vertex shader creation failed", L"error", MB_OK);
 	}
 
-	//this is wrong should be nothing
-	D3D11_INPUT_ELEMENT_DESC paricleInputDesc[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	};
 
-	hr = this->gDevice->CreateInputLayout(paricleInputDesc, ARRAYSIZE(paricleInputDesc), pvsBlob->GetBufferPointer(), pvsBlob->GetBufferSize(), &this->partilceVertexLayout);
-
-	if (FAILED(hr))
-	{
-		MessageBox(0, L" particle input desc creation failed", L"error", MB_OK);
-	}
 
 	pvsBlob->Release();
 
@@ -953,8 +946,8 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 {
 	
 	Particle *particles = new Particle[nrOfPArticles];
-	EmitterLocation emitterLocation;
-	emitterLocation.emitterLocation = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	EmitterLocation eLocation;
+	eLocation.emitterLocation = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	float x, y, z;
 	x = rand() % 2 - 1;
 	y = rand() % 2 - 1;
@@ -963,7 +956,7 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	randVec = DirectX::XMVector4Normalize(randVec);
 	DirectX::XMFLOAT4 temp;
 	DirectX::XMStoreFloat4(&temp, randVec);
-	emitterLocation.randomVector = temp;
+	eLocation.randomVector = temp;
 	
 
 	for (size_t i = 0; i < nrOfPArticles; i++)
@@ -984,9 +977,9 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	data.pSysMem = &emitterLocation;
+	data.pSysMem = &eLocation;
 
-	//creates emitter lacation constant buffer
+	//creates emitter location constant buffer
 	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->emitterlocation);
 	if (FAILED(hr))
 	{
@@ -1013,7 +1006,7 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	sDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 
-	//creates 2 structured buffers who si going to be used as append/consume buffers for the particle system
+	//creates 2 structured buffers who is going to be used as append/consume buffers for the particle system
 	hr = this->gDevice->CreateBuffer(&sDesc, &data, &this->structBuffer1);
 	if (FAILED(hr))
 	{
@@ -1056,30 +1049,32 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	srvDesc.Buffer = srv;
 
 	//uav and srv for first buffer
-	hr = this->gDevice->CreateUnorderedAccessView(this->structBuffer1, &uavDesc, &this->uav1);
+	hr = this->gDevice->CreateUnorderedAccessView(this->structBuffer1, &uavDesc, &this->UAVS[0]);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"uav 1 creation failed", L"error", MB_OK);
 	}
 
-	hr = this->gDevice->CreateShaderResourceView(this->structBuffer1, &srvDesc, &this->srv1);
+	hr = this->gDevice->CreateShaderResourceView(this->structBuffer1, &srvDesc, &this->SRVS[0]);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"srv 1 creation failed", L"error", MB_OK);
 	}
 
 	//uav and srv for second buffer
-	hr = this->gDevice->CreateUnorderedAccessView(this->structBuffer2, &uavDesc, &this->uav2);
+	hr = this->gDevice->CreateUnorderedAccessView(this->structBuffer2, &uavDesc, &this->UAVS[1]);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"uav 2 creation failed", L"error", MB_OK);
 	}
 
-	hr = this->gDevice->CreateShaderResourceView(this->structBuffer2, &srvDesc, &this->srv2);
+	hr = this->gDevice->CreateShaderResourceView(this->structBuffer2, &srvDesc, &this->SRVS[1]);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"srv 2 creation failed", L"error", MB_OK);
 	}
+
+
 
 	//create constant buffer who holds the nr of particles
 	D3D11_BUFFER_DESC nrBDesc;
@@ -1366,43 +1361,45 @@ void GraphicsHandler::render()
 {
 	float clearColor[] = { 0, 0, 0, 1 };
 
-	this->renderGeometry();
+
+	this->renderParticles();
+	//this->renderGeometry();
 
 
-	//disable depth stencil
-	this->gDeviceContext->OMSetDepthStencilState(this->disableDepthState, 1);
+	////disable depth stencil
+	//this->gDeviceContext->OMSetDepthStencilState(this->disableDepthState, 1);
 
-	UINT32 vertexSize = sizeof(TriangleVertex);
-	UINT32 offset = 0;
-	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
+	//UINT32 vertexSize = sizeof(TriangleVertex);
+	//UINT32 offset = 0;
+	//this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
-	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	this->gDeviceContext->PSSetShaderResources(0, NROFBUFFERS, this->shaderResourceViews);
+	//this->gDeviceContext->PSSetShaderResources(0, NROFBUFFERS, this->shaderResourceViews);
 
-	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
+	//this->gDeviceContext->IASetInputLayout(this->vertexLayout);
 
-	this->gDeviceContext->VSSetShader(this->vertexShader, nullptr, 0);
-	this->gDeviceContext->HSSetShader(nullptr, nullptr, 0);
-	this->gDeviceContext->DSSetShader(nullptr, nullptr, 0);
-	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
-	this->gDeviceContext->PSSetShader(this->pixelShader, nullptr, 0);
+	//this->gDeviceContext->VSSetShader(this->vertexShader, nullptr, 0);
+	//this->gDeviceContext->HSSetShader(nullptr, nullptr, 0);
+	//this->gDeviceContext->DSSetShader(nullptr, nullptr, 0);
+	//this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
+	//this->gDeviceContext->PSSetShader(this->pixelShader, nullptr, 0);
 
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
-	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
-	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
+	//this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	//this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
+	//this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
 
-	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
+	//this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
-	//Clear depth stencil here
-	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
-	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.f, 0);
+	////Clear depth stencil here
+	//this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
+	//this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.f, 0);
 
-	this->gDeviceContext->Draw(6, 0);
+	//this->gDeviceContext->Draw(6, 0);
 
-	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
+	//this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 
-	this->swapChain->Present(0, 0);
+	//this->swapChain->Present(0, 0);
 }
 
 void GraphicsHandler::renderGeometry()
@@ -1462,27 +1459,117 @@ void GraphicsHandler::renderParticles()
 
 	this->setViewPort(this->height, this->width);
 	this->gDeviceContext->VSSetShader(this->particleVertex, nullptr, 0);
+	this->gDeviceContext->HSSetShader(nullptr, nullptr, 0);
+	this->gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->GSSetShader(this->particleGeometry, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->particlePixel, nullptr, 0);
+	this->gDeviceContext->IASetInputLayout(nullptr);
+	//this->gDeviceContext->IASetVertexBuffers(0, 1, nullptr, 0, 0);
 
 	this->gDeviceContext->GSSetConstantBuffers(0, 1, &this->matrixBuffer);
-	this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 
 	this->gDeviceContext->OMSetRenderTargets(0, &this->rtvBackBuffer, this->DSV);
 
 	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
 	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+	this->gDeviceContext->DrawIndexedInstancedIndirect(this->IndirectArgsBuffer, 0);
+	this->swapChain->Present(0, 0);
+
 }
 
 void GraphicsHandler::update(float currentTime)
 {
-	this->deltaTime = currentTime - this->currentTime;
-	this->currentTime = currentTime;
+	this->updateParticleCBuffers(currentTime);
 	this->updateParticles();
+
 }
 
 void GraphicsHandler::updateParticles()
 {
+	if (this->deltaTime > 30.0f)
+	{
+		this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
+		this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->deltaTimeBuffer);
+		this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, this->UAVS, &UAVFLAG);
 
+		this->gDeviceContext->CSSetShader(this->particleInserter, nullptr, 0);
+		this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 4 * sizeof(UINT), this->UAVS[0]);
+	}
+
+
+	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
+	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->deltaTimeBuffer);
+
+	this->gDeviceContext->CSSetUnorderedAccessViews(0, 2, this->UAVS, &UAVFLAG);
+	this->gDeviceContext->CSSetShaderResources(0, 2, this->SRVS);
+
+	this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
+
+	this->gDeviceContext->Dispatch(512, 1, 1);
+	this->swapParticleBuffers();
+	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 4 * sizeof(UINT), this->UAVS[0]);
+	this->gDeviceContext->CopyStructureCount(this->IndirectArgsBuffer, 0, this->UAVS[0]);
+}
+
+void GraphicsHandler::swapParticleBuffers()
+{
+	ID3D11UnorderedAccessView *tempUAV;
+	ID3D11ShaderResourceView *tempSRV;
+
+	tempUAV = this->UAVS[0];
+	tempSRV = this->SRVS[0];
+
+	this->UAVS[0] = this->UAVS[1];
+	this->SRVS[0] = this->SRVS[1];
+
+	this->UAVS[1] = tempUAV;
+	this->SRVS[1] = tempSRV;
+
+}
+
+void GraphicsHandler::particleFirstTimeInit()
+{
+	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
+	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->deltaTimeBuffer);
+	this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, this->UAVS, &startParticleCount);
+	//this->gDeviceContext->CSSetShaderResources(0, 1, &this->srv2);
+
+	this->gDeviceContext->CSSetShader(this->particleInserter, nullptr, 0);
+
+	this->gDeviceContext->Dispatch(8, 1, 1);
+	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 4 * sizeof(UINT), this->UAVS[0]);
+}
+
+void GraphicsHandler::updateParticleCBuffers(float currentTime)
+{
+	D3D11_MAPPED_SUBRESOURCE data;
+	this->gDeviceContext->Map(this->emitterlocation, 0 , D3D11_MAP_WRITE_DISCARD, 0, &data);
+
+	EmitterLocation eLocation;
+	eLocation.emitterLocation = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	float x, y, z;
+	x = rand() % 2 - 1;
+	y = rand() % 2 - 1;
+	z = rand() % 2 - 1;
+	DirectX::XMVECTOR randVec = DirectX::XMVectorSet(x, y, z, 1.0f);
+	randVec = DirectX::XMVector4Normalize(randVec);
+	DirectX::XMFLOAT4 temp;
+	DirectX::XMStoreFloat4(&temp, randVec);
+	eLocation.randomVector = temp;
+
+	memcpy(data.pData, &eLocation, sizeof(eLocation));
+
+	this->gDeviceContext->Unmap(this->emitterlocation, 0);
+	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
+
+	this->gDeviceContext->Map(this->deltaTimeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+	this->deltaTime = currentTime - this->currentTime;
+	this->currentTime = currentTime;
+
+	memcpy(data.pData, &this->deltaTime, sizeof(this->deltaTime));
+
+	this->gDeviceContext->Unmap(this->deltaTimeBuffer, 0);
+	this->gDeviceContext->CSGetConstantBuffers(0, 1, &this->deltaTimeBuffer);
 }

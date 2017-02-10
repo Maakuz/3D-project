@@ -9,6 +9,9 @@
 
 
 const int NROFBUFFERS = 3;
+const UINT startParticleCount = 0;
+//makes it so the actual amount of particles in the buffers is used
+const UINT UAVFLAG = -1;
 
 
 class GraphicsHandler
@@ -26,10 +29,7 @@ private:
 	ID3D11PixelShader* pixelShader;
 	ID3D11PixelShader* defferedPixelShader;
 	ID3D11ComputeShader* computeShader;
-	ID3D11PixelShader* particlePixel;
-	ID3D11VertexShader* particleVertex;
-	ID3D11GeometryShader* particleGeometry;
-	ID3D11ComputeShader* particleInserter;
+	
 
 	ID3D11InputLayout* vertexLayout;
 	ID3D11InputLayout* defferedVertexLayout;
@@ -65,6 +65,11 @@ private:
 
 	lightStruct light;
 
+	//particle system things
+	ID3D11PixelShader* particlePixel;
+	ID3D11VertexShader* particleVertex;
+	ID3D11GeometryShader* particleGeometry;
+	ID3D11ComputeShader* particleInserter;
 	ID3D11Buffer* emitterlocation;
 	ID3D11Buffer* structBuffer1;
 	ID3D11Buffer* structBuffer2;
@@ -72,13 +77,14 @@ private:
 	ID3D11Buffer* IndirectArgsBuffer;
 	ID3D11Buffer* StagingBuffer;
 	ID3D11Buffer* deltaTimeBuffer;
-	ID3D11UnorderedAccessView* uav1;
-	ID3D11UnorderedAccessView* uav2;
-	ID3D11ShaderResourceView* srv1;
-	ID3D11ShaderResourceView* srv2;
+	ID3D11UnorderedAccessView* UAVS[2];
+	ID3D11ShaderResourceView* SRVS[2];
+	ID3D11Resource* particleTexture;
+	
 
 	float deltaTime;
 	float currentTime;
+	
 
 
 	void loadObj();
@@ -98,6 +104,9 @@ private:
 	void renderGeometry();
 	void renderParticles();
 	void updateParticles();
+	void swapParticleBuffers();
+	void particleFirstTimeInit();
+	void updateParticleCBuffers(float currentTime);
 	
 	
 
