@@ -10,6 +10,13 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float he
 	
 	this->createVertices();
 	this->createVertexBuffer(gDevice);
+
+	HRESULT hr = DirectX::CreateWICTextureFromFile(gDevice, L"../resource/Maps/grass.png", &this->res, &this->srv);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"texture creation failed", L"error", MB_OK);
+	}
+
 }
 
 TerrainHandler::~TerrainHandler()
@@ -322,5 +329,6 @@ void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
 	UINT32 stride = sizeof(vertexInfo);
 	UINT32 offset = 0;
 	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
+	gDeviceContext->PSSetShaderResources(0, 1, &this->srv);
 	gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }

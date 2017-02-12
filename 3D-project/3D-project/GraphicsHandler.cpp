@@ -33,7 +33,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
 	this->terrainHandler = new TerrainHandler(
-		this->gDevice, "../resource/maps/HeightMap3.bmp", 20.f);
+		this->gDevice, "../resource/maps/HeightMap4.bmp", 20.f);
 
 	this->createShaders();
 	this->createTexture();
@@ -1098,25 +1098,26 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
 
+	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
+
 	
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
 
-	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
-
-	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
-
 	//Draw terrain
 	this->terrainHandler->setShaderResources(this->gDeviceContext);
 	this->terrainHandler->renderTerrain(this->gDeviceContext);
+
+	//Swap the texture
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 	
 
 	//Draw objects
 	UINT32 vertexSize = sizeof(vertexInfo);
 	UINT32 offset = 0;
-	//this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
-	//this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//this->gDeviceContext->Draw(36, 0);
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
+	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	this->gDeviceContext->Draw(36, 0);
 
 	//Reset
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);

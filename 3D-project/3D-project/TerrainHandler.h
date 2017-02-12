@@ -14,6 +14,8 @@ private:
 	int height, width;
 	float heightMultiple;
 	ID3D11Buffer* vertexBuffer;
+	ID3D11Resource* res;
+	ID3D11ShaderResourceView* srv;
 	HeightMap* heightMap;
 	vertexInfo* vertices;
 	int nrOfVertices;
