@@ -32,7 +32,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->setViewPort(height, width);
 
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
-	this->terrainHandler = new TerrainHandler(this->gDevice, "../resource/maps/HeightMap3.bmp", 50.f);
+	this->terrainHandler = new TerrainHandler(
+		this->gDevice, "../resource/maps/HeightMap3.bmp", 20.f);
 
 	this->createShaders();
 	this->createTexture();
@@ -41,7 +42,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->loadObj();
 
 	this->createTriangleData();
-	this->createLightBuffer();
 
 	this->createLightBuffer();
 	this->createVertexBuffer();
@@ -951,6 +951,7 @@ void GraphicsHandler::createLightBuffer()
 	this->light.lightDir = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 0.0f);
 	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 0.0f);
 
+	//What is this!?
 	DirectX::XMVECTOR temp;
 
 	temp = DirectX::XMLoadFloat4(&this->light.lightPos);
@@ -958,7 +959,7 @@ void GraphicsHandler::createLightBuffer()
 	//temp = DirectX::XMVector4Transform(temp, this->cameraClass->getMatrix().world);
 
 	DirectX::XMStoreFloat4(&this->light.lightPos, temp);
-
+	//WhatisthisEnd
 
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
@@ -1068,7 +1069,7 @@ void GraphicsHandler::render()
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
-	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
+	this->gDeviceContext->PSSetConstantBuffers(2, 1, &this->mtlLightbuffer);
 
 	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 

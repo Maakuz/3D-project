@@ -25,7 +25,7 @@ struct mtlStruct
     float4 specular;
 };
 
-cbuffer mtlLightBuffer : register(b1)
+cbuffer mtlLightBuffer : register(b2)
 {
     mtlStruct mtls[10];
 };
@@ -56,7 +56,6 @@ float4 main(VS_OUT input) : SV_TARGET
 
 	//For directional lights only
     lVec = -lightDir;
-
     //  //attenuation here somewhere
     //distance = length(lVec);
     //attenuation = max(0, 1.f - (distance / lightRange.x));
@@ -70,6 +69,7 @@ float4 main(VS_OUT input) : SV_TARGET
 
     lighting = float4(diffuse, 1);
 
-    return float4(colors.Sample(sSampler, input.uv).xyz, 1);
+	//return lightColor;
+    //return float4(colors.Sample(sSampler, input.uv).xyz, 1);
     return  lighting;
 }
