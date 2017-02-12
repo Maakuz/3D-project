@@ -14,6 +14,11 @@ class CameraClass
 private: 
 	std::unique_ptr<DirectX::Keyboard> m_keyboard;
 	std::unique_ptr<DirectX::Mouse> m_mouse;
+	
+	HWND window;
+	int width;
+	int height;
+	POINT p;
 
 	matrixStruct matrices; //buffern
 	ID3D11Device* gDevice;
@@ -22,7 +27,7 @@ private:
 	float defaultRotationRate;
 	float defaultMovementRate;
 	float defaultMouseSensitivity;
-	DirectX::XMFLOAT2 previousMouseLocation;
+	DirectX::XMINT2 previousMouseLocation;
 
 	//matrices.view = 
 
@@ -38,13 +43,15 @@ private:
 
 	//man sparar vectorer och matriser som floats pga performance
 	// då kan man använda "SIMD stands for "single instruction, multiple data""
-
+	DirectX::XMFLOAT3 mDirection; //punktDirection
 	DirectX::XMFLOAT3 mPosition; //positin va kamera
 	DirectX::XMFLOAT3 mUp;		//up pekar upp y //XMFLOAT3 dessa ändras hela tiden
 	DirectX::XMFLOAT3 mLook;	//look pekar ner z	//direction
 	DirectX::XMFLOAT3 mRight;	//right pekar ner x			//cross produkt av de andra 2
 	DirectX::XMFLOAT4X4 mViewMatrix;		//sparad viewmatrix
 	DirectX::XMFLOAT4X4 mProjectionMatrix;	//sparad projectionmatris
+
+
 
 	bool mouseMove;
 	DirectX::XMFLOAT2 startMouse;
@@ -58,7 +65,7 @@ private:
 
 	float rotationValue;
 public:
-	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, HWND window);
+	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, HWND window, int width, int height);
 
 	virtual ~CameraClass();
 	DirectX::XMMATRIX viewProjectionMatrix(); //kan va bra att ha
