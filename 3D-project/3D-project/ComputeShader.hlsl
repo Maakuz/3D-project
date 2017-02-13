@@ -1,11 +1,12 @@
 struct Particle
 {
-    float3 position;
+    float4 position;
     float3 velocity;
     float time;
 };
-AppendStructuredBuffer<Particle> nextSimState : register(u0);
-ConsumeStructuredBuffer<Particle> CurrentSimState : register(u1);
+
+ConsumeStructuredBuffer<Particle> CurrentSimState : register(u0);
+AppendStructuredBuffer<Particle> nextSimState : register(u1);
 
 cbuffer currentTime
 {
@@ -30,11 +31,11 @@ void main( uint3 DTID : SV_DispatchThreadID )
         Particle currentParticle = CurrentSimState.Consume();
 
         //calculate next particle
-        currentParticle.position = currentParticle.velocity * time;
+        currentParticle.position = float4(currentParticle.velocity * time, 1.0f);
 
         currentParticle.time += time;
 
-        if(currentParticle.time < 1000000.0f)
+        if(true) //currentParticle.time < 1000000.0f)
         {
             nextSimState.Append(currentParticle);
         }

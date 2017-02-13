@@ -5,6 +5,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
 	srand(time(NULL));
 	this->currentTime = time(NULL);
+	this->deltaTime = 0;
+	this->lastInsert = this->currentTime;
 	this->height = height;
 	this->width = width;
 
@@ -45,6 +47,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->UAVS[1] = nullptr;
 	this->SRVS[0] = nullptr;
 	this->SRVS[1] = nullptr;
+
 	
 
 
@@ -104,7 +107,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->structBuffer2->Release();
 	this->particleCountBuffer->Release();
 	this->IndirectArgsBuffer->Release();
-	//this->StagingBuffer->Release();
+	this->StagingBuffer->Release();
 	
 	this->particleInserter->Release();
 
@@ -156,7 +159,7 @@ HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		NULL, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
+		D3D11_CREATE_DEVICE_DEBUG, //Sätt till null på skoldatorrerneA D3D11_CREATE_DEVICE_DEBUG
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -1034,6 +1037,7 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
 	uavDesc.Buffer = uav;
+	
 
 	
 
@@ -1047,6 +1051,9 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
 	srvDesc.Buffer = srv;
+
+	//this may be fucked up
+	srvDesc.BufferEx.Flags = D3D11_BUFFER_UAV_FLAG_APPEND;
 
 	//uav and srv for first buffer
 	hr = this->gDevice->CreateUnorderedAccessView(this->structBuffer1, &uavDesc, &this->UAVS[0]);
@@ -1090,6 +1097,8 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	init[1] = 0;
 	init[2] = 0;
 	init[3] = 0;
+	init[4] = 0;
+	
 	
 
 	data.pSysMem = init;
@@ -1103,35 +1112,46 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	//create indirect argument buffer used for the drawInstancedIndirect call
 	D3D11_BUFFER_DESC inDesc;
 	ZeroMemory(&inDesc, sizeof(D3D11_BUFFER_DESC));
-	inDesc.ByteWidth = 4 * sizeof(UINT);
+	inDesc.ByteWidth = 5 * sizeof(UINT);
 	inDesc.Usage = D3D11_USAGE_DEFAULT;
 	inDesc.MiscFlags = D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
 
+	//sets nr of insatnces
 	init[1] = 1;
+
+
 	hr = this->gDevice->CreateBuffer(&inDesc, &data, &this->IndirectArgsBuffer);
 	if (FAILED(hr))
 	{
-		MessageBox(0, L"inirect args buffer creation failed", L"error", MB_OK);
+		MessageBox(0, L"indirect args buffer creation failed", L"error", MB_OK);
 	}
 
 
 	//create stageing buffer used for copying data from gpu to cpu
-	/*D3D11_BUFFER_DESC stageDesc;
-	ZeroMemory(&inDesc, sizeof(D3D11_BUFFER_DESC));
+	D3D11_BUFFER_DESC stageDesc;
+	ZeroMemory(&stageDesc, sizeof(D3D11_BUFFER_DESC));
 	stageDesc.ByteWidth = 8 * sizeof(UINT);
 	stageDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 	stageDesc.Usage = D3D11_USAGE_STAGING;
-	
 
-	for (size_t i = 0; i < 8; i++)
+
+	UINT* stagingInit = new UINT[8];
+	for (int i = 0; i < 8; i++)
 	{
-		init[i] = 0;
+		stagingInit[i] = 0;
 	}
-	hr = this->gDevice->CreateBuffer(&stageDesc, &data, &this->StagingBuffer);
+
+	D3D11_SUBRESOURCE_DATA sData;
+	ZeroMemory(&sData, sizeof(D3D11_SUBRESOURCE_DATA));
+	sData.pSysMem = stagingInit;
+
+	hr = this->gDevice->CreateBuffer(&stageDesc, &sData, &this->StagingBuffer);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"STAGING BUFFER CREATION FAILED!", L"error", MB_OK);
-	}*/
+	}
+	delete[] init;
+	delete[] stagingInit;
 }
 
 void GraphicsHandler::createVertexBuffer()
@@ -1387,7 +1407,7 @@ void GraphicsHandler::render()
 
 	//this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	//this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
-	//this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
+	//this->gDeviceContext->PSSetConstantBuffers(1, 1, &this->mtlLightbuffer);
 
 	//this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
@@ -1464,12 +1484,13 @@ void GraphicsHandler::renderParticles()
 	this->gDeviceContext->GSSetShader(this->particleGeometry, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->particlePixel, nullptr, 0);
 	this->gDeviceContext->IASetInputLayout(nullptr);
-	//this->gDeviceContext->IASetVertexBuffers(0, 1, nullptr, 0, 0);
+	this->gDeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+	
 
 	this->gDeviceContext->GSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 
-	this->gDeviceContext->OMSetRenderTargets(0, &this->rtvBackBuffer, this->DSV);
+	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
 	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
 	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -1481,36 +1502,42 @@ void GraphicsHandler::renderParticles()
 
 void GraphicsHandler::update(float currentTime)
 {
-	this->updateParticleCBuffers(currentTime);
+	//this->updateParticleCBuffers(currentTime);
 	this->updateParticles();
 
 }
 
 void GraphicsHandler::updateParticles()
 {
-	if (this->deltaTime > 30.0f)
-	{
+	/*if (this->currentTime - this->lastInsert > 30.0f)
+	{*/
+		this->lastInsert = currentTime;
 		this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
-		this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->deltaTimeBuffer);
+		this->gDeviceContext->CSSetConstantBuffers(1, 1, &this->deltaTimeBuffer);
 		this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, this->UAVS, &UAVFLAG);
+		this->gDeviceContext->CSSetShaderResources(0, 2, this->SRVS);
 
 		this->gDeviceContext->CSSetShader(this->particleInserter, nullptr, 0);
-		this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 4 * sizeof(UINT), this->UAVS[0]);
-	}
+		this->gDeviceContext->Dispatch(8, 1, 1);
+		this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);
 
+	//}
+	//
 
-	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
-	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->deltaTimeBuffer);
+	////this->gDeviceContext->CSSetShaderResources(0, 0, nullptr);
+	//this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
+	//this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->deltaTimeBuffer);
 
-	this->gDeviceContext->CSSetUnorderedAccessViews(0, 2, this->UAVS, &UAVFLAG);
-	this->gDeviceContext->CSSetShaderResources(0, 2, this->SRVS);
+	//this->gDeviceContext->CSSetUnorderedAccessViews(0, 2, this->UAVS, &UAVFLAG);
+	////this->gDeviceContext->CSSetShaderResources(0, 2, this->SRVS);
 
-	this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
+	//this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
 
-	this->gDeviceContext->Dispatch(512, 1, 1);
-	this->swapParticleBuffers();
-	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 4 * sizeof(UINT), this->UAVS[0]);
-	this->gDeviceContext->CopyStructureCount(this->IndirectArgsBuffer, 0, this->UAVS[0]);
+	//this->gDeviceContext->Dispatch(512, 1, 1);
+	//this->swapParticleBuffers();
+	//this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);
+	//this->gDeviceContext->CopyStructureCount(this->IndirectArgsBuffer, 0, this->UAVS[0]);
+
 }
 
 void GraphicsHandler::swapParticleBuffers()
@@ -1532,14 +1559,27 @@ void GraphicsHandler::swapParticleBuffers()
 void GraphicsHandler::particleFirstTimeInit()
 {
 	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
-	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->deltaTimeBuffer);
-	this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, this->UAVS, &startParticleCount);
-	//this->gDeviceContext->CSSetShaderResources(0, 1, &this->srv2);
+	this->gDeviceContext->CSSetConstantBuffers(1, 1, &this->deltaTimeBuffer);
+	this->gDeviceContext->CSSetUnorderedAccessViews(0, 2, this->UAVS, &startParticleCount);
+	//this->gDeviceContext->CSSetShaderResources(0, 1, this->SRVS);
 
 	this->gDeviceContext->CSSetShader(this->particleInserter, nullptr, 0);
 
 	this->gDeviceContext->Dispatch(8, 1, 1);
-	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 4 * sizeof(UINT), this->UAVS[0]);
+	//this->gDeviceContext->CSSetShaderResources(0, 0, nullptr);
+	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);
+
+	this->gDeviceContext->CopyStructureCount(this->StagingBuffer, sizeof(UINT), this->UAVS[0]);
+
+	D3D11_MAPPED_SUBRESOURCE data;
+	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
+	UINT test[8];
+	for (size_t i = 0; i < 0; i++)
+	{
+		test[i] = 0;
+	}
+	memcpy(test, (UINT*)&data.pData, sizeof(UINT)*8);
+	
 }
 
 void GraphicsHandler::updateParticleCBuffers(float currentTime)
@@ -1562,7 +1602,6 @@ void GraphicsHandler::updateParticleCBuffers(float currentTime)
 	memcpy(data.pData, &eLocation, sizeof(eLocation));
 
 	this->gDeviceContext->Unmap(this->emitterlocation, 0);
-	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
 
 	this->gDeviceContext->Map(this->deltaTimeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 	this->deltaTime = currentTime - this->currentTime;
@@ -1571,5 +1610,4 @@ void GraphicsHandler::updateParticleCBuffers(float currentTime)
 	memcpy(data.pData, &this->deltaTime, sizeof(this->deltaTime));
 
 	this->gDeviceContext->Unmap(this->deltaTimeBuffer, 0);
-	this->gDeviceContext->CSGetConstantBuffers(0, 1, &this->deltaTimeBuffer);
 }

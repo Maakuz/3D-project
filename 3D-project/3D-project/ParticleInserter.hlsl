@@ -1,6 +1,6 @@
 struct Particle
 {
-    float3 position;
+    float4 position;
     float3 velocity;
     float age;
 };
@@ -30,11 +30,11 @@ void main( uint3 GTID : SV_GroupThreadID )
 {
     Particle newParticle;
 
-    newParticle.position = emitterLocation.xyz;
+    newParticle.position = emitterLocation;
 
     newParticle.velocity = normalize(cross(direction[GTID.x], randomVector.xyz));
 
-    newParticle.age = randomVector.x;
+    newParticle.age = randomVector.x * 4.0f;
 
     nextSimState.Append(newParticle);
 }

@@ -84,6 +84,7 @@ private:
 
 	float deltaTime;
 	float currentTime;
+	float lastInsert;
 	
 
 
