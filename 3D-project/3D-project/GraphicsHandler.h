@@ -53,10 +53,16 @@ private:
 	ID3D11DepthStencilState* dsState;
 	ID3D11DepthStencilView* DSV;
 
+	ID3D11Texture2D* shadowDepthBuffer;
+	ID3D11DepthStencilView* shadowDSV;
+	ID3D11ShaderResourceView* shadowSRV;
+
+
 	CameraClass* cameraClass;
 	TerrainHandler* terrainHandler;
 
 	lightStruct light;
+	DirLightMatrixStruct lightMatrices;
 
 
 
@@ -70,12 +76,14 @@ private:
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void createVertexBuffer();
 	void createDefferedBuffers();
-	void createDepthBuffer();
+	void createDepthBuffers();
 	void createSamplers();
 	void createLightBuffer();
 	void createMtlLightBuffer();
 	void render();
 	void renderGeometry();
+	void renderShadows();
+	void createLightMatrices();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
