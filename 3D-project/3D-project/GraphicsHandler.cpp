@@ -19,7 +19,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->defferedVertexBuffer = nullptr;
 	this->DSV = nullptr;
 	this->mtlLightbuffer = nullptr;
-
+	this->sState = nullptr;
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -33,7 +33,9 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext);
 	this->terrainHandler = new TerrainHandler(
-		this->gDevice, "../resource/maps/HeightMap4.bmp", 20.f);
+		this->gDevice, 
+		"../resource/maps/HeightMap4.bmp", 
+		20.f);
 
 	this->createShaders();
 	this->createTexture();
@@ -925,21 +927,19 @@ void GraphicsHandler::createDepthBuffer()
 
 void GraphicsHandler::createSamplers()
 {
-	ID3D11SamplerState* sState = nullptr;
 	D3D11_SAMPLER_DESC sDesc;
 	sDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 
 	sDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-	sDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	sDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	sDesc.MaxAnisotropy = 1;
-	sDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	sDesc.MaxLOD = 0;
 	sDesc.MinLOD = 0;
 	sDesc.MipLODBias = 0;
 
 	this->gDevice->CreateSamplerState(&sDesc, &sState);
-	this->gDeviceContext->PSSetSamplers(0, 1, &sState);
 
 }
 
@@ -1067,6 +1067,8 @@ void GraphicsHandler::render()
 	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->pixelShader, nullptr, 0);
 
+	this->gDeviceContext->PSSetSamplers(0, 1, &this->sState);
+
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
 	this->gDeviceContext->PSSetConstantBuffers(2, 1, &this->mtlLightbuffer);
@@ -1104,6 +1106,8 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
 
+
+	this->gDeviceContext->PSSetSamplers(0, 1, &this->sState);
 	//Draw terrain
 	this->terrainHandler->setShaderResources(this->gDeviceContext);
 	this->terrainHandler->renderTerrain(this->gDeviceContext);

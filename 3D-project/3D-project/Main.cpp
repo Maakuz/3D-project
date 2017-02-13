@@ -5,7 +5,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	WindowClass windClass(hInstance, 1920, 1080);
+	WindowClass windClass(hInstance, 1280, 720);
 
 
 	return windClass.run();

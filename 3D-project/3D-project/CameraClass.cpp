@@ -190,7 +190,7 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 {
 	D3D11_MAPPED_SUBRESOURCE dataPtr;
 
-	this->rotationValue += 0.00005;
+	this->rotationValue += 0.0005;
 	if (this->rotationValue == 100000)
 		this->rotationValue = 0;
 

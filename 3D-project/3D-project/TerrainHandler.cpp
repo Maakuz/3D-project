@@ -11,7 +11,11 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float he
 	this->createVertices();
 	this->createVertexBuffer(gDevice);
 
-	HRESULT hr = DirectX::CreateWICTextureFromFile(gDevice, L"../resource/Maps/grass.png", &this->res, &this->srv);
+	HRESULT hr = DirectX::CreateWICTextureFromFile(
+		gDevice,
+		L"../resource/Maps/kung.png",
+		&this->res,
+		&this->srv);
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"texture creation failed", L"error", MB_OK);

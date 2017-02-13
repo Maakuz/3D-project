@@ -36,6 +36,7 @@ private:
 	ID3D11Buffer* lightbuffer;
 	ID3D11Buffer* mtlLightbuffer;
 
+	ID3D11SamplerState* sState;
 
 	//texture things
 	ID3D11Resource* textureResoure;
