@@ -18,10 +18,10 @@ cbuffer WVPMatrixBuffer
 
 static const float4 qCorners[4] =
 {
-    float4(-1.0f, 1.0f, 0.0f, 0.0f),
-    float4(1.0f, 1.0f, 0.0f, 0.0f),
-    float4(-1.0f, -1.0f, 0.0f, 0.0f),
-    float4(1.0f, -1.0f, 0.0f, 0.0f)
+    float4(-0.014f, 0.014f, 0.0f, 0.0f),
+    float4(0.02f, 0.014f, 0.0f, 0.0f),
+    float4(-0.014f, -0.014f, 0.0f, 0.0f),
+    float4(0.014f, -0.014f, 0.0f, 0.0f)
 };
 
 static const float2 qTexCoords[4] =

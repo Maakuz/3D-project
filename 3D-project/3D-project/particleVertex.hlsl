@@ -1,6 +1,6 @@
 struct Particle
 {
-    float3 position;
+    float4 position;
     float3 velocity;
     float age;
 };
@@ -20,7 +20,8 @@ VS_OUT main( in VS_IN input)
 {
     VS_OUT output;
 	
-    output.position = currentSimState[input.vertexID].position;
+    output.position = currentSimState[input.vertexID].position.xyz;
+    
 
     return output;
 }

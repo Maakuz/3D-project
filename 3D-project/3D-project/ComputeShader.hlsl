@@ -8,15 +8,17 @@ struct Particle
 ConsumeStructuredBuffer<Particle> CurrentSimState : register(u0);
 AppendStructuredBuffer<Particle> nextSimState : register(u1);
 
-cbuffer currentTime
-{
-    float time;
-};
 
 cbuffer nrOfParticles
 {
     uint nrOfParticles;
 };
+
+cbuffer currentTime
+{
+    float time;
+};
+
 
 
 [numthreads(512, 1, 1)]
@@ -26,7 +28,7 @@ void main( uint3 DTID : SV_DispatchThreadID )
     uint threadID = DTID.x + DTID.y * 512 + DTID.z * 512 * 512;
 
     //check if this thread has a particle to update
-    if(threadID < nrOfParticles)
+    if(threadID < (nrOfParticles))
     {
         Particle currentParticle = CurrentSimState.Consume();
 
@@ -35,9 +37,9 @@ void main( uint3 DTID : SV_DispatchThreadID )
 
         currentParticle.time += time;
 
-        if(true) //currentParticle.time < 1000000.0f)
-        {
+        //if(currentParticle.time < 1000000000000000000000000000000000000000.0f)
+        //{
             nextSimState.Append(currentParticle);
-        }
+        //}
     }
 }

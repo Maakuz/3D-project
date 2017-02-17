@@ -371,7 +371,7 @@ void GraphicsHandler::createShaders()
 
 	ID3D10Blob *icsBlob = nullptr;
 	hr = D3DCompileFromFile(
-		L"ComputeShader.hlsl",
+		L"ParticleInserter.hlsl",
 		NULL,
 		NULL,
 		"main",
@@ -952,11 +952,12 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	EmitterLocation eLocation;
 	eLocation.emitterLocation = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	float x, y, z;
-	x = rand() % 2 - 1;
-	y = rand() % 2 - 1;
-	z = rand() % 2 - 1;
+	x = rand() % 255;
+	y = rand() % 255;
+	z = rand() % 255;
 	DirectX::XMVECTOR randVec = DirectX::XMVectorSet(x, y, z, 1.0f);
 	randVec = DirectX::XMVector4Normalize(randVec);
+	DirectX::XMVectorSetByIndex(randVec, 1.0f, 3);
 	DirectX::XMFLOAT4 temp;
 	DirectX::XMStoreFloat4(&temp, randVec);
 	eLocation.randomVector = temp;
@@ -989,7 +990,8 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 		MessageBox(0, L"emitter creation failed", L"error", MB_OK);
 	}
 
-	data.SysMemPitch = this->deltaTime;
+	desc.ByteWidth = sizeof(float)* 4;
+	data.pSysMem = &this->deltaTime;
 	hr = this->gDevice->CreateBuffer(&desc, &data, &this->deltaTimeBuffer);
 	if (FAILED(hr))
 	{
@@ -1006,7 +1008,8 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	sDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	sDesc.StructureByteStride = sizeof(Particle);
 	sDesc.Usage = D3D11_USAGE_DEFAULT;
-	sDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	//sDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	sDesc.CPUAccessFlags = 0;
 
 
 	//creates 2 structured buffers who is going to be used as append/consume buffers for the particle system
@@ -1052,8 +1055,7 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
 	srvDesc.Buffer = srv;
 
-	//this may be fucked up
-	srvDesc.BufferEx.Flags = D3D11_BUFFER_UAV_FLAG_APPEND;
+
 
 	//uav and srv for first buffer
 	hr = this->gDevice->CreateUnorderedAccessView(this->structBuffer1, &uavDesc, &this->UAVS[0]);
@@ -1090,7 +1092,7 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	nrBDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	nrBDesc.Usage = D3D11_USAGE_DEFAULT;
 
-	UINT* init = new UINT[8];
+	UINT* init = new UINT[5];
 	
 	
 	init[0] = 0;
@@ -1130,13 +1132,13 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	//create stageing buffer used for copying data from gpu to cpu
 	D3D11_BUFFER_DESC stageDesc;
 	ZeroMemory(&stageDesc, sizeof(D3D11_BUFFER_DESC));
-	stageDesc.ByteWidth = 8 * sizeof(UINT);
+	stageDesc.ByteWidth = 4 * sizeof(UINT);
 	stageDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 	stageDesc.Usage = D3D11_USAGE_STAGING;
 
 
-	UINT* stagingInit = new UINT[8];
-	for (int i = 0; i < 8; i++)
+	UINT* stagingInit = new UINT[4];
+	for (int i = 0; i < 4; i++)
 	{
 		stagingInit[i] = 0;
 	}
@@ -1486,7 +1488,7 @@ void GraphicsHandler::renderParticles()
 	this->gDeviceContext->IASetInputLayout(nullptr);
 	this->gDeviceContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
 	
-
+	this->gDeviceContext->VSSetShaderResources(0, 1, this->SRVS);
 	this->gDeviceContext->GSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
 
@@ -1502,41 +1504,66 @@ void GraphicsHandler::renderParticles()
 
 void GraphicsHandler::update(float currentTime)
 {
-	//this->updateParticleCBuffers(currentTime);
+	this->updateParticleCBuffers(currentTime);
 	this->updateParticles();
 
 }
 
 void GraphicsHandler::updateParticles()
 {
-	/*if (this->currentTime - this->lastInsert > 30.0f)
-	{*/
+	if (this->currentTime - this->lastInsert > 30.0f)
+	{
 		this->lastInsert = currentTime;
 		this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
 		this->gDeviceContext->CSSetConstantBuffers(1, 1, &this->deltaTimeBuffer);
-		this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, this->UAVS, &UAVFLAG);
-		this->gDeviceContext->CSSetShaderResources(0, 2, this->SRVS);
+		this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, &this->UAVS[0], &UAVFLAG);
+		//this->gDeviceContext->CSSetShaderResources(0, 1, this->SRVS);
 
 		this->gDeviceContext->CSSetShader(this->particleInserter, nullptr, 0);
 		this->gDeviceContext->Dispatch(8, 1, 1);
 		this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);
+	}
+	
 
-	//}
-	//
+	
+	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->particleCountBuffer);
+	this->gDeviceContext->CSSetConstantBuffers(1, 1, &this->deltaTimeBuffer);
 
-	////this->gDeviceContext->CSSetShaderResources(0, 0, nullptr);
-	//this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
-	//this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->deltaTimeBuffer);
+	this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, &this->UAVS[0], &UAVFLAG);
+	this->gDeviceContext->CSSetUnorderedAccessViews(1, 1, &this->UAVS[1], &startParticleCount);
+	//this->gDeviceContext->CSSetShaderResources(0, 2, this->SRVS);
 
-	//this->gDeviceContext->CSSetUnorderedAccessViews(0, 2, this->UAVS, &UAVFLAG);
-	////this->gDeviceContext->CSSetShaderResources(0, 2, this->SRVS);
+	this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
 
-	//this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
+	this->gDeviceContext->CopyStructureCount(this->StagingBuffer, 0, this->UAVS[1]);
+	D3D11_MAPPED_SUBRESOURCE data;
+	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
+	UINT test[4];
+	for (size_t i = 0; i < 4; i++)
+	{
+		test[i] = 1;
+	}
+	memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);
 
-	//this->gDeviceContext->Dispatch(512, 1, 1);
-	//this->swapParticleBuffers();
-	//this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);
-	//this->gDeviceContext->CopyStructureCount(this->IndirectArgsBuffer, 0, this->UAVS[0]);
+	this->gDeviceContext->Unmap(this->StagingBuffer, 0);
+
+	this->gDeviceContext->Dispatch(512, 1, 1);
+	this->swapParticleBuffers();
+
+	this->gDeviceContext->CopyStructureCount(this->StagingBuffer, 0, this->UAVS[0]);
+
+	//D3D11_MAPPED_SUBRESOURCE data;
+	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
+	//UINT test[4];
+	for (size_t i = 0; i < 4; i++)
+	{
+	test[i] = 1;
+	}
+	memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);
+
+	this->gDeviceContext->Unmap(this->StagingBuffer, 0);
+	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);
+	this->gDeviceContext->CopyStructureCount(this->IndirectArgsBuffer, 0, this->UAVS[0]);
 
 }
 
@@ -1545,6 +1572,27 @@ void GraphicsHandler::swapParticleBuffers()
 	ID3D11UnorderedAccessView *tempUAV;
 	ID3D11ShaderResourceView *tempSRV;
 
+	/*this->gDeviceContext->CopyStructureCount(this->StagingBuffer, 0, this->UAVS[0]);
+	D3D11_MAPPED_SUBRESOURCE data;
+	UINT test[4];
+	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
+	for (size_t i = 0; i < 4; i++)
+	{
+		test[i] = 1;
+	}
+	memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);
+
+
+	this->gDeviceContext->CopyStructureCount(this->StagingBuffer, 0, this->UAVS[1]);
+	this->gDeviceContext->Unmap(this->StagingBuffer, 0);
+	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
+	for (size_t i = 0; i < 4; i++)
+	{
+		test[i] = 1;
+	}
+	memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);
+	this->gDeviceContext->Unmap(this->StagingBuffer, 0);
+*/
 	tempUAV = this->UAVS[0];
 	tempSRV = this->SRVS[0];
 
@@ -1554,6 +1602,26 @@ void GraphicsHandler::swapParticleBuffers()
 	this->UAVS[1] = tempUAV;
 	this->SRVS[1] = tempSRV;
 
+	/*this->gDeviceContext->CopyStructureCount(this->StagingBuffer, 0, this->UAVS[0]);
+	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
+	for (size_t i = 0; i < 4; i++)
+	{
+		test[i] = 1;
+	}
+	memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);
+
+
+	this->gDeviceContext->CopyStructureCount(this->StagingBuffer, 0, this->UAVS[1]);
+	this->gDeviceContext->Unmap(this->StagingBuffer, 0);
+	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
+	for (size_t i = 0; i < 4; i++)
+	{
+		test[i] = 1;
+	}
+	memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);
+	this->gDeviceContext->Unmap(this->StagingBuffer, 0);
+	
+*/
 }
 
 void GraphicsHandler::particleFirstTimeInit()
@@ -1561,24 +1629,26 @@ void GraphicsHandler::particleFirstTimeInit()
 	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
 	this->gDeviceContext->CSSetConstantBuffers(1, 1, &this->deltaTimeBuffer);
 	this->gDeviceContext->CSSetUnorderedAccessViews(0, 2, this->UAVS, &startParticleCount);
-	//this->gDeviceContext->CSSetShaderResources(0, 1, this->SRVS);
+	this->gDeviceContext->CSSetShaderResources(0, 1, this->SRVS);
 
 	this->gDeviceContext->CSSetShader(this->particleInserter, nullptr, 0);
 
+
+
 	this->gDeviceContext->Dispatch(8, 1, 1);
-	//this->gDeviceContext->CSSetShaderResources(0, 0, nullptr);
-	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);
+	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);	
+	this->lastInsert = this->currentTime;
 
-	this->gDeviceContext->CopyStructureCount(this->StagingBuffer, sizeof(UINT), this->UAVS[0]);
-
+	/*this->gDeviceContext->CopyStructureCount(this->StagingBuffer, sizeof(UINT), this->UAVS[0]);
 	D3D11_MAPPED_SUBRESOURCE data;
 	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
-	UINT test[8];
-	for (size_t i = 0; i < 0; i++)
+	UINT test[4];
+	for (size_t i = 0; i < 4; i++)
 	{
-		test[i] = 0;
+		test[i] = 1;
 	}
-	memcpy(test, (UINT*)&data.pData, sizeof(UINT)*8);
+	memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);*/
+
 	
 }
 
@@ -1588,7 +1658,7 @@ void GraphicsHandler::updateParticleCBuffers(float currentTime)
 	this->gDeviceContext->Map(this->emitterlocation, 0 , D3D11_MAP_WRITE_DISCARD, 0, &data);
 
 	EmitterLocation eLocation;
-	eLocation.emitterLocation = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	eLocation.emitterLocation = DirectX::XMFLOAT4(400.0f, 400.0f, 4000.0f, 1.0f);
 	float x, y, z;
 	x = rand() % 2 - 1;
 	y = rand() % 2 - 1;
