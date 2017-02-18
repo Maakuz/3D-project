@@ -46,6 +46,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createTriangleData();
 
 	this->createLightBuffer();
+	this->createLightMatrices();
 	this->createVertexBuffer();
 	this->createMtlLightBuffer();
 
@@ -250,6 +251,34 @@ void GraphicsHandler::createShaders()
 	}
 
 	dvsBlob->Release();
+
+	ID3DBlob* shadowVSBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"ShadowVS.hlsl",
+		nullptr,
+		nullptr,
+		"main",
+		"vs_5_0",
+		0,
+		0,
+		&shadowVSBlob,
+		nullptr);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"vsblob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateVertexShader(shadowVSBlob->GetBufferPointer(), shadowVSBlob->GetBufferSize(), NULL, &this->shadowVertexShader);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"shadow vertex shader creation failed", L"error", MB_OK);
+	}
+
+	//Same input as deferred for easy managing
+
+	shadowVSBlob->Release();
 
 	ID3DBlob *psBlob = nullptr;
 	hr = D3DCompileFromFile(
@@ -1052,7 +1081,7 @@ void GraphicsHandler::update()
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
 	//this->cameraClass->update();
 
-
+	this->renderShadows();
 	this->renderGeometry();
 	this->render();
 }
@@ -1060,8 +1089,6 @@ void GraphicsHandler::update()
 void GraphicsHandler::render()
 {
 	float clearColor[] = { 0, 0, 0, 1 };
-
-	this->renderShadows();
 
 	//disable depth stencil. Anledningen till det är för att vi nu renderar i 2D på en stor quad, det finns inget djup längre
 	this->gDeviceContext->OMSetDepthStencilState(this->disableDepthState, 1);
@@ -1073,6 +1100,9 @@ void GraphicsHandler::render()
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	this->gDeviceContext->PSSetShaderResources(0, 3, this->shaderResourceViews);
+	
+	//setting shadow map
+	this->gDeviceContext->PSSetShaderResources(4, 1, &this->shadowSRV);
 
 	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
 
@@ -1155,29 +1185,29 @@ void GraphicsHandler::renderGeometry()
 
 void GraphicsHandler::renderShadows()
 {
-	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
 
 	this->gDeviceContext->OMSetRenderTargets(0, 0, this->shadowDSV);
 	this->gDeviceContext->ClearDepthStencilView(this->shadowDSV, D3D11_CLEAR_DEPTH, 1.f, 0);
 
+	this->gDeviceContext->VSSetShader(this->shadowVertexShader, nullptr, 0);
 	this->gDeviceContext->PSSetShader(nullptr, nullptr, 0);
+
+	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
+
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->shadowBuffer);
 
 	this->terrainHandler->setShaderResources(this->gDeviceContext);
 	this->terrainHandler->renderTerrain(this->gDeviceContext);
 
-
-
-	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
 
 	UINT32 vertexSize = sizeof(TriangleVertex);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &vertexSize, &offset);
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->gDeviceContext->Draw(6, 0);
+	this->gDeviceContext->Draw(36, 0);
 
 }
-
 
 void GraphicsHandler::createLightMatrices()
 {
@@ -1190,12 +1220,32 @@ void GraphicsHandler::createLightMatrices()
 	DirectX::XMVECTOR upDirection;
 	upDirection = DirectX::XMVectorSet(0, 1, 0, 0);
 
-	DirectX::XMMATRIX wLight = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
-	wLight = DirectX::XMMatrixTranspose(wLight);
+	DirectX::XMMATRIX vLight = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
+	vLight = DirectX::XMMatrixTranspose(vLight);
 
 	DirectX::XMMATRIX pLight = DirectX::XMMatrixOrthographicLH(this->width, this->height, 0.1, 200);
 	pLight = DirectX::XMMatrixTranspose(pLight);
 
 	this->lightMatrices.lProjection = pLight;
-	this->lightMatrices.lView = wLight;
+	this->lightMatrices.lView = vLight;
+
+	DirectX::XMMATRIX wvpLight = DirectX::XMMatrixMultiply(cameraClass->getMatrix().world, lightMatrices.lView);
+	wvpLight = DirectX::XMMatrixMultiply(wvpLight, lightMatrices.lProjection);
+
+
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+
+	desc.ByteWidth = sizeof(DirectX::XMMATRIX);
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = &wvpLight;
+	data.SysMemPitch = 0;
+	data.SysMemSlicePitch = 0;
+
+	this->gDevice->CreateBuffer(&desc, &data, &this->shadowBuffer);
 }

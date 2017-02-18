@@ -3,6 +3,7 @@ texture2D positions : register(t0);
 texture2D normals : register(t1);
 texture2D colors : register(t2);
 texture2D mtl : register(t3);
+texture2D shadowMap : register(t4);
 
 cbuffer lightBuffer : register(b0)
 {
@@ -70,6 +71,6 @@ float4 main(VS_OUT input) : SV_TARGET
     lighting = float4(diffuse, 1);
 
 	//return lightColor;
-    //return float4(colors.Sample(sSampler, input.uv).xyz, 1);
+    return float4(shadowMap.Sample(sSampler, input.uv).xyz, 1);
     return  lighting;
 }
