@@ -2,7 +2,7 @@ struct Particle
 {
     float4 position;
     float3 velocity;
-    float time;
+    float age;
 };
 
 ConsumeStructuredBuffer<Particle> CurrentSimState : register(u0);
@@ -16,10 +16,9 @@ cbuffer nrOfParticles
 
 cbuffer currentTime
 {
+    //time in ms
     float time;
 };
-
-
 
 [numthreads(512, 1, 1)]
 void main( uint3 DTID : SV_DispatchThreadID )
@@ -28,18 +27,18 @@ void main( uint3 DTID : SV_DispatchThreadID )
     uint threadID = DTID.x + DTID.y * 512 + DTID.z * 512 * 512;
 
     //check if this thread has a particle to update
-    if(threadID < (nrOfParticles))
+    if(threadID < nrOfParticles)
     {
         Particle currentParticle = CurrentSimState.Consume();
 
-        //calculate next particle
-        currentParticle.position = float4(currentParticle.velocity * time, 1.0f);
+        //calculate next postion
+        currentParticle.position.xyz += float3(currentParticle.velocity * time * 0.0001);
 
-        currentParticle.time += time;
+        currentParticle.age += time;
 
-        //if(currentParticle.time < 1000000000000000000000000000000000000000.0f)
-        //{
+        if(currentParticle.age < 10000.0f)
+        {
             nextSimState.Append(currentParticle);
-        //}
+        }
     }
 }

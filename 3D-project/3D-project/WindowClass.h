@@ -3,6 +3,8 @@
 
 #include <Windows.h>
 #include"GraphicsHandler.h"
+#include <ctime>
+#include <chrono>
 
 class WindowClass
 {
@@ -11,6 +13,8 @@ private:
 	int width;
 	int heigth;
 	HINSTANCE hInstance;
+	
+
 
 	GraphicsHandler *graphicsHandler;
 

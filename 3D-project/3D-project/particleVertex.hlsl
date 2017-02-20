@@ -6,21 +6,16 @@ struct Particle
 };
 StructuredBuffer<Particle> currentSimState;
 
-struct VS_IN
-{
-    uint vertexID : SV_VertexID;
-};
-
 struct VS_OUT
 {
     float3 position : POSITION;
 };
 
-VS_OUT main( in VS_IN input)
+VS_OUT main( uint vertexID : SV_VertexID)
 {
     VS_OUT output;
 	
-    output.position = currentSimState[input.vertexID].position.xyz;
+    output.position = currentSimState[vertexID].position.xyz;
     
 
     return output;

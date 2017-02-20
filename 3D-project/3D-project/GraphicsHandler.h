@@ -78,8 +78,12 @@ private:
 	ID3D11Buffer* StagingBuffer;
 	ID3D11Buffer* deltaTimeBuffer;
 	ID3D11UnorderedAccessView* UAVS[2];
+	ID3D11UnorderedAccessView* nullUAV;
 	ID3D11ShaderResourceView* SRVS[2];
+	ID3D11ShaderResourceView* nullSRV;
 	ID3D11Resource* particleTexture;
+	ID3D11RenderTargetView* nullRTV;
+	ID3D11DepthStencilView* nullDSV;
 	
 
 	float deltaTime;

@@ -43,7 +43,6 @@ WindowClass::WindowClass(HINSTANCE hInstance)
 	this->hInstance = hInstance;
 	this->initializeWindow();
 	this->graphicsHandler = new GraphicsHandler(this->wnd, this->heigth, this->width);
-	
 }
 
 WindowClass::WindowClass(HINSTANCE hInstance, int width, int height)
@@ -54,6 +53,7 @@ WindowClass::WindowClass(HINSTANCE hInstance, int width, int height)
 	this->hInstance = hInstance;
 	this->initializeWindow();
 	this->graphicsHandler = new GraphicsHandler(this->wnd, this->heigth, this->width);
+
 }
 
 WindowClass::~WindowClass()
@@ -122,7 +122,7 @@ int WindowClass::run()
 		}
 		else
 		{
-			graphicsHandler->update(time(NULL));
+			graphicsHandler->update(GetTickCount());
 			graphicsHandler->render();
 		}
 			
