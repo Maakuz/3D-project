@@ -86,9 +86,9 @@ struct matrixStruct
 struct lightStruct
 {
 	DirectX::XMFLOAT4 lightPos;
-	DirectX::XMFLOAT3 lightColor;
-	DirectX::XMFLOAT3 lightDir;
-	DirectX::XMFLOAT2 lightAngle;
+	DirectX::XMFLOAT4 lightColor;
+	DirectX::XMFLOAT4 lightDir;
+	DirectX::XMFLOAT4 lightAngle;
 	DirectX::XMFLOAT4 lightRange;
 };
 

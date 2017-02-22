@@ -6,6 +6,7 @@
 #include "CameraClass.h"
 #include "WICTextureLoader.h"
 #include <time.h>
+#include "TerrainHandler.h"
 
 
 const int NROFBUFFERS = 4;
@@ -42,6 +43,7 @@ private:
 	ID3D11Buffer* lightbuffer;
 	ID3D11Buffer* mtlLightbuffer;
 
+	ID3D11SamplerState* sState;
 
 	//texture things
 	ID3D11Resource* textureResoure;
@@ -59,6 +61,7 @@ private:
 	ID3D11DepthStencilView* DSV;
 
 	CameraClass* cameraClass;
+	TerrainHandler* terrainHandler;
 
 	lightStruct light;
 
@@ -104,6 +107,7 @@ private:
 	void createLightBuffer();
 	void createMtlLightBuffer();
 	void createParticleBuffers(int nrOfPArticles);
+	void render();
 	void renderGeometry();
 	void renderParticles();
 	void updateParticles();
@@ -117,7 +121,7 @@ public:
 	GraphicsHandler(HWND wHandler, int height, int width);
 	~GraphicsHandler();
 
-	void render();
+	void update();
 	void update(float currentTime);
 	
 

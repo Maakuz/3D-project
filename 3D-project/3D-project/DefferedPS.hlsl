@@ -26,9 +26,9 @@ PS_OUT main(VS_OUT input)
 
     outPut.color = tex.Sample(sSampler, input.uv);
     outPut.position = input.wPos;
-    outPut.normal = input.norm;
-    outPut.mtl = input.mtl;
 
+    outPut.normal = normalize(input.norm);
+    outPut.mtl = input.mtl;
 
     return outPut;
 }
