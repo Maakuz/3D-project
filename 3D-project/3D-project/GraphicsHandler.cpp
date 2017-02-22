@@ -53,6 +53,9 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->nullRTV = nullptr;
 	this->nullDSV = nullptr;
 
+	this->pDSV = nullptr;
+	this->pDepthBuffer = nullptr;
+
 	
 
 
@@ -88,7 +91,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -143,6 +145,10 @@ GraphicsHandler::~GraphicsHandler()
 
 	this->gDevice->Release();
 	this->gDeviceContext->Release();
+
+
+	this->pDSV->Release();
+	this->pDepthBuffer->Release();
 
 }
 
@@ -521,7 +527,6 @@ void GraphicsHandler::createTriangleData()
 
 
 	this->matrixBuffer = cameraClass->createConstantBuffer();
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 }
 
 void GraphicsHandler::loadObj()
@@ -1205,6 +1210,22 @@ void GraphicsHandler::createDepthBuffer()
 	if (FAILED(hr))
 		MessageBox(0, L"depth stencil resource creation failed", L"error", MB_OK);
 
+	hr = this->gDevice->CreateTexture2D(&dDesc, NULL, &this->pDepthBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"depth stencil resource creation failded", L"error", MB_OK);
+	}
+
+	D3D11_TEX2D_SRV srv;
+	srv.MipLevels = 1;
+	srv.MostDetailedMip = 1;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+	srvDesc.Texture2D = srv;
+	srvDesc.Format = dDesc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
 	dsDesc.DepthEnable = true;
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -1243,6 +1264,12 @@ void GraphicsHandler::createDepthBuffer()
 		MessageBox(0, L"depth stencil view creation failed", L"error", MB_OK);
 
 
+	hr = this->gDevice->CreateDepthStencilView(this->pDepthBuffer, &dsvDesc, &this->pDSV);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"pDSV creation failed", L"error", MB_OK);
+	}
+
 	D3D11_DEPTH_STENCIL_DESC disabledDepthDesc;
 	ZeroMemory(&disabledDepthDesc, sizeof(disabledDepthDesc));
 
@@ -1269,6 +1296,7 @@ void GraphicsHandler::createDepthBuffer()
 	hr = gDevice->CreateDepthStencilState(&disabledDepthDesc, &this->disableDepthState);
 	if (FAILED(hr))
 		MessageBox(0, L"stensil state failed!", L"error", MB_OK);
+
 
 
 }
@@ -1351,19 +1379,19 @@ void GraphicsHandler::createDefferedBuffers()
 	ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
 
 	rtvDesc.Format = desc.Format;
-	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
 
 	srvDesc.Format = desc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 
 
 	HRESULT hr;
 
-	for (int i = 0; i < NROFBUFFERS; i++)
+	for (int i = 0; i < NROFBUFFERS-1; i++)
 	{
 		hr = this->gDevice->CreateTexture2D(&desc, NULL, &this->renderTargets[i]);
 		if (FAILED(hr))
@@ -1378,6 +1406,24 @@ void GraphicsHandler::createDefferedBuffers()
 			MessageBox(0, L"Shader resource view failed!", L"error", MB_OK);
 	}
 
+
+	//if we add another rtv this need to be changed
+	desc.Format = DXGI_FORMAT_R32_SINT;
+	rtvDesc.Format = desc.Format;
+	srvDesc.Format = desc.Format;
+
+	hr = this->gDevice->CreateTexture2D(&desc, NULL, &this->renderTargets[3]);
+	if (FAILED(hr))
+		MessageBox(0, L"Render target failed!", L"error", MB_OK);
+
+	hr = this->gDevice->CreateRenderTargetView(this->renderTargets[3], &rtvDesc, &this->renderTargetViews[3]);
+	if (FAILED(hr))
+		MessageBox(0, L"Render target view failed!", L"error", MB_OK);
+
+	hr = this->gDevice->CreateShaderResourceView(renderTargets[3], &srvDesc, &this->shaderResourceViews[3]);
+	if (FAILED(hr))
+		MessageBox(0, L"Shader resource view failed!", L"error", MB_OK);
+
 }
 
 void GraphicsHandler::render()
@@ -1388,6 +1434,7 @@ void GraphicsHandler::render()
 	
 	this->renderGeometry();
 	this->renderParticles();
+	
 
 
 	//disable depth stencil
@@ -1413,6 +1460,7 @@ void GraphicsHandler::render()
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
 	this->gDeviceContext->PSSetConstantBuffers(1, 1, &this->mtlLightbuffer);
 
+	
 	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
 	//Clear depth stencil here
@@ -1422,8 +1470,14 @@ void GraphicsHandler::render()
 	this->gDeviceContext->Draw(6, 0);
 
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
+	
 
 	this->swapChain->Present(0, 0);
+
+	for (size_t i = 0; i < NROFBUFFERS; i++)
+	{
+		this->gDeviceContext->PSSetShaderResources(i, 1, &this->nullSRV);
+	}
 }
 
 void GraphicsHandler::renderGeometry()
@@ -1446,6 +1500,7 @@ void GraphicsHandler::renderGeometry()
 
 
 	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
+	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
 
 	//kanske ska vara andra tal, troligtvis inte
@@ -1466,7 +1521,6 @@ void GraphicsHandler::renderGeometry()
 
 	//Null stuff
 	ID3D11RenderTargetView* temp[NROFBUFFERS];
-
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
 		temp[i] = NULL;
@@ -1494,16 +1548,16 @@ void GraphicsHandler::renderParticles()
 	this->gDeviceContext->VSSetShaderResources(0, 1, &this->SRVS[0]);
 	this->gDeviceContext->GSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->depthBuffer);
 
-	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
+	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->pDSV);
 
-	/*this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
-	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);*/
+	//this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
+	this->gDeviceContext->ClearDepthStencilView(this->pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	this->gDeviceContext->DrawInstancedIndirect(this->IndirectArgsBuffer, 0);
 	this->swapChain->Present(0, 0);
 	this->gDeviceContext->VSSetShaderResources(0, 1, &this->nullSRV);
-	//this->gDeviceContext->OMSetRenderTargets(1, &this->nullRTV, this->nullDSV);
 }
 
 void GraphicsHandler::update(float currentTime)

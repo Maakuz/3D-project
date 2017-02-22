@@ -8,7 +8,7 @@
 #include <time.h>
 
 
-const int NROFBUFFERS = 3;
+const int NROFBUFFERS = 4;
 const UINT startParticleCount = 0;
 //makes it so the actual amount of particles in the buffers is used
 const UINT UAVFLAG = -1;
@@ -58,8 +58,8 @@ private:
 	ID3D11DepthStencilState* dsState;
 	ID3D11DepthStencilView* DSV;
 
-	//ID3D11RenderTargetView* particleRenderTarget;
-
+	ID3D11Texture2D* pDepthBuffer;
+	ID3D11DepthStencilView* pDSV;
 
 	CameraClass* cameraClass;
 
