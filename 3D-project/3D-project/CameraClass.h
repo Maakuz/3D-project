@@ -51,7 +51,7 @@ private:
 
 	float rotationValue;
 public:
-	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext);
+	CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, int width, int height);
 
 	virtual ~CameraClass();
 	DirectX::XMMATRIX viewProjectionMatrix(); //kan va bra att ha
@@ -66,7 +66,7 @@ public:
 	void rotation(DirectX::XMFLOAT4X4 &transform); //genomför inte en ändring i position
 
 	D3D11_SUBRESOURCE_DATA getMatricesSubresource();
-	matrixStruct initiateMatrices();
+	matrixStruct initiateMatrices(int width, int height);
 	ID3D11Buffer* createConstantBuffer();
 	void updateConstantBuffer(ID3D11Buffer * VSConstantBuffer);
 

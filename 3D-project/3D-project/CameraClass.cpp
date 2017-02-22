@@ -1,6 +1,6 @@
 #include "CameraClass.h"
 
-CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext)
+CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, int width, int height)
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(1.0f);
 	this->defaultMovementRate = 10.0f;
@@ -10,7 +10,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 	m_keyboard = std::make_unique<DirectX::Keyboard>();
 	this->m_mouse = new DirectX::Mouse();
 
-	this->initiateMatrices();
+	this->initiateMatrices(width, height);
 	this->gDevice = gDevice;
 	this->gDeviceContext = gDeviceContext;
 }
@@ -107,10 +107,10 @@ D3D11_SUBRESOURCE_DATA CameraClass::getMatricesSubresource()
 	return data;
 }
 
-matrixStruct CameraClass::initiateMatrices()
+matrixStruct CameraClass::initiateMatrices(int width, int height)
 {
 	this->fovAngleY = 3.14 * 0.45;
-	this->aspectRatio = 640.f / 480.f;
+	this->aspectRatio = (float)width / (float)height;
 	this->zNear = 0.1;
 	this->zFar = 200;
 
@@ -118,7 +118,7 @@ matrixStruct CameraClass::initiateMatrices()
 	//this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
 
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(0, 0, -30, 0);
+	eyePosition = DirectX::XMVectorSet(0, 3, -3, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 0);
@@ -134,8 +134,9 @@ matrixStruct CameraClass::initiateMatrices()
 	DirectX::XMMATRIX temp = matrices.view;
 	matrices.view = DirectX::XMMatrixTranspose(temp);
 
-	this->matrices.projection = DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, zNear, zFar);
-
+	//this->matrices.projection = DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, zNear, zFar);
+	this->matrices.projection = DirectX::XMMatrixOrthographicLH(width / 100.f, height / 100.f, 0.1f, 200);
+	
 	temp = matrices.projection;
 	this->matrices.projection = DirectX::XMMatrixTranspose(temp);
 
@@ -210,8 +211,6 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 
 	//Ger GPU:n tillgång till datan igen
 	this->gDeviceContext->Unmap(VSConstantBuffer, 0);
-
-	this->gDeviceContext->GSSetConstantBuffers(0, 1, &VSConstantBuffer);
 }
 
 void CameraClass::update()

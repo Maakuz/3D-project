@@ -71,6 +71,6 @@ float4 main(VS_OUT input) : SV_TARGET
     lighting = float4(diffuse, 1);
 
 	//return lightColor;
-    return float4(shadowMap.Sample(sSampler, input.uv).xyz, 1);
+    //return float4(shadowMap.Sample(sSampler, input.uv).xyz, 1);
     return  lighting;
 }

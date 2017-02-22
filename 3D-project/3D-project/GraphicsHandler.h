@@ -26,6 +26,7 @@ private:
 	ID3D11VertexShader* shadowVertexShader;
 	ID3D11PixelShader* pixelShader;
 	ID3D11PixelShader* defferedPixelShader;
+	ID3D11PixelShader* shadowPixelShader;
 
 	ID3D11InputLayout* vertexLayout;
 	ID3D11InputLayout* defferedVertexLayout;
@@ -65,7 +66,7 @@ private:
 	TerrainHandler* terrainHandler;
 
 	lightStruct light;
-	DirLightMatrixStruct lightMatrices;
+	matrixStruct lightMatrices;
 
 
 
@@ -87,6 +88,7 @@ private:
 	void renderGeometry();
 	void renderShadows();
 	void createLightMatrices();
+	void updateLightBuffer();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);

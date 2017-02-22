@@ -13,7 +13,9 @@ struct VS_OUT
 
 cbuffer lightWVP
 {
-	matrix lightWVP;
+	matrix lightWorld;
+    matrix lightView;
+    matrix lightProjection;
 };
 
 VS_OUT main(VS_IN input)
@@ -22,7 +24,9 @@ VS_OUT main(VS_IN input)
 	
 	output.pos = float4(input.pos, 1);
 
-	output.pos = mul(input.pos, lightWVP);
+    output.pos = mul(output.pos, lightWorld);
+    output.pos = mul(output.pos, lightView);
+    output.pos = mul(output.pos, lightProjection);
 	
 	return output;
 }

@@ -17,6 +17,14 @@ cbuffer matrixBuffer
     matrix invProjMatrix;
 };
 
+cbuffer lightMatrixes
+{
+    matrix lightWorld;
+    matrix lightView;
+    matrix lightProjection;
+    här lägger jag in lite kaos för att komma ihåg att fixa matriserna i main och titta på frisco fandangos slides okbra
+};
+
 float4 getWVPos()
 {
     // Calculate the view space vertex position
