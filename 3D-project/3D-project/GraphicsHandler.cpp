@@ -1409,20 +1409,6 @@ void GraphicsHandler::createDefferedBuffers()
 
 }
 
-void GraphicsHandler::update()
-{
-	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-	//this->cameraClass->update();
-
-
-
-	
-	this->renderGeometry();
-	this->renderParticles();
-	
-	this->render();
-}
-
 void GraphicsHandler::render()
 {
 	float clearColor[] = { 0, 0, 0, 1 };
@@ -1572,6 +1558,14 @@ void GraphicsHandler::update(float currentTime)
 {
 	this->updateParticleCBuffers(currentTime);
 	this->updateParticles();
+
+	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
+	//this->cameraClass->update();
+
+	this->renderGeometry();
+	this->renderParticles();
+
+	this->render();
 
 }
 
