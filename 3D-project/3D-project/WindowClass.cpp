@@ -1,4 +1,5 @@
 #include "WindowClass.h"
+#include <time.h>
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -7,23 +8,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+
 	case WM_KEYDOWN:
-		if (wparam == 'W')
-		{
-			//todo do stuff
-		}
-		if (wparam == 'S')
-		{
-			//todo do stuff
-		}
-		if (wparam == 'A')
-		{
-			//todo do stuff
-		}
-		if (wparam == 'D')
-		{
-			//todo do stuff
-		}
+	case WM_SYSKEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		DirectX::Keyboard::ProcessMessage(msg, wparam, lparam);
+		break;
 
 	default:
 		return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -42,7 +33,6 @@ WindowClass::WindowClass(HINSTANCE hInstance)
 	this->hInstance = hInstance;
 	this->initializeWindow();
 	this->graphicsHandler = new GraphicsHandler(this->wnd, this->heigth, this->width);
-	
 }
 
 WindowClass::WindowClass(HINSTANCE hInstance, int width, int height)
@@ -53,6 +43,7 @@ WindowClass::WindowClass(HINSTANCE hInstance, int width, int height)
 	this->hInstance = hInstance;
 	this->initializeWindow();
 	this->graphicsHandler = new GraphicsHandler(this->wnd, this->heigth, this->width);
+
 }
 
 WindowClass::~WindowClass()
@@ -109,7 +100,11 @@ void WindowClass::initializeWindow()
 int WindowClass::run()
 {
 	MSG msg = { 0 };
-
+	std::chrono::high_resolution_clock timer;
+	auto startTime = timer.now();
+	auto endTime = timer.now();
+	auto deltaTime = startTime - endTime;
+	float t = 0.0f;
 	
 
 	while (WM_QUIT != msg.message)
@@ -121,10 +116,12 @@ int WindowClass::run()
 		}
 		else
 		{
-			graphicsHandler->render();
+			startTime = timer.now();
+			deltaTime = startTime - endTime;
+			t = std::chrono::duration_cast<std::chrono::nanoseconds>(deltaTime).count() / 10000.0f;
+			graphicsHandler->update(t);
+			endTime = timer.now();
 		}
-			
-		
 	}
 
 	return 0;
