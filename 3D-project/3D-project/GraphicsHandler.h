@@ -58,9 +58,6 @@ private:
 	ID3D11DepthStencilState* dsState;
 	ID3D11DepthStencilView* DSV;
 
-	ID3D11Texture2D* pDepthBuffer;
-	ID3D11DepthStencilView* pDSV;
-
 	CameraClass* cameraClass;
 
 	lightStruct light;
@@ -84,6 +81,7 @@ private:
 	ID3D11Resource* particleTexture;
 	ID3D11RenderTargetView* nullRTV;
 	ID3D11DepthStencilView* nullDSV;
+
 	
 
 	float deltaTime;

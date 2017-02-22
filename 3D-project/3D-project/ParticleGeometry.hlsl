@@ -1,6 +1,7 @@
 struct GS_OUT
 {
 	float4 pos : SV_POSITION;
+    float4 norm : NORMAL;
     float2 uv : UV;
 };
 
@@ -43,6 +44,8 @@ void main(point VS_OUT input[1], inout TriangleStream< GS_OUT> tStream)
     for (int i = 0; i < 4; i++)
     {
         output.pos = mul(pos + qCorners[i], projection);
+        output.norm.xyz = cross((pos + qCorners[0]).xyz, (pos + qCorners[1]).xyz);
+        output.norm.w = 1.0f;
         output.uv = qTexCoords[i];
         tStream.Append(output);
     }

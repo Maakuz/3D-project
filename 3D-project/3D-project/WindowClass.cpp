@@ -110,7 +110,11 @@ void WindowClass::initializeWindow()
 int WindowClass::run()
 {
 	MSG msg = { 0 };
-
+	std::chrono::high_resolution_clock timer;
+	auto startTime = timer.now();
+	auto endTime = timer.now();
+	auto deltaTime = startTime - endTime;
+	float t = 0.0f;
 	
 
 	while (WM_QUIT != msg.message)
@@ -122,11 +126,13 @@ int WindowClass::run()
 		}
 		else
 		{
-			graphicsHandler->update(GetTickCount());
+			startTime = timer.now();
+			deltaTime = startTime - endTime;
+			t = std::chrono::duration_cast<std::chrono::nanoseconds>(deltaTime).count() / 10000.0f;
+			graphicsHandler->update(t);
 			graphicsHandler->render();
+			endTime = timer.now();
 		}
-			
-		
 	}
 
 	return 0;

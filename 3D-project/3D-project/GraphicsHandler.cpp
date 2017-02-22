@@ -4,7 +4,7 @@
 GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 {
 	srand(time(NULL));
-	this->currentTime = GetTickCount();;
+	this->currentTime = 0;
 	this->deltaTime = 0;
 	this->lastInsert = this->currentTime;
 	this->height = height;
@@ -53,8 +53,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->nullRTV = nullptr;
 	this->nullDSV = nullptr;
 
-	this->pDSV = nullptr;
-	this->pDepthBuffer = nullptr;
+	
 
 	
 
@@ -114,7 +113,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->structBuffer2->Release();
 	this->particleCountBuffer->Release();
 	this->IndirectArgsBuffer->Release();
-	this->StagingBuffer->Release();
+	/*this->StagingBuffer->Release();*/
 	
 	this->particleInserter->Release();
 
@@ -135,6 +134,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->UAVS[1]->Release();
 	this->SRVS[0]->Release();
 	this->SRVS[1]->Release();
+	
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -147,8 +147,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->gDeviceContext->Release();
 
 
-	this->pDSV->Release();
-	this->pDepthBuffer->Release();
+	
 
 }
 
@@ -1137,31 +1136,31 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	}
 
 
-	//create stageing buffer used for copying data from gpu to cpu
-	D3D11_BUFFER_DESC stageDesc;
-	ZeroMemory(&stageDesc, sizeof(D3D11_BUFFER_DESC));
-	stageDesc.ByteWidth = 4 * sizeof(UINT);
-	stageDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-	stageDesc.Usage = D3D11_USAGE_STAGING;
+	////create stageing buffer used for copying data from gpu to cpu
+	//D3D11_BUFFER_DESC stageDesc;
+	//ZeroMemory(&stageDesc, sizeof(D3D11_BUFFER_DESC));
+	//stageDesc.ByteWidth = 4 * sizeof(UINT);
+	//stageDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	//stageDesc.Usage = D3D11_USAGE_STAGING;
 
 
-	UINT* stagingInit = new UINT[4];
-	for (int i = 0; i < 4; i++)
-	{
-		stagingInit[i] = 0;
-	}
+	//UINT* stagingInit = new UINT[4];
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	stagingInit[i] = 0;
+	//}
 
-	D3D11_SUBRESOURCE_DATA sData;
-	ZeroMemory(&sData, sizeof(D3D11_SUBRESOURCE_DATA));
-	sData.pSysMem = stagingInit;
+	//D3D11_SUBRESOURCE_DATA sData;
+	//ZeroMemory(&sData, sizeof(D3D11_SUBRESOURCE_DATA));
+	//sData.pSysMem = stagingInit;
 
-	hr = this->gDevice->CreateBuffer(&stageDesc, &sData, &this->StagingBuffer);
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"STAGING BUFFER CREATION FAILED!", L"error", MB_OK);
-	}
+	//hr = this->gDevice->CreateBuffer(&stageDesc, &sData, &this->StagingBuffer);
+	//if (FAILED(hr))
+	//{
+	//	MessageBox(0, L"STAGING BUFFER CREATION FAILED!", L"error", MB_OK);
+	//}
 	delete[] init;
-	delete[] stagingInit;
+	/*delete[] stagingInit;*/
 }
 
 void GraphicsHandler::createVertexBuffer()
@@ -1199,32 +1198,18 @@ void GraphicsHandler::createDepthBuffer()
 	dDesc.Height = this->height;
 	dDesc.MipLevels = 1;
 	dDesc.ArraySize = 1;
-	dDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	dDesc.SampleDesc.Count = 1;
 	dDesc.SampleDesc.Quality = 0;
 	dDesc.Usage = D3D11_USAGE_DEFAULT;
-	dDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	dDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	dDesc.CPUAccessFlags = 0;
 	dDesc.MiscFlags = 0;
 	HRESULT hr = this->gDevice->CreateTexture2D(&dDesc, NULL, &this->depthBuffer);
 	if (FAILED(hr))
 		MessageBox(0, L"depth stencil resource creation failed", L"error", MB_OK);
 
-	hr = this->gDevice->CreateTexture2D(&dDesc, NULL, &this->pDepthBuffer);
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"depth stencil resource creation failded", L"error", MB_OK);
-	}
-
-	D3D11_TEX2D_SRV srv;
-	srv.MipLevels = 1;
-	srv.MostDetailedMip = 1;
-
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-	srvDesc.Texture2D = srv;
-	srvDesc.Format = dDesc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	
 
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
 	dsDesc.DepthEnable = true;
@@ -1254,7 +1239,7 @@ void GraphicsHandler::createDepthBuffer()
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	ZeroMemory(&dsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
 
-	dsvDesc.Format = dDesc.Format;
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 	dsvDesc.Texture2D.MipSlice = 0;
 	dsvDesc.Flags = 0;
@@ -1264,11 +1249,7 @@ void GraphicsHandler::createDepthBuffer()
 		MessageBox(0, L"depth stencil view creation failed", L"error", MB_OK);
 
 
-	hr = this->gDevice->CreateDepthStencilView(this->pDepthBuffer, &dsvDesc, &this->pDSV);
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"pDSV creation failed", L"error", MB_OK);
-	}
+	
 
 	D3D11_DEPTH_STENCIL_DESC disabledDepthDesc;
 	ZeroMemory(&disabledDepthDesc, sizeof(disabledDepthDesc));
@@ -1463,12 +1444,13 @@ void GraphicsHandler::render()
 	
 	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->DSV);
 
-	//Clear depth stencil here
+	
 	this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
-	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.f, 0);
+	
 
 	this->gDeviceContext->Draw(6, 0);
-
+	//Clear depth stencil here
+	this->gDeviceContext->ClearDepthStencilView(this->DSV, D3D11_CLEAR_DEPTH, 1.f, 0);
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 	
 
@@ -1503,8 +1485,8 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
 
-	//kanske ska vara andra tal, troligtvis inte
-	this->setViewPort(480, 640);
+	
+	this->setViewPort(this->height, this->width);
 
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
 
@@ -1512,12 +1494,10 @@ void GraphicsHandler::renderGeometry()
 	{
 		this->gDeviceContext->ClearRenderTargetView(this->renderTargetViews[i], clearColor);
 	}
-
-	//Kanskse borde vara drawindexed
-	this->gDeviceContext->Draw(36, 0);
-
-	//Reset
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
+
+
+	this->gDeviceContext->Draw(36, 0);
 
 	//Null stuff
 	ID3D11RenderTargetView* temp[NROFBUFFERS];
@@ -1548,16 +1528,27 @@ void GraphicsHandler::renderParticles()
 	this->gDeviceContext->VSSetShaderResources(0, 1, &this->SRVS[0]);
 	this->gDeviceContext->GSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
-	this->gDeviceContext->PSSetShaderResources(0, 1, &this->depthBuffer);
+	//this->gDeviceContext->PSSetShaderResources(1, 1, &this->earlydepthSRV);
 
-	this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->pDSV);
+	//this->gDeviceContext->OMSetRenderTargets(1, &this->rtvBackBuffer, this->pDSV);
 
-	//this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
-	this->gDeviceContext->ClearDepthStencilView(this->pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	/*this->gDeviceContext->ClearRenderTargetView(this->rtvBackBuffer, clearColor);
+	this->gDeviceContext->ClearDepthStencilView(this->pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);*/
+
+	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
+
+	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 
 	this->gDeviceContext->DrawInstancedIndirect(this->IndirectArgsBuffer, 0);
-	this->swapChain->Present(0, 0);
+
+	//clear stuff for later stages
 	this->gDeviceContext->VSSetShaderResources(0, 1, &this->nullSRV);
+	ID3D11RenderTargetView* temp[NROFBUFFERS];
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		temp[i] = NULL;
+	}
+	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, temp, NULL);
 }
 
 void GraphicsHandler::update(float currentTime)
@@ -1593,42 +1584,11 @@ void GraphicsHandler::updateParticles()
 
 	this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
 
-	
-
-	
 
 	this->gDeviceContext->Dispatch(512, 1, 1);
 	
 	this->swapParticleBuffers();
 
-
-	this->gDeviceContext->CopyStructureCount(this->StagingBuffer, 0, this->UAVS[0]);
-	D3D11_MAPPED_SUBRESOURCE data;
-	this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
-	UINT test[4];
-	for (size_t i = 0; i < 4; i++)
-	{
-		test[i] = 1;
-	}
-	memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);
-
-	this->gDeviceContext->Unmap(this->StagingBuffer, 0);
-
-	//this->gDeviceContext->CopyStructureCount(this->StagingBuffer, 0, this->UAVS[1]);
-
-	////D3D11_MAPPED_SUBRESOURCE data;
-	//this->gDeviceContext->Map(this->StagingBuffer, 0, D3D11_MAP_READ, 0, &data);
-	////UINT test[4];
-	//for (size_t i = 0; i < 4; i++)
-	//{
-	//	test[i] = 1;
-	//}
-	//memcpy(test, (UINT*)data.pData, sizeof(UINT) * 4);
-
-	//this->gDeviceContext->Unmap(this->StagingBuffer, 0);
-
-	
-	
 
 	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);
 	this->gDeviceContext->CopyStructureCount(this->IndirectArgsBuffer, 0, this->UAVS[0]);
@@ -1653,6 +1613,8 @@ void GraphicsHandler::swapParticleBuffers()
 
 }
 
+
+
 void GraphicsHandler::particleFirstTimeInit()
 {
 	this->gDeviceContext->CSSetConstantBuffers(0, 1, &this->emitterlocation);
@@ -1664,7 +1626,7 @@ void GraphicsHandler::particleFirstTimeInit()
 
 
 
-	this->gDeviceContext->Dispatch(8, 1, 1);
+	this->gDeviceContext->Dispatch(1, 1, 1);
 	this->gDeviceContext->CopyStructureCount(this->particleCountBuffer, 0, this->UAVS[0]);	
 	this->lastInsert = this->currentTime;
 
@@ -1672,7 +1634,7 @@ void GraphicsHandler::particleFirstTimeInit()
 	this->gDeviceContext->CSSetUnorderedAccessViews(1, 1, &this->nullUAV, &startParticleCount);
 }
 
-void GraphicsHandler::updateParticleCBuffers(float currentTime)
+void GraphicsHandler::updateParticleCBuffers(float deltaTime)
 {
 	D3D11_MAPPED_SUBRESOURCE data;
 	this->gDeviceContext->Map(this->emitterlocation, 0 , D3D11_MAP_WRITE_DISCARD, 0, &data);
@@ -1698,8 +1660,10 @@ void GraphicsHandler::updateParticleCBuffers(float currentTime)
 	this->gDeviceContext->Unmap(this->emitterlocation, 0);
 
 	this->gDeviceContext->Map(this->deltaTimeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
-	this->deltaTime = currentTime - this->currentTime;
-	this->currentTime = currentTime;
+
+
+	this->deltaTime = deltaTime;
+	this->currentTime += deltaTime;
 
 	memcpy(data.pData, &this->deltaTime, sizeof(this->deltaTime));
 

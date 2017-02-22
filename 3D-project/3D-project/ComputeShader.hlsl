@@ -32,11 +32,11 @@ void main( uint3 DTID : SV_DispatchThreadID )
         Particle currentParticle = CurrentSimState.Consume();
 
         //calculate next postion
-        currentParticle.position.xyz += float3(currentParticle.velocity * time * 0.0001);
+        currentParticle.position.xyz += float3(currentParticle.velocity * time * 0.001);
 
         currentParticle.age += time;
 
-        if(currentParticle.age < 10000.0f)
+        if(currentParticle.age < 15000.0f)
         {
             nextSimState.Append(currentParticle);
         }
