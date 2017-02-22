@@ -299,16 +299,19 @@ void CameraClass::update()
 
 	setPosition(position); //sparar den i mPosition
 
-	//Set the look at to the same x coord as the camera
 
-	//this->mLook.x = this->mPosition.x; //kanske bara addera?
-	//this->mLook.x = this->mPosition.x;
+						   //Set the look at to the same x coord as the camera
 
+						   //xled borde fungera för direction är bara i z led
+
+						   //this->mDirection.z = this->mDirection.z + 0.00003f; //kanske bara addera?
+						   //this->mLook.y = this->mLook.y + this->mPosition.y;
+						   //this->mLook.x = this->mPosition.x;
 
 
 
 	
-
+	//this->mDirection.z = this->mDirection.z + -0.00003f; // i w och s för att kunna gå igenom
 	
 	//mus
 
@@ -358,168 +361,12 @@ void CameraClass::update()
 
 		//ShowCursor(FALSE);
 
-	//	newMouseLocation = DirectX::XMFLOAT2(width / 2, height / 2);
-
-
-		//DirectX::XMVectorSetX(rotationVector, totalnewMouseLocation.x * this->defaultRotationRate); // * elapsedTime
-		//DirectX::XMVectorSetY(rotationVector, totalnewMouseLocation.y * this->defaultRotationRate); // * elapsedTime
-
-		//DirectX::XMVECTOR right = DirectX::XMLoadFloat3(&this->mRight);
-
-		//float temp = DirectX::XMVectorGetY(rotationVector);
-
-		//DirectX::XMMATRIX pitchMatrix = DirectX::XMMatrixRotationAxis(right, temp);
-		//DirectX::XMMATRIX yawMatrix = DirectX::XMMatrixRotationY(DirectX::XMVectorGetX(rotationVector));
-
-		//DirectX::XMMATRIX yawXPitch = DirectX::XMMatrixMultiply(pitchMatrix, yawMatrix);
-		//DirectX::XMFLOAT4X4 floatYawXPitch;
-		//DirectX::XMStoreFloat4x4(&floatYawXPitch, yawXPitch);
-
-		//
-
-
-
-		//this->mLook.x = this->mLook.x + totalnewMouseLocation.x;
-		//this->mLook.y = this->mLook.y - totalnewMouseLocation.y;
-
-		//this->rotation(floatYawXPitch);	//rotationen
-
-		//this->updateViewMatrix(); //view matrixen
 	}
 
 	this->updateViewMatrix(); //view matrixen
 
 
-	//ms.positionMode = DirectX::Mouse::MODE_RELATIVE; //system cursorn inte visible?
-
-	/*if (this->m_mouse->IsConnected() && ms.leftButton)
-	{
-		DirectX::XMVECTOR delta = DirectX::XMVectorZero();
-
-		delta = DirectX::XMVectorSetX(delta, ms.x * this->defaultMouseSensitivity);
-		delta = DirectX::XMVectorSetY(delta, ms.y * this->defaultMouseSensitivity);
-		delta = DirectX::XMVectorSetZ(delta, 0.f);
-
-		this->mPitch -= DirectX::XMVectorGetY(delta);
-		this->mYaw -= DirectX::XMVectorGetX(delta);
-
-		 limit pitch to straight up or straight down
-		 with a little fudge-factor to avoid gimbal lock
-		float limit = DirectX::XM_PI / 2.0f - 0.01f;
-
-		if (-limit > this->mPitch)
-		{
-			this->mPitch = -limit;
-		}
-		else
-		{
-			pitch = pitch
-		}
-
-		if (+limit < this->mPitch)
-		{
-			this->mPitch = +limit;
-		}
-		else
-		{
-			picth = pitch
-		}
-
-		 keep longitude in sane range by wrapping
-		if (mYaw > DirectX::XM_PI)
-		{
-			mYaw -= DirectX::XM_PI * 2.0f;
-		}
-		else if (mYaw < -DirectX::XM_PI)
-		{
-			mYaw += DirectX::XM_PI * 2.0f;
-		}
-
-		float y = sinf(this->mPitch);
-		float r = cosf(this->mPitch);
-		float z = r*cosf(this->mYaw);
-		float x = r*sinf(this->mYaw);
-
-		DirectX::XMVECTOR changeLook = DirectX::XMVectorZero();
-		changeLook = DirectX::XMVectorSetX(changeLook, x);
-		changeLook = DirectX::XMVectorSetY(changeLook, y);
-		changeLook = DirectX::XMVectorSetZ(changeLook, z); 
-		changeLook = DirectX::XMVector3Normalize(changeLook);
-
-		this->mLook.x = this->mPosition.x + DirectX::XMVectorGetX(changeLook);
-		this->mLook.y = this->mPosition.y + DirectX::XMVectorGetY(changeLook);
-		this->mLook.z = this->mPosition.z + DirectX::XMVectorGetZ(changeLook);
-
-		DirectX::XMVECTOR temp = DirectX::XMLoadFloat3(&this->mLook);
-		temp = DirectX::XMVector3Normalize(temp);
-		DirectX::XMStoreFloat3(&this->mLook, temp);
-
-		m_mouse->SetMode(ms.leftButton ? DirectX::Mouse::MODE_RELATIVE : DirectX::Mouse::MODE_ABSOLUTE);
-	}*/
 	
-
-
-
-
-
-
-
-
-
-
-	//	if (this->mouseMove == false)
-	//	{
-	//		this->startMouse.x = ms.x * 0.001;
-	//		this->mouseMove = true;
-	//	}
-
-	//		(ms.x * this->defaultMouseSensitivity); // nya mnus frra i total
-	//	mouseAmount.y = (ms.y * this->defaultMouseSensitivity);
-
-	//	totalMouseAmount.x = startMouse.x - previousMouseLocation.x;
-	//	totalMouseAmount.y = mouseAmount.y - previousMouseLocation.y;
-	//	
-	//	previousMouseLocation.x = startMouse.x;
-	//	previousMouseLocation.y = mouseAmount.y;
-
-	//	this->mLook.x = this->mLook.x + totalMouseAmount.x;
-	//	this->mLook.y = this->mLook.y - totalMouseAmount.y;
-	//	
-	//	if (this->m_mouse->GetState().rightButton)
-	//	{
-	//		this->stopMouse.x = ms.x * 0.001;
-
-	//		this->totalMouse.x = this->stopMouse.x + this->startMouse.x;
-	//		
-
-
-
-	//		this->mLook.x = this->mLook.x + this->totalMouse.x;
-	//		
-	//		DirectX::XMVECTOR up = DirectX::XMLoadFloat3(&this->mUp);
-
-	//		DirectX::XMVECTOR look = DirectX::XMLoadFloat3(&this->mLook);
-	//		look = DirectX::XMVector4Normalize(look);
-	//		DirectX::XMStoreFloat3(&this->mLook, look);
-
-	//		DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, look);
-	//		right = DirectX::XMVector4Normalize(right);
-	//		normaliserad om alla tal^2 och roten ur hela blir 1.
-
-	//		DirectX::XMStoreFloat3(&this->mRight, right);
-	//		this->mouseMove = false;
-
-	//		this->startMouse = DirectX::XMFLOAT2(0, 0);
-	//		this->stopMouse = DirectX::XMFLOAT2(0, 0);
-	//		this->totalMouse = DirectX::XMFLOAT2(0, 0);
-	///*	}
-	//}
-	/*if (this->m_mouse->GetState().leftButton == false && this->mouseMove == true)
-	{
-		this->mouseMove = false;
-		sätt musen i mitten av windwow
-		SetCursorPos(500, 500);
-	}*/
 
 
 
