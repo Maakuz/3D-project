@@ -243,6 +243,13 @@ void CameraClass::update()
 
 		deltaMouseMovement.x = newMouseLocation.x - previousMouseLocation.x;
 		deltaMouseMovement.y = previousMouseLocation.y - newMouseLocation.y; //y reversed
+
+		//It works, be happy
+		if (abs(deltaMouseMovement.x) <= 1)
+			deltaMouseMovement.x = 0; 
+		
+		if (abs(deltaMouseMovement.y) <= 1)
+			deltaMouseMovement.y = 0;
 		
 		previousMouseLocation.x = newMouseLocation.x;
 		previousMouseLocation.y = newMouseLocation.y;

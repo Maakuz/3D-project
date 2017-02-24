@@ -62,3 +62,8 @@
 3D-project/3D-project/x64/Debug/3D-project.tlog/unsuccessfulbuild
 3D-project/x64/Debug/DefferedPS.cso
 3D-project/x64/Debug/DefferedVS.cso
+3D-project/x64/Debug/ComputeShader.cso
+3D-project/x64/Debug/ParticleGeometry.cso
+3D-project/x64/Debug/ParticleInserter.cso
+3D-project/x64/Debug/ParticlePixel.cso
+3D-project/x64/Debug/particleVertex.cso
