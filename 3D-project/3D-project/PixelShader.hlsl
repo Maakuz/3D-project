@@ -33,9 +33,10 @@ cbuffer mtlLightBuffer : register(b2)
 
 struct VS_OUT
 {
-    float4 pos : SV_Position;
-    float4 posVS : VSPOS;
-    float2 uv : TEXCOORD;
+	float4 pos : SV_Position;
+	float4 posVS : VSPOS;
+	float4 lightPos : LIGHTPOSITION;
+	float2 uv : TEXCOORD;
 };
 
 float4 main(VS_OUT input) : SV_TARGET
@@ -69,6 +70,26 @@ float4 main(VS_OUT input) : SV_TARGET
    //TODO: Specularity
 
     lighting = float4(diffuse, 1);
+
+	//Shadow mapping
+	input.lightPos.xyz /= input.lightPos.w;
+
+	//Light frustum culling maybe
+	/*if (input.lightPos.x < -1.f || input.lightPos.y < -1.f	|| input.lightPos.x > 1.f || 
+		input.lightPos.y > 1.f	|| input.lightPos.z < 0.f	|| input.lightPos.z > 1.f)
+		lighting = float4(0.1, 0.1, 0.1, 1);
+*/
+
+	//Convert to texture coords
+	input.lightPos.x = (input.lightPos.x * 0.5) + 0.5;
+	input.lightPos.y = (input.lightPos.y * -0.5) + 0.5;
+
+	float depth = shadowMap.Sample(sSampler, input.lightPos.xy).x;
+
+	if (depth < input.lightPos.z)
+		lighting *= float4(0.5, 0.5, 0.5, 1);
+
+
 
 	//return lightColor;
     //return float4(shadowMap.Sample(sSampler, input.uv).xyz, 1);

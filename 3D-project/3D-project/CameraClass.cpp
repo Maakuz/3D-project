@@ -118,7 +118,7 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 	//this->matrices.world = DirectX::XMMatrixTranspose(this->matrices.world);
 
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(0, 3, -3, 0);
+	eyePosition = DirectX::XMVectorSet(0, 0, -10, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 0);
@@ -134,8 +134,8 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 	DirectX::XMMATRIX temp = matrices.view;
 	matrices.view = DirectX::XMMatrixTranspose(temp);
 
-	//this->matrices.projection = DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, zNear, zFar);
-	this->matrices.projection = DirectX::XMMatrixOrthographicLH(width / 100.f, height / 100.f, 0.1f, 200);
+	this->matrices.projection = DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, zNear, zFar);
+	//this->matrices.projection = DirectX::XMMatrixOrthographicLH(width / 100.f, height / 100.f, 0.1f, 200);
 	
 	temp = matrices.projection;
 	this->matrices.projection = DirectX::XMMatrixTranspose(temp);

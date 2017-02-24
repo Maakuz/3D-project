@@ -80,7 +80,7 @@ GraphicsHandler::~GraphicsHandler()
 	this->matrixBuffer->Release();
 	this->lightbuffer->Release();
 	this->mtlLightbuffer->Release();
-	this->shadowBuffer->Release();
+	this->lightMatrixBuffer->Release();
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -1124,6 +1124,8 @@ void GraphicsHandler::render()
 	this->gDeviceContext->PSSetSamplers(0, 1, &this->sState);
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
+	this->gDeviceContext->VSSetConstantBuffers(1, 1, &this->lightMatrixBuffer);
+
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
 	this->gDeviceContext->PSSetConstantBuffers(2, 1, &this->mtlLightbuffer);
 
@@ -1212,7 +1214,7 @@ void GraphicsHandler::renderShadows()
 
 	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
 
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->shadowBuffer);
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->lightMatrixBuffer);
 
 	this->terrainHandler->setShaderResources(this->gDeviceContext);
 	this->terrainHandler->renderTerrain(this->gDeviceContext);
@@ -1267,7 +1269,7 @@ void GraphicsHandler::createLightMatrices()
 	data.SysMemPitch = 0;
 	data.SysMemSlicePitch = 0;
 
-	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->shadowBuffer);
+	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->lightMatrixBuffer);
 	if (FAILED(hr))
 		MessageBox(0, L"shadow buffer failed!", L"error", MB_OK);
 }
@@ -1277,13 +1279,13 @@ void GraphicsHandler::updateLightBuffer()
 	D3D11_MAPPED_SUBRESOURCE dataPtr;
 
 	//Shadow buffer
-	this->gDeviceContext->Map(this->shadowBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &dataPtr);
+	this->gDeviceContext->Map(this->lightMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &dataPtr);
 
 	this->lightMatrices.world = this->cameraClass->getMatrix().world;
 	
 	memcpy(dataPtr.pData, &this->lightMatrices, sizeof(matrixStruct));
 
-	this->gDeviceContext->Unmap(shadowBuffer, 0);
+	this->gDeviceContext->Unmap(lightMatrixBuffer, 0);
 
 	//Light buffer
 	this->gDeviceContext->Map(this->lightbuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &dataPtr);

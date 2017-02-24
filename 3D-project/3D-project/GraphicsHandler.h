@@ -38,7 +38,7 @@ private:
 	ID3D11Buffer* matrixBuffer;
 	ID3D11Buffer* lightbuffer;
 	ID3D11Buffer* mtlLightbuffer;
-	ID3D11Buffer* shadowBuffer;
+	ID3D11Buffer* lightMatrixBuffer;
 
 	ID3D11SamplerState* sState;
 
