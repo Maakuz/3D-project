@@ -3,6 +3,7 @@ texture2D positions : register(t0);
 texture2D normals : register(t1);
 texture2D colors : register(t2);
 texture2D mtl : register(t3);
+texture2D shadowMap : register(t4);
 
 cbuffer lightBuffer : register(b0)
 {
@@ -30,11 +31,18 @@ cbuffer mtlLightBuffer : register(b2)
     mtlStruct mtls[10];
 };
 
+cbuffer lightMatrixes : register(b3)
+{
+    matrix lightWorld;
+    matrix lightView;
+    matrix lightProjection;
+};
+
 struct VS_OUT
 {
-    float4 pos : SV_Position;
-    float4 posVS : VSPOS;
-    float2 uv : TEXCOORD;
+	float4 pos : SV_Position;
+	float4 posVS : VSPOS;
+	float2 uv : TEXCOORD;
 };
 
 float4 main(VS_OUT input) : SV_TARGET
@@ -69,7 +77,23 @@ float4 main(VS_OUT input) : SV_TARGET
 
     lighting = float4(diffuse, 1);
 
-	//return lightColor;
-    //return float4(colors.Sample(sSampler, input.uv).xyz, 1);
+//*************************Shadow mapping*********************************
+    float4 posFromLight = positions.Sample(sSampler, input.uv);
+
+    posFromLight = mul(posFromLight, lightView);
+    posFromLight = mul(posFromLight, lightProjection);
+
+	//Convert to texture coords
+    posFromLight.x = (posFromLight.x * 0.5) + 0.5;
+    posFromLight.y = (posFromLight.y * -0.5) + 0.5;
+
+
+    float depth = shadowMap.Sample(sSampler, posFromLight.xy).x;
+
+    if (depth < posFromLight.z - 0.01)
+		lighting *= float4(0.5, 0.5, 0.5, 1);
+
+//********************Shadow mapping end*********************************
+
     return  lighting;
 }

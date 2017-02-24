@@ -137,6 +137,7 @@ void TerrainHandler::createVertices()
 
 	float length = 0.3f;
 	float offsetX = ((this->width - 1) * length) / 2.f;
+	float offsetY = 10.f;
 	float offsetZ = ((this->height - 1) * length) / 2.f;
 	int count = 0;
 
@@ -159,7 +160,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i].x * length - offsetX,
-			this->heightMap[i].y * this->heightMultiple,
+			this->heightMap[i].y * this->heightMultiple - offsetY,
 			this->heightMap[i].z * length - offsetZ,
 
 			//Normals goes here later
@@ -173,7 +174,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1].x * length - offsetX,
-			this->heightMap[i + 1].y * this->heightMultiple,
+			this->heightMap[i + 1].y * this->heightMultiple - offsetY,
 			this->heightMap[i + 1].z * length - offsetZ,
 
 			//Normals goes here later
@@ -188,7 +189,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + this->width].x * length - offsetX,
-			this->heightMap[i + this->width].y * this->heightMultiple,
+			this->heightMap[i + this->width].y * this->heightMultiple - offsetY,
 			this->heightMap[i + this->width].z * length - offsetZ,
 
 			//Normals goes here later
@@ -232,7 +233,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1].x * length - offsetX,
-			this->heightMap[i + 1].y * this->heightMultiple,
+			this->heightMap[i + 1].y * this->heightMultiple - offsetY,
 			this->heightMap[i + 1].z * length - offsetZ,
 
 			//Normals goes here later
@@ -247,7 +248,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1 + this->width].x * length - offsetX,
-			this->heightMap[i + 1 + this->width].y * this->heightMultiple,
+			this->heightMap[i + 1 + this->width].y * this->heightMultiple - offsetY,
 			this->heightMap[i + 1 + this->width].z * length - offsetZ,
 
 			//Normals goes here later
@@ -262,7 +263,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + this->width].x * length - offsetX,
-			this->heightMap[i + this->width].y * this->heightMultiple,
+			this->heightMap[i + this->width].y * this->heightMultiple - offsetY,
 			this->heightMap[i + this->width].z * length - offsetZ,
 
 			//Normals goes here later

@@ -83,6 +83,7 @@ struct matrixStruct
 	DirectX::XMMATRIX projection;
 };
 
+
 struct lightStruct
 {
 	DirectX::XMFLOAT4 lightPos;

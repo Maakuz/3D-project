@@ -27,6 +27,7 @@ private:
 
 	ID3D11VertexShader* vertexShader;
 	ID3D11VertexShader* defferedVertexShader;
+	ID3D11VertexShader* shadowVertexShader;
 	ID3D11PixelShader* pixelShader;
 	ID3D11PixelShader* defferedPixelShader;
 	ID3D11ComputeShader* computeShader;
@@ -35,6 +36,9 @@ private:
 	ID3D11InputLayout* vertexLayout;
 	ID3D11InputLayout* defferedVertexLayout;
 	ID3D11InputLayout* partilceVertexLayout;
+
+	ID3D11PixelShader* shadowPixelShader;
+
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* defferedVertexBuffer;
 	objectInfo objInfo;
@@ -42,6 +46,7 @@ private:
 	ID3D11Buffer* matrixBuffer;
 	ID3D11Buffer* lightbuffer;
 	ID3D11Buffer* mtlLightbuffer;
+	ID3D11Buffer* lightMatrixBuffer;
 
 	ID3D11SamplerState* sState;
 
@@ -60,10 +65,16 @@ private:
 	ID3D11DepthStencilState* dsState;
 	ID3D11DepthStencilView* DSV;
 
+	ID3D11Texture2D* shadowDepthBuffer;
+	ID3D11DepthStencilView* shadowDSV;
+	ID3D11ShaderResourceView* shadowSRV;
+
+
 	CameraClass* cameraClass;
 	TerrainHandler* terrainHandler;
 
 	lightStruct light;
+	matrixStruct lightMatrices;
 
 	//particle system things
 	ID3D11PixelShader* particlePixel;
@@ -102,7 +113,7 @@ private:
 	HRESULT CreateDirect3DContext(HWND wHandler);
 	void createVertexBuffer();
 	void createDefferedBuffers();
-	void createDepthBuffer();
+	void createDepthBuffers();
 	void createSamplers();
 	void createLightBuffer();
 	void createMtlLightBuffer();
@@ -116,12 +127,14 @@ private:
 	void updateParticleCBuffers(float currentTime);
 	
 	
+	void renderShadows();
+	void createLightMatrices();
+	void updateLightBuffer();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
 	~GraphicsHandler();
 
-	void update();
 	void update(float currentTime);
 	
 
