@@ -8,7 +8,6 @@ struct VS_OUT
 {
     float4 pos : SV_Position;
     float4 posVS : VSPOS;
-	float4 lightPos : LIGHTPOSITION;
     float2 uv : TEXCOORD;
 };
 
@@ -16,13 +15,6 @@ cbuffer matrixBuffer : register(b0)
 {
     matrix WVMatrix;
     matrix invProjMatrix;
-};
-
-cbuffer lightMatrixes : register(b1)
-{
-    matrix lightWorld;
-    matrix lightView;
-    matrix lightProjection;
 };
 
 float4 getWVPos()
@@ -43,9 +35,6 @@ VS_OUT main(VS_IN input)
     output.pos = float4(input.pos, 1);
     //output.posVS = getWVPos();
     output.uv = input.uv;
-	output.lightPos = mul(float4(input.pos, 1), lightWorld);
-	output.lightPos = mul(output.lightPos, lightView);
-	output.lightPos = mul(output.lightPos, lightProjection);
 	
     return output;
 }

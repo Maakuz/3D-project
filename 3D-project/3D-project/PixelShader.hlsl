@@ -31,11 +31,17 @@ cbuffer mtlLightBuffer : register(b2)
     mtlStruct mtls[10];
 };
 
+cbuffer lightMatrixes : register(b3)
+{
+    matrix lightWorld;
+    matrix lightView;
+    matrix lightProjection;
+};
+
 struct VS_OUT
 {
 	float4 pos : SV_Position;
 	float4 posVS : VSPOS;
-	float4 lightPos : LIGHTPOSITION;
 	float2 uv : TEXCOORD;
 };
 
@@ -71,27 +77,23 @@ float4 main(VS_OUT input) : SV_TARGET
 
     lighting = float4(diffuse, 1);
 
-	//Shadow mapping
-	input.lightPos.xyz /= input.lightPos.w;
+//*************************Shadow mapping*********************************
+    float4 posFromLight = positions.Sample(sSampler, input.uv);
 
-	//Light frustum culling maybe
-	/*if (input.lightPos.x < -1.f || input.lightPos.y < -1.f	|| input.lightPos.x > 1.f || 
-		input.lightPos.y > 1.f	|| input.lightPos.z < 0.f	|| input.lightPos.z > 1.f)
-		lighting = float4(0.1, 0.1, 0.1, 1);
-*/
+    posFromLight = mul(posFromLight, lightView);
+    posFromLight = mul(posFromLight, lightProjection);
 
 	//Convert to texture coords
-	input.lightPos.x = (input.lightPos.x * 0.5) + 0.5;
-	input.lightPos.y = (input.lightPos.y * -0.5) + 0.5;
+    posFromLight.x = (posFromLight.x * 0.5) + 0.5;
+    posFromLight.y = (posFromLight.y * -0.5) + 0.5;
 
-	float depth = shadowMap.Sample(sSampler, input.lightPos.xy).x;
 
-	if (depth < input.lightPos.z)
+    float depth = shadowMap.Sample(sSampler, posFromLight.xy).x;
+
+    if (depth < posFromLight.z - 0.01)
 		lighting *= float4(0.5, 0.5, 0.5, 1);
 
+//********************Shadow mapping end*********************************
 
-
-	//return lightColor;
-    //return float4(shadowMap.Sample(sSampler, input.uv).xyz, 1);
     return  lighting;
 }

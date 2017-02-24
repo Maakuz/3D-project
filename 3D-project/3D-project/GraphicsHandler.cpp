@@ -35,7 +35,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->terrainHandler = new TerrainHandler(
 		this->gDevice, 
 		"../resource/maps/HeightMap3.bmp", 
-		0.f);
+		30.f);
 
 	this->createShaders();
 	this->createTexture();
@@ -178,7 +178,7 @@ void GraphicsHandler::createShaders()
 		nullptr,
 		"main",
 		"vs_5_0",
-		D3D10_SHADER_DEBUG,
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
 		&vsBlob,
 		nullptr);
@@ -218,7 +218,7 @@ void GraphicsHandler::createShaders()
 		nullptr,
 		"main",
 		"vs_5_0",
-		D3D10_SHADER_DEBUG,
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
 		&dvsBlob,
 		nullptr);
@@ -259,7 +259,7 @@ void GraphicsHandler::createShaders()
 		nullptr,
 		"main",
 		"vs_5_0",
-		D3D10_SHADER_DEBUG,
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
 		&shadowVSBlob,
 		nullptr);
@@ -287,7 +287,7 @@ void GraphicsHandler::createShaders()
 		NULL,
 		"main",
 		"ps_5_0",
-		D3D10_SHADER_DEBUG,
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
 		&psBlob,
 		NULL);
@@ -311,7 +311,7 @@ void GraphicsHandler::createShaders()
 		NULL,
 		"main",
 		"ps_5_0",
-		D3D10_SHADER_DEBUG,
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
 		0,
 		&dpsBlob,
 		NULL);
@@ -983,9 +983,13 @@ void GraphicsHandler::createDepthBuffers()
 void GraphicsHandler::createSamplers()
 {
 	D3D11_SAMPLER_DESC sDesc;
-	sDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	sDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	sDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	sDesc.BorderColor[0] = 1;
+	sDesc.BorderColor[1] = 1;
+	sDesc.BorderColor[2] = 1;
+	sDesc.BorderColor[3] = 1;
 
 	sDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
 	sDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -1124,10 +1128,10 @@ void GraphicsHandler::render()
 	this->gDeviceContext->PSSetSamplers(0, 1, &this->sState);
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
-	this->gDeviceContext->VSSetConstantBuffers(1, 1, &this->lightMatrixBuffer);
 
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
 	this->gDeviceContext->PSSetConstantBuffers(2, 1, &this->mtlLightbuffer);
+	this->gDeviceContext->PSSetConstantBuffers(3, 1, &this->lightMatrixBuffer);
 
 
 	this->gDeviceContext->Draw(6, 0);
@@ -1247,7 +1251,7 @@ void GraphicsHandler::createLightMatrices()
 	DirectX::XMMATRIX vLight = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
 	vLight = DirectX::XMMatrixTranspose(vLight);
 
-	DirectX::XMMATRIX pLight = DirectX::XMMatrixOrthographicLH(this->width/100.f, this->height/100.f, 0.1f, 20);
+	DirectX::XMMATRIX pLight = DirectX::XMMatrixOrthographicLH(this->width/100.f, this->height/100.f, 0.1f, 200);
 	pLight = DirectX::XMMatrixTranspose(pLight);
 
 	this->lightMatrices.projection = pLight;
