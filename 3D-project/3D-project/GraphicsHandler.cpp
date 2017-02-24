@@ -68,11 +68,12 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 
-	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext, this->width, this->height);
+	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext, wHandler, width, height);
 	this->terrainHandler = new TerrainHandler(
 		this->gDevice, 
 		"../resource/maps/HeightMap3.bmp", 
 		30.f);
+	
 
 	this->createShaders();
 	this->createTexture();
@@ -149,9 +150,6 @@ GraphicsHandler::~GraphicsHandler()
 
 	this->gDevice->Release();
 	this->gDeviceContext->Release();
-
-
-	
 
 }
 
@@ -1365,9 +1363,9 @@ void GraphicsHandler::createSamplers()
 void GraphicsHandler::createLightBuffer()
 {
 	this->light.lightColor = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	this->light.lightPos = DirectX::XMFLOAT4(0.0f, 3.0f, -3.0f, 1.0f);
+	this->light.lightPos = DirectX::XMFLOAT4(0.0f, 13.0f, 0.f, 1.0f);
 	this->light.lightAngle = DirectX::XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f);
-	this->light.lightDir = DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 0.0f);
+	this->light.lightDir = DirectX::XMFLOAT4(0.0f, -1.0f, 0.0f, 0.0f);
 	this->light.lightRange = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 0.0f);
 
 	D3D11_BUFFER_DESC desc;
@@ -1622,7 +1620,7 @@ void GraphicsHandler::update(float currentTime)
 
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
 	this->updateLightBuffer();
-	//this->cameraClass->update();
+	this->cameraClass->update(currentTime);
 
 
 	this->renderShadows();
@@ -1775,8 +1773,9 @@ void GraphicsHandler::renderShadows()
 
 void GraphicsHandler::createLightMatrices()
 {
+	//If z is 0 it won't work, will look into this
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(0, 3, -3, 0);
+	eyePosition = DirectX::XMVectorSet(0, 13, 0.1f, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 0);

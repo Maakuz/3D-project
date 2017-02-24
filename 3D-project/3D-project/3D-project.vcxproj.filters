@@ -22,6 +22,15 @@
     <Filter Include="Header Files\Classes">
       <UniqueIdentifier>{452c0e66-c46a-47be-a55e-347ee7c6b6ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\shaders\Deffered">
+      <UniqueIdentifier>{fea8b472-efd1-46bc-b68a-c0399347651c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders\Light">
+      <UniqueIdentifier>{b2a71b10-d4ef-42ff-a59d-b364fa16e0d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders\Particles">
+      <UniqueIdentifier>{8dede76a-d876-4169-9a65-f9ac8d08fb0c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CameraClass.cpp">
@@ -61,35 +70,35 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="DefferedVS.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
     <FxCompile Include="DefferedPS.hlsl">
-      <Filter>Source Files\shaders</Filter>
+      <Filter>Source Files\shaders\Deffered</Filter>
     </FxCompile>
-    <FxCompile Include="PixelShader.hlsl">
-      <Filter>Source Files\shaders</Filter>
+    <FxCompile Include="DefferedVS.hlsl">
+      <Filter>Source Files\shaders\Deffered</Filter>
     </FxCompile>
     <FxCompile Include="VertexShader.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ComputeShader.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="particleVertex.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ParticlePixel.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ParticleGeometry.hlsl">
-      <Filter>Source Files\shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ParticleInserter.hlsl">
-      <Filter>Source Files\shaders</Filter>
+      <Filter>Source Files\shaders\Light</Filter>
     </FxCompile>
     <FxCompile Include="shadowVS.hlsl">
-      <Filter>Source Files\shaders</Filter>
+      <Filter>Source Files\shaders\Light</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Source Files\shaders\Light</Filter>
+    </FxCompile>
+    <FxCompile Include="ComputeShader.hlsl">
+      <Filter>Source Files\shaders\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticleGeometry.hlsl">
+      <Filter>Source Files\shaders\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticleInserter.hlsl">
+      <Filter>Source Files\shaders\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="ParticlePixel.hlsl">
+      <Filter>Source Files\shaders\Particles</Filter>
+    </FxCompile>
+    <FxCompile Include="particleVertex.hlsl">
+      <Filter>Source Files\shaders\Particles</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

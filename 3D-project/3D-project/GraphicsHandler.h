@@ -103,7 +103,6 @@ private:
 	float lastInsert;
 	
 
-
 	void loadObj();
 	void loadMtl();
 	void createTexture();
