@@ -3,8 +3,8 @@
 CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, HWND window, int width, int height)
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
-	this->defaultMovementRate = 10.0f;
-	this->defaultMouseSensitivity = 0.001f;
+	this->defaultMovementRate = 0.003f;
+	this->defaultMouseSensitivity = 0.01f;
 	this->rotationValue = 0;
 
 	this->m_keyboard = std::make_unique<DirectX::Keyboard>();
@@ -161,28 +161,26 @@ void CameraClass::update(float dt)
 {
 	DirectX::XMFLOAT2 keyboardAmount = DirectX::XMFLOAT2(0, 0);
 
-	//Add gametime variable
-
-	//keyboard
+	//Change defaultMovementRate to change speed
 	auto ks = this->m_keyboard->GetState();
 	if (ks.W)
 	{
-		keyboardAmount.y = 0.003f;
+		keyboardAmount.y = 1;
 	}
 	
 	if (ks.S)
 	{
-		keyboardAmount.y = -0.003f;
+		keyboardAmount.y = -1;
 	}
 
 	if (ks.A)
 	{
-		keyboardAmount.x = -0.003f;
+		keyboardAmount.x = -1;
 	}
 	
 	if (ks.D)
 	{
-		keyboardAmount.x = 0.003f;
+		keyboardAmount.x = 1;
 	}
 
 	if (ks.Escape)

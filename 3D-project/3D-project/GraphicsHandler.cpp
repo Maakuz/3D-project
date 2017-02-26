@@ -71,8 +71,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext, wHandler, width, height);
 	this->terrainHandler = new TerrainHandler(
 		this->gDevice, 
-		"../resource/maps/HeightMap3.bmp", 
-		30.f);
+		"../resource/maps/HeightMap4.bmp", 
+		50.f);
 	
 
 	this->createShaders();
