@@ -1617,6 +1617,7 @@ void GraphicsHandler::update(float currentTime)
 {
 	this->updateParticleCBuffers(currentTime);
 	this->updateParticles();
+	this->terrainHandler->walkOnTerrain(DirectX::XMFLOAT3(0,1,0));
 
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
 	this->updateLightBuffer();

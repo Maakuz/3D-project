@@ -1,5 +1,12 @@
 #include "TerrainHandler.h"
 
+float TerrainHandler::determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c)
+{
+	return ((a.x * b.y * c.z) - (a.x * b.z * c.y)) +
+		((a.y * b.z * c.x) - (a.y * b.x * c.z)) +
+		((a.z * b.x * c.y) - (a.z * b.y * c.x));
+}
+
 TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float heightMultiple)
 {
 	this->height = 0;
@@ -337,3 +344,46 @@ void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
 	gDeviceContext->PSSetShaderResources(0, 1, &this->srv);
 	gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
+
+void TerrainHandler::walkOnTerrain(DirectX::XMFLOAT3& camPos)
+{
+	bool found = false;
+
+	for (size_t i = 0; i < this->nrOfVertices && found == false; i+=3)
+	{
+		vertexInfo v1 = this->vertices[i];
+		vertexInfo v2 = this->vertices[i + 1];
+		vertexInfo v3 = this->vertices[i + 2];
+
+		DirectX::XMFLOAT3 e0(v1.vpx - v2.vpx, v1.vpy - v2.vpy, v1.vpz - v2.vpz);
+		DirectX::XMFLOAT3 e1(v3.vpx - v2.vpx, v3.vpy - v2.vpy, v3.vpz - v2.vpz);
+		DirectX::XMFLOAT3 s(camPos.x - v2.vpx, camPos.y - v2.vpy, camPos.x - v2.vpz);
+		
+		//Direction is actually (0, -1, 0) but we only need the invers
+		DirectX::XMFLOAT3 dir(0, 1, 0);
+
+		float divisionDet = this->determinateDeterminant(dir, e0, e1);
+
+		if (abs(divisionDet) > DBL_EPSILON)
+		{
+			float det1 = determinateDeterminant(s, e0, e1);
+			float det2 = determinateDeterminant(dir, s, e1);
+			float det3 = determinateDeterminant(dir, e0, s);
+
+			divisionDet = 1 / divisionDet;
+
+
+			float t = det1 * divisionDet;
+			float u = det2 * divisionDet;
+			float v = det3 * divisionDet;
+
+			if (u + v >= 0 && u + v < 1
+				&& u <= 1 && v <= 1
+				&& u >= 0 && v >= 0)
+			{
+
+			}
+		}
+	}
+}
+

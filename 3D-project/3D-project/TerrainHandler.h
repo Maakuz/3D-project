@@ -20,6 +20,7 @@ private:
 	vertexInfo* vertices;
 	int nrOfVertices;
 
+	float determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c);
 
 public:
 	TerrainHandler(ID3D11Device* gDevice, std::string path, float heightMultiple = 0);
@@ -30,6 +31,7 @@ public:
 	void createVertices();
 	void createVertexBuffer(ID3D11Device* gDevice);
 	void setShaderResources(ID3D11DeviceContext* gDeviceContext);
+	void walkOnTerrain(DirectX::XMFLOAT3& camPos);
 };
 
 
