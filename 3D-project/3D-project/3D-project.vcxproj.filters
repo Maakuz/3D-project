@@ -100,6 +100,9 @@
     <FxCompile Include="particleVertex.hlsl">
       <Filter>Source Files\shaders\Particles</Filter>
     </FxCompile>
+    <FxCompile Include="GeometryShader.hlsl">
+      <Filter>Source Files\shaders\Deffered</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

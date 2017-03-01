@@ -96,4 +96,7 @@ float4 main(VS_OUT input) : SV_TARGET
 //********************Shadow mapping end*********************************
 
     return  lighting;
+
+    //for test purpouses
+    //return float4(colors.Sample(sSampler, input.uv));
 }

@@ -28,6 +28,8 @@ TerrainHandler::~TerrainHandler()
 	delete[] this->heightMap;
 	delete[] this->vertices;
 	this->vertexBuffer->Release();
+	this->res->Release();
+	this->srv->Release();
 }
 
 void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDeviceContext)

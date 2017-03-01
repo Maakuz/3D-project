@@ -17,6 +17,5 @@ VS_OUT main( uint vertexID : SV_VertexID)
 	
     output.position = currentSimState[vertexID].position.xyz;
     
-
     return output;
 }

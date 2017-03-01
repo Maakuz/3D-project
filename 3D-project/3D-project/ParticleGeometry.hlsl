@@ -17,7 +17,7 @@ cbuffer WVPMatrixBuffer
     float4x4 projection;
 };
 
-static const float4 qCorners[4] =
+static const float4 quadCorners[4] =
 {
     float4(-0.016f, 0.016f, 0.0f, 0.0f),
     float4(0.016f, 0.016f, 0.0f, 0.0f),
@@ -25,7 +25,7 @@ static const float4 qCorners[4] =
     float4(0.016f, -0.016f, 0.0f, 0.0f)
 };
 
-static const float2 qTexCoords[4] =
+static const float2 quadTexCoords[4] =
 {
     float2(0.0f, 1.0f),
     float2(1.0f, 1.0f),
@@ -43,10 +43,10 @@ void main(point VS_OUT input[1], inout TriangleStream< GS_OUT> tStream)
 
     for (int i = 0; i < 4; i++)
     {
-        output.pos = mul(pos + qCorners[i], projection);
-        output.norm.xyz = cross((pos + qCorners[0]).xyz, (pos + qCorners[1]).xyz);
+        output.pos = mul(pos + quadCorners[i], projection);
+        output.norm.xyz = cross((pos + quadCorners[0]).xyz, (pos + quadCorners[1]).xyz);
         output.norm.w = 1.0f;
-        output.uv = qTexCoords[i];
+        output.uv = quadTexCoords[i];
         tStream.Append(output);
     }
     tStream.RestartStrip();
