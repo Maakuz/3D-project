@@ -11,7 +11,7 @@ struct VS_OUT
     float2 uv : TEXCOORD;
 };
 
-cbuffer matrixBuffer 
+cbuffer matrixBuffer : register(b0)
 {
     matrix WVMatrix;
     matrix invProjMatrix;
@@ -35,6 +35,6 @@ VS_OUT main(VS_IN input)
     output.pos = float4(input.pos, 1);
     //output.posVS = getWVPos();
     output.uv = input.uv;
-
+	
     return output;
 }

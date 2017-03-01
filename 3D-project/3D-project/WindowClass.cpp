@@ -16,6 +16,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		DirectX::Keyboard::ProcessMessage(msg, wparam, lparam);
 		break;
 
+	case WM_ACTIVATEAPP:
+	case WM_INPUT:
+	case WM_MOUSEMOVE:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_MOUSEWHEEL:
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
+	case WM_MOUSEHOVER:
+		DirectX::Mouse::ProcessMessage(msg, wparam, lparam);
+		break;
+
 	default:
 		return DefWindowProc(hwnd, msg, wparam, lparam);
 		break;
