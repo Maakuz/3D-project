@@ -93,6 +93,8 @@ private:
 	
 	
 	ID3D11RasterizerState* rState;
+	ID3D11Buffer* cameraPos;
+	ID3D11Debug* debugDevice;
 
 	
 	ID3D11UnorderedAccessView* nullUAV;

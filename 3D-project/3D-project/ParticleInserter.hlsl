@@ -33,15 +33,18 @@ static const float3 reflectVectors[8] =
 [numthreads(8, 1, 1)]
 void main( uint3 GTID : SV_GroupThreadID )
 {
-    if(nrOfParticles <506)
+    //checks that this insert doesnt overflow the buffer
+    if(nrOfParticles <= 506)
     {
         Particle newParticle;
 
         newParticle.position = emitterLocation;
 
+        //using reflect for a smoth distibution. 
         newParticle.velocity = reflect(randomVector.xyz, reflectVectors[GTID.x]);
 
-        newParticle.age = normalize(randomVector.x) * 200.0f;
+        //so the particle has a random lifetime 
+        newParticle.age = saturate(randomVector.x) * 200.0f;
 
         nextSimState.Append(newParticle);
     }

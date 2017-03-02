@@ -51,6 +51,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->nullDSV = nullptr;
 
 	this->rState = nullptr;
+	this->cameraPos = nullptr;
+	this->debugDevice = nullptr;
 
 	
 
@@ -84,17 +86,28 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createLightBuffer();
 	this->createVertexBuffer();
 	this->createMtlLightBuffer();
+	//if you change nr of particles here remember to change in shaders too
 	this->createParticleBuffers(512);
 	this->particleFirstTimeInit();
 	this->createRasterState();
-
+	
+	
+	HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"debug device creation failed", L"error", MB_OK);
+	}
 
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
+	this->cameraPos = this->cameraClass->createCamrePosBuffer();
 }
 
 GraphicsHandler::~GraphicsHandler()
 {
+	
+	this->gDeviceContext->ClearState();
+
 	this->swapChain->Release();
 	this->gDevice->Release();
 	this->gDeviceContext->Release();
@@ -150,7 +163,11 @@ GraphicsHandler::~GraphicsHandler()
 	this->SRVS[0]->Release();
 	this->SRVS[1]->Release();
 	this->rState->Release();
-	
+	this->cameraPos->Release();
+
+	this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+	this->debugDevice->Release();
+
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
@@ -1121,7 +1138,7 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	srvDesc.Buffer = srv;
 
 
-
+	//uav for updating buffer srv for viewing 
 	//uav and srv for first buffer
 	hr = this->gDevice->CreateUnorderedAccessView(structBuffer1, &uavDesc, &this->UAVS[0]);
 	if (FAILED(hr))
@@ -1151,6 +1168,19 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	structBuffer2->Release();
 
 
+	//this is for the indirect args buffer. For  constant buffer only first value is relevant rest is padding.
+	//0: nr of verticies
+	//1: nr of instances
+	//2: start vertex
+	//3: start instance
+	//4: padding
+	UINT* init = new UINT[5];
+	init[0] = 0;
+	init[1] = 0;
+	init[2] = 0;
+	init[3] = 0;
+	init[4] = 0;
+
 	//create constant buffer who holds the nr of particles
 	D3D11_BUFFER_DESC nrBDesc;
 	ZeroMemory(&nrBDesc, sizeof(D3D11_BUFFER_DESC));
@@ -1158,16 +1188,6 @@ void GraphicsHandler::createParticleBuffers(int nrOfPArticles)
 	nrBDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	nrBDesc.Usage = D3D11_USAGE_DEFAULT;
 
-	UINT* init = new UINT[5];
-	
-	
-	init[0] = 0;
-	init[1] = 0;
-	init[2] = 0;
-	init[3] = 0;
-	init[4] = 0;
-	
-	
 
 	data.pSysMem = init;
 
@@ -1515,6 +1535,7 @@ void GraphicsHandler::render()
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->lightbuffer);
+	this->gDeviceContext->PSSetConstantBuffers(1, 1, &this->cameraPos);
 	this->gDeviceContext->PSSetConstantBuffers(2, 1, &this->mtlLightbuffer);
 	this->gDeviceContext->PSSetConstantBuffers(3, 1, &this->lightMatrixBuffer);
 	
@@ -1560,7 +1581,7 @@ void GraphicsHandler::renderGeometry()
 
 	
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
-	
+	this->gDeviceContext->GSSetConstantBuffers(0, 1, &this->cameraPos);
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
 
 	
@@ -1636,9 +1657,11 @@ void GraphicsHandler::update(float deltaT)
 	this->updateParticleCBuffers(deltaT);
 	this->updateParticles();
 
+	this->cameraClass->update(deltaT);
+	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
 	this->updateLightBuffer();
-	this->cameraClass->update(deltaT);
+	
 
 	//locks fps at 60
 	if (this->currentTime - this->lastFrame >= 16.0f)
@@ -1772,6 +1795,7 @@ void GraphicsHandler::renderShadows()
 	this->gDeviceContext->ClearDepthStencilView(this->shadowDSV, D3D11_CLEAR_DEPTH, 1.f, 0);
 
 	this->gDeviceContext->VSSetShader(this->shadowVertexShader, nullptr, 0);
+	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->PSSetShader(nullptr, nullptr, 0);
 
 	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);

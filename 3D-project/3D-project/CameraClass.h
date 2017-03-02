@@ -58,6 +58,8 @@ public:
 	matrixStruct initiateMatrices(int width, int height);
 	ID3D11Buffer* createConstantBuffer();
 	void updateConstantBuffer(ID3D11Buffer* VSConstantBuffer);
+	ID3D11Buffer* createCamrePosBuffer();
+	void updatecameraPosBuffer(ID3D11Buffer* cameraConstantBuffer);
 
 
 	void update(float dt);

@@ -1,7 +1,7 @@
 SamplerState sSampler; //can set flags if needed
 texture2D tex : register(t0);
 
-struct VS_OUT
+struct GS_OUT
 {
     float4 pos : SV_Position;
     float4 wPos : WPOS;
@@ -20,7 +20,7 @@ struct PS_OUT
 };
 
 
-PS_OUT main(VS_OUT input)
+PS_OUT main(GS_OUT input)
 {
     PS_OUT outPut;
 

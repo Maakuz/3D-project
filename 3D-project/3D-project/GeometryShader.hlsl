@@ -1,6 +1,6 @@
 struct VS_OUT
 {
-    float4 pos : SV_Position;
+    float4 pos : Position;
     float4 wPos : WPOS;
     float4 norm : NORMAL;
     float2 uv : TEXCOORD;
@@ -16,12 +16,21 @@ struct GS_OUT
     int mtl : MTLNR;
 };
 
+cbuffer cameraBuffer
+{
+    float3 cameraPos;
+};
+
 [maxvertexcount(3)]
 void main(triangle VS_OUT input[3] : SV_POSITION, inout TriangleStream<GS_OUT> output)
 {
-    float3 check = cross(input[1].pos.xyz - input[0].pos.xyz, input[2].pos.xyz - input[0].pos.xyz);
+    //creates vector from camera to triangle
+    float3 cToT = cameraPos - input[0].wPos.xyz;
 
-    if (sign(check.z) == -1)
+    float check = dot(cToT, input[0].norm.xyz);
+
+    //checks if backfacing
+    if (sign(check) >= 0)
     {
         for (uint i = 0; i < 3; i++)
         {
