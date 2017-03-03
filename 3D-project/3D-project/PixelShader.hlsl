@@ -4,6 +4,7 @@ texture2D normals : register(t1);
 texture2D colors : register(t2);
 texture2D mtl : register(t3);
 texture2D shadowMap : register(t4);
+texture2D normalMap : register(t5);
 
 cbuffer lightBuffer : register(b0)
 {
@@ -22,7 +23,7 @@ cbuffer cameraPos : register(b1)
 struct mtlStruct
 {
     float4 ambient;
-    float3 diff;
+    float4 diff;
     float4 specular;
 };
 
@@ -47,38 +48,51 @@ struct VS_OUT
 
 float4 main(VS_OUT input) : SV_TARGET
 {
-   /* int mtl = positions.Sample(sSampler, input.uv);
-    float4 difLightDir = normalize(positions.Sample(sSampler, input.uv) - lightPos);
-    float diffuse = saturate(dot(difLightDir, normals.Sample(sSampler, input.uv)));
 
-    return colors.Sample(sSampler, input.uv);*/
+   float4 color = colors.Sample(sSampler, input.uv);
+   float4 pPos = positions.Sample(sSampler, input.uv);
+   float4 norm = normals.Sample(sSampler, input.uv);
 
+   int m = (int)mtl.Sample(sSampler, input.uv);
+    if(m == 10)
+    {
+        return color;
+    }
+  
     float4 lVec;
     float4 lighting;
     float3 diffuse;
-    float distance;
+    float3 ambient;
+    float3 specular;
+    float weight;
     float attenuation;
+
 
     //Light vector
     lVec = lightPos - positions.Sample(sSampler, input.uv);
 
 	//For directional lights only
     lVec = -lightDir;
-    //  //attenuation here somewhere
-    //distance = length(lVec);
-    //attenuation = max(0, 1.f - (distance / lightRange.x));
-
-    //lVec /= distance;
-
-    diffuse = saturate(dot(normalize(lVec.xyz), normals.Sample(sSampler, input.uv)));
-    diffuse *= lightColor.xyz * colors.Sample(sSampler, input.uv);
     
-   //TODO: Specularity
+    float nVSL = saturate(dot(normalize(lVec.xyz), norm));
 
-    lighting = float4(diffuse, 1);
+    diffuse = nVSL;
+    diffuse *= lightColor.xyz * color.xyz * mtls[m].diff.xyz;
+
+    ambient = color.xyz * mtls[m].ambient.xyz;
+
+
+   
+    float3 camera2Pixel = camPos - pPos.xyz;
+    //used to reflect
+    float3 H = normalize(lVec.xyz + camera2Pixel);
+    specular = pow(saturate(dot(norm.xyz, H)), mtls[m].specular.w) * lightColor.xyz * mtls[m].specular.xyz * nVSL;
+
+
+    lighting = float4(diffuse + ambient + specular, 1);
 
 //*************************Shadow mapping*********************************
-    float4 posFromLight = positions.Sample(sSampler, input.uv);
+    float4 posFromLight = pPos;
 
     posFromLight = mul(posFromLight, lightView);
     posFromLight = mul(posFromLight, lightProjection);
@@ -95,8 +109,5 @@ float4 main(VS_OUT input) : SV_TARGET
 
 //********************Shadow mapping end*********************************
 
-    //return  lighting;
-
-    //for test purpouses
-    return float4(colors.Sample(sSampler, input.uv));
+    return  lighting;
 }

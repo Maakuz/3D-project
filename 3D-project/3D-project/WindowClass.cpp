@@ -139,6 +139,6 @@ int WindowClass::run()
 			endTime = timer.now();
 		}
 	}
-
+	graphicsHandler->kill();
 	return 0;
 }

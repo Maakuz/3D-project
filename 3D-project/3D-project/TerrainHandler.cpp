@@ -25,11 +25,7 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float he
 
 TerrainHandler::~TerrainHandler()
 {
-	delete[] this->heightMap;
-	delete[] this->vertices;
-	this->vertexBuffer->Release();
-	this->res->Release();
-	this->srv->Release();
+	
 }
 
 void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDeviceContext)
@@ -118,7 +114,6 @@ void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::string path)
 				this->heightMap[i].y /= 255;
 			}
 		}
-
 
 		delete headers[0];
 		delete headers[1];
@@ -338,4 +333,14 @@ void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
 	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
 	gDeviceContext->PSSetShaderResources(0, 1, &this->srv);
 	gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void TerrainHandler::kill()
+{
+	ULONG test = 0;
+	delete[] this->heightMap;
+	delete[] this->vertices;
+	test = this->vertexBuffer->Release();
+	test = this->res->Release();
+	test = this->srv->Release();
 }

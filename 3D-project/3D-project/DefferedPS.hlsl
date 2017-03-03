@@ -16,7 +16,7 @@ struct PS_OUT
     float4 position : SV_Target0;
     float4 normal : SV_Target1;
     float4 color : SV_Target2;
-    int mtl : SV_Target3;
+    float mtl : SV_Target3;
 };
 
 

@@ -30,6 +30,7 @@ public:
 	void createVertices();
 	void createVertexBuffer(ID3D11Device* gDevice);
 	void setShaderResources(ID3D11DeviceContext* gDeviceContext);
+	void kill();
 };
 
 

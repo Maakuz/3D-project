@@ -60,6 +60,7 @@ public:
 	void updateConstantBuffer(ID3D11Buffer* VSConstantBuffer);
 	ID3D11Buffer* createCamrePosBuffer();
 	void updatecameraPosBuffer(ID3D11Buffer* cameraConstantBuffer);
+	void kill();
 
 
 	void update(float dt);

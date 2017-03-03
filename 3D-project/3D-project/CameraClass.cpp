@@ -3,7 +3,7 @@
 CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, HWND window, int width, int height)
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
-	this->defaultMovementRate = 0.0003f;
+	this->defaultMovementRate = 0.002f;
 	this->defaultMouseSensitivity = 0.01f;
 	this->rotationValue = 0;
 
@@ -32,6 +32,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 
 CameraClass::~CameraClass()
 {
+	
 }
 
 void CameraClass::setPosition(float x, float y, float z)
@@ -124,7 +125,6 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"matrix resource creation failed!", L"error", MB_OK);
-		return 0;
 	}
 	return (pBuffer);
 }
@@ -158,7 +158,7 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 	this->gDeviceContext->Unmap(VSConstantBuffer, 0);
 }
 
-ID3D11Buffer * CameraClass::createCamrePosBuffer()
+ID3D11Buffer* CameraClass::createCamrePosBuffer()
 {
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
@@ -181,7 +181,7 @@ ID3D11Buffer * CameraClass::createCamrePosBuffer()
 	return pBuffer;
 }
 
-void CameraClass::updatecameraPosBuffer(ID3D11Buffer *CameraConstantBuffer)
+void CameraClass::updatecameraPosBuffer(ID3D11Buffer* CameraConstantBuffer)
 {
 	D3D11_MAPPED_SUBRESOURCE data;
 	ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
@@ -190,6 +190,13 @@ void CameraClass::updatecameraPosBuffer(ID3D11Buffer *CameraConstantBuffer)
 	memcpy(data.pData, &this->mPosition, sizeof(DirectX::XMFLOAT3));
 
 	this->gDeviceContext->Unmap(CameraConstantBuffer, 0);
+}
+
+void CameraClass::kill()
+{
+	ULONG test = 0;
+	test = this->gDevice->Release();
+	test = this->gDeviceContext->Release();;
 }
 
 void CameraClass::update(float dt)

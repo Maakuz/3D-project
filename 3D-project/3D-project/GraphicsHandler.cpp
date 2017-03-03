@@ -53,6 +53,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->rState = nullptr;
 	this->cameraPos = nullptr;
 	this->debugDevice = nullptr;
+	this->normalMapView = nullptr;
 
 	
 
@@ -85,18 +86,18 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 	this->createLightBuffer();
 	this->createVertexBuffer();
-	this->createMtlLightBuffer();
+	this->createMtlLightBuffer(MAXMTLS);
 	//if you change nr of particles here remember to change in shaders too
 	this->createParticleBuffers(512);
 	this->particleFirstTimeInit();
 	this->createRasterState();
 	
 	
-	HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
+	/*HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"debug device creation failed", L"error", MB_OK);
-	}
+	}*/
 
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
@@ -106,68 +107,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 GraphicsHandler::~GraphicsHandler()
 {
 	
-	this->gDeviceContext->ClearState();
-
-	this->swapChain->Release();
-	this->gDevice->Release();
-	this->gDeviceContext->Release();
-	this->rtvBackBuffer->Release();
-	this->vertexShader->Release();
-	this->defferedVertexShader->Release();
-	this->shadowVertexShader->Release();
-	this->pixelShader->Release();
-	this->defferedPixelShader->Release();
-	this->computeShader->Release();
-	this->geometryShader->Release();
-	this->vertexLayout->Release();
-	this->defferedVertexLayout->Release();
-	//this->shadowPixelShader->Release();
-	this->vertexBuffer->Release();
-	this->defferedVertexBuffer->Release();
-	this->matrixBuffer->Release();
-	this->lightbuffer->Release();
-	this->mtlLightbuffer->Release();
-	this->lightMatrixBuffer->Release();
-	this->sState->Release();
-	this->textureResoure->Release();
-	this->textureView->Release();
-
-	for (int i = 0; i < NROFBUFFERS; i++)
-	{
-		this->renderTargets[i]->Release();
-		this->renderTargetViews[i]->Release();
-		this->shaderResourceViews[i]->Release();
-	}
-
-	this->disableDepthState->Release();
-	this->depthBuffer->Release();
-	this->dsState->Release();
-	this->DSV->Release();
-	this->shadowDepthBuffer->Release();
-	this->shadowDSV->Release();
-	this->shadowSRV->Release();
-
-	delete this->cameraClass;
-	delete this->terrainHandler;
-
-	this->particlePixel->Release();
-	this->particleVertex->Release();
-	this->particleGeometry->Release();
-	this->particleInserter->Release();
-	this->emitterlocation->Release();
-	this->particleCountBuffer->Release();
-	this->IndirectArgsBuffer->Release();
-	this->deltaTimeBuffer->Release();
-	this->UAVS[0]->Release();
-	this->UAVS[1]->Release();
-	this->SRVS[0]->Release();
-	this->SRVS[1]->Release();
-	this->rState->Release();
-	this->cameraPos->Release();
-
-	this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-	this->debugDevice->Release();
-
+	
 }
 
 HRESULT GraphicsHandler::CreateDirect3DContext(HWND wHandler)
@@ -558,6 +498,13 @@ void GraphicsHandler::createTexture()
 		MessageBox(0, L"texture creation failed", L"error", MB_OK);
 	}
 
+	ID3D11Resource* texture = nullptr;
+	hr = DirectX::CreateWICTextureFromFile(this->gDevice, this->gDeviceContext, L"../resource/Maps/normalMap.png", &texture, &this->normalMapView);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"normalmap texture creation failed", L"error", MB_OK);
+	}
+	texture->Release();
 }
 
 void GraphicsHandler::createTriangleData()
@@ -594,12 +541,6 @@ void GraphicsHandler::createTriangleData()
 	D3D11_SUBRESOURCE_DATA data;
 	data.pSysMem = triangleVertices;
 	this->gDevice->CreateBuffer(&bufferDesc, &data, &this->vertexBuffer);
-
-	UINT32 vertexSize = sizeof(TriangleVertex);
-	UINT32 offset = 0;
-
-
-	this->matrixBuffer = cameraClass->createConstantBuffer();
 }
 
 void GraphicsHandler::loadObj()
@@ -991,23 +932,34 @@ void GraphicsHandler::loadMtl()
 
 }
 
-void GraphicsHandler::createMtlLightBuffer()
+void GraphicsHandler::createMtlLightBuffer(const int MaxMTLS)
 {
-	mtLight *ml = new mtLight[this->objInfo.nrOfMaterials];
+	//sets maximu nr of materials. shange in pixel shader to if you want more
+	mtLight *ml = new mtLight[MaxMTLS]; 
 
 	for (size_t i = 0; i < this->objInfo.nrOfMaterials; i++)
 	{
 		ml[i].ambient = this->objInfo.mInfo.at(i).ambient;
+		ml[i].ambient.w = 0.0f;
 		ml[i].diffuse = this->objInfo.mInfo.at(i).diffuse;
+		ml[i].diffuse.w = 0.0f;
 		ml[i].specular = this->objInfo.mInfo.at(i).specular;
 		ml[i].specular.w = this->objInfo.mInfo.at(i).specWeight;
+	}
+
+	for (size_t i = this->objInfo.nrOfMaterials; i < 10; i++)
+	{
+		ml[i].ambient = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+		ml[i].diffuse = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+		ml[i].specular = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+			
 	}
 
 
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
-	desc.ByteWidth = sizeof(mtLight);
+	desc.ByteWidth = MaxMTLS * sizeof(mtLight);
 	desc.Usage = D3D11_USAGE_DYNAMIC;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -1015,7 +967,8 @@ void GraphicsHandler::createMtlLightBuffer()
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	data.pSysMem = &ml;
+	data.pSysMem = ml;
+	
 
 	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->mtlLightbuffer);
 	if (FAILED(hr))
@@ -1463,7 +1416,7 @@ void GraphicsHandler::createDefferedBuffers()
 
 	HRESULT hr;
 
-	for (int i = 0; i < NROFBUFFERS - 1; i++)
+	for (int i = 0; i < NROFBUFFERS; i++)
 	{
 		hr = this->gDevice->CreateTexture2D(&desc, NULL, &this->renderTargets[i]);
 		if (FAILED(hr))
@@ -1477,25 +1430,6 @@ void GraphicsHandler::createDefferedBuffers()
 		if (FAILED(hr))
 			MessageBox(0, L"Shader resource view failed!", L"error", MB_OK);
 	}
-
-
-	//if we add another rtv this need to be changed
-	desc.Format = DXGI_FORMAT_R32_SINT;
-	rtvDesc.Format = desc.Format;
-	srvDesc.Format = desc.Format;
-
-	hr = this->gDevice->CreateTexture2D(&desc, NULL, &this->renderTargets[3]);
-	if (FAILED(hr))
-		MessageBox(0, L"Render target failed!", L"error", MB_OK);
-
-	hr = this->gDevice->CreateRenderTargetView(this->renderTargets[3], &rtvDesc, &this->renderTargetViews[3]);
-	if (FAILED(hr))
-		MessageBox(0, L"Render target view failed!", L"error", MB_OK);
-
-	hr = this->gDevice->CreateShaderResourceView(renderTargets[3], &srvDesc, &this->shaderResourceViews[3]);
-	if (FAILED(hr))
-		MessageBox(0, L"Shader resource view failed!", L"error", MB_OK);
-
 }
 
 void GraphicsHandler::render()
@@ -1521,6 +1455,7 @@ void GraphicsHandler::render()
 
 	//setting shadow map
 	this->gDeviceContext->PSSetShaderResources(4, 1, &this->shadowSRV);
+	this->gDeviceContext->PSSetShaderResources(5, 1, &this->normalMapView);
 
 	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
 
@@ -1786,6 +1721,87 @@ void GraphicsHandler::updateParticleCBuffers(float deltaTime)
 	memcpy(data.pData, &this->deltaTime, sizeof(this->deltaTime));
 
 	this->gDeviceContext->Unmap(this->deltaTimeBuffer, 0);
+}
+
+void GraphicsHandler::kill()
+{
+	ULONG test = 0;
+
+	this->gDeviceContext->ClearState();
+
+	
+	test = this->swapChain->Release();
+	test = this->rtvBackBuffer->Release();
+	
+	
+	test = this->vertexShader->Release();
+	test = this->defferedVertexShader->Release();
+	test = this->shadowVertexShader->Release();
+	test = this->pixelShader->Release();
+	test = this->defferedPixelShader->Release();
+	test = this->computeShader->Release();
+	test = this->geometryShader->Release();
+	test = this->vertexLayout->Release();
+	test = this->defferedVertexLayout->Release();
+	//this->shadowPixelShader->Release();
+	test = this->vertexBuffer->Release();
+	test = this->defferedVertexBuffer->Release();
+	test = this->matrixBuffer->Release();
+	test = this->lightbuffer->Release();
+	test = this->mtlLightbuffer->Release();
+	test = this->lightMatrixBuffer->Release();
+	test = this->sState->Release();
+	test = this->textureResoure->Release();
+	test = this->textureView->Release();
+
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		test = this->renderTargets[i]->Release();
+		test = this->renderTargetViews[i]->Release();
+		test = this->shaderResourceViews[i]->Release();
+	}
+
+	test = this->disableDepthState->Release();
+	test = this->depthBuffer->Release();
+	test = this->dsState->Release();
+	test = this->DSV->Release();
+	test = this->shadowDepthBuffer->Release();
+	test = this->shadowDSV->Release();
+	test = this->shadowSRV->Release();
+
+	this->terrainHandler->kill();
+
+	delete this->cameraClass;
+	delete this->terrainHandler;
+
+	test = this->particlePixel->Release();
+	test = this->particleVertex->Release();
+	test = this->particleGeometry->Release();
+	test = this->particleInserter->Release();
+	test = this->emitterlocation->Release();
+	test = this->particleCountBuffer->Release();
+	test = this->IndirectArgsBuffer->Release();
+	test = this->deltaTimeBuffer->Release();
+	test = this->UAVS[0]->Release();
+	test = this->UAVS[1]->Release();
+	test = this->SRVS[0]->Release();
+	test = this->SRVS[1]->Release();
+	test = this->rState->Release();
+	test = this->cameraPos->Release();
+	test = this->normalMapView->Release();
+	
+
+	
+	
+	
+	test = this->gDeviceContext->Release();
+	test = this->gDevice->Release();
+
+
+	/*this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+	this->debugDevice->Release();*/
+	
+	
 }
 
 void GraphicsHandler::renderShadows()

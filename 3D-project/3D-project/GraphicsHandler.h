@@ -13,6 +13,7 @@ const int NROFBUFFERS = 4;
 const UINT startParticleCount = 0;
 //makes it so the actual amount of particles in the buffers is used
 const UINT UAVFLAG = -1;
+const int MAXMTLS = 10;
 
 
 class GraphicsHandler
@@ -101,6 +102,7 @@ private:
 	ID3D11ShaderResourceView* nullSRV;
 	ID3D11RenderTargetView* nullRTV;
 	ID3D11DepthStencilView* nullDSV;
+	ID3D11ShaderResourceView* normalMapView;
 
 	float deltaTime;
 	float currentTime;
@@ -120,7 +122,7 @@ private:
 	void createDepthBuffers();
 	void createSamplers();
 	void createLightBuffer();
-	void createMtlLightBuffer();
+	void createMtlLightBuffer(const int MaxMTLS);
 	void createParticleBuffers(int nrOfPArticles);
 	void createRasterState();
 	void render();
@@ -132,6 +134,7 @@ private:
 	void updateParticleCBuffers(float currentTime);
 	
 	
+	
 	void renderShadows();
 	void createLightMatrices();
 	void updateLightBuffer();
@@ -141,8 +144,7 @@ public:
 	~GraphicsHandler();
 
 	void update(float currentTime);
-	
-
+	void kill();
 };
 
 
