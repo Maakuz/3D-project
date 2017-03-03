@@ -59,10 +59,17 @@ public:
 	ID3D11Buffer* createConstantBuffer();
 	void updateConstantBuffer(ID3D11Buffer* VSConstantBuffer);
 
-
 	void update(float dt);
 
 	matrixStruct getMatrix() const;
+	float getNearPlane();
+	float getFarPlane();
+	float getFovAngleY();
+	float getAspectRatio();
+	DirectX::XMFLOAT3 getMPosition();
+	DirectX::XMFLOAT3 getMDirection();
+	DirectX::XMFLOAT3 getMRight();
+	DirectX::XMFLOAT3 getMUp();
 };
 
 #endif

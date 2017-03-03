@@ -57,7 +57,7 @@ D3D11_SUBRESOURCE_DATA CameraClass::getMatricesSubresource()
 
 matrixStruct CameraClass::initiateMatrices(int width, int height)
 {
-	this->fovAngleY = M_PI * 0.45f;
+	this->fovAngleY = M_PI * 0.5f; //90 grader fov
 	this->aspectRatio = (float)width / (float)height;
 	this->zNear = 0.1f;
 	this->zFar = 200.f;
@@ -309,3 +309,40 @@ matrixStruct CameraClass::getMatrix() const
 	return this->matrices;
 }
 
+float CameraClass::getNearPlane()
+{
+	return this->zNear;
+}
+
+float CameraClass::getFarPlane()
+{
+	return this->zFar;
+}
+
+float CameraClass::getFovAngleY()
+{
+	return this->fovAngleY;
+}
+
+DirectX::XMFLOAT3 CameraClass::getMPosition()
+{
+	return this->mPosition;
+}
+
+DirectX::XMFLOAT3 CameraClass::getMDirection()
+{
+	return this->mDirection;
+}
+
+DirectX::XMFLOAT3 CameraClass::getMRight()
+{
+	return this->mRight;
+}
+DirectX::XMFLOAT3 CameraClass::getMUp()
+{
+	return this->mUp;
+}
+float CameraClass::getAspectRatio()
+{
+	return this->aspectRatio;
+}
