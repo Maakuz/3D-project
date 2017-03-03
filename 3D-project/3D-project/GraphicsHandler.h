@@ -31,11 +31,13 @@ private:
 	ID3D11PixelShader* pixelShader;
 	ID3D11PixelShader* defferedPixelShader;
 	ID3D11ComputeShader* computeShader;
+
+	ID3D11GeometryShader* geometryShader;
 	
 
 	ID3D11InputLayout* vertexLayout;
 	ID3D11InputLayout* defferedVertexLayout;
-	ID3D11InputLayout* partilceVertexLayout;
+	
 
 	ID3D11PixelShader* shadowPixelShader;
 
@@ -82,25 +84,28 @@ private:
 	ID3D11GeometryShader* particleGeometry;
 	ID3D11ComputeShader* particleInserter;
 	ID3D11Buffer* emitterlocation;
-	ID3D11Buffer* structBuffer1;
-	ID3D11Buffer* structBuffer2;
 	ID3D11Buffer* particleCountBuffer;
 	ID3D11Buffer* IndirectArgsBuffer;
-	ID3D11Buffer* StagingBuffer;
 	ID3D11Buffer* deltaTimeBuffer;
 	ID3D11UnorderedAccessView* UAVS[2];
-	ID3D11UnorderedAccessView* nullUAV;
 	ID3D11ShaderResourceView* SRVS[2];
-	ID3D11ShaderResourceView* nullSRV;
-	ID3D11Resource* particleTexture;
-	ID3D11RenderTargetView* nullRTV;
-	ID3D11DepthStencilView* nullDSV;
+	
+	
+	
+	ID3D11RasterizerState* rState;
+	ID3D11Buffer* cameraPos;
+	ID3D11Debug* debugDevice;
 
 	
+	ID3D11UnorderedAccessView* nullUAV;
+	ID3D11ShaderResourceView* nullSRV;
+	ID3D11RenderTargetView* nullRTV;
+	ID3D11DepthStencilView* nullDSV;
 
 	float deltaTime;
 	float currentTime;
 	float lastInsert;
+	float lastFrame;
 	
 
 	void loadObj();
@@ -117,6 +122,7 @@ private:
 	void createLightBuffer();
 	void createMtlLightBuffer();
 	void createParticleBuffers(int nrOfPArticles);
+	void createRasterState();
 	void render();
 	void renderGeometry();
 	void renderParticles();

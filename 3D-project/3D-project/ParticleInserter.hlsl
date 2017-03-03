@@ -12,39 +12,40 @@ cbuffer emitterLocation
     float4 randomVector;
 }
 
-static const float3 direction[8] =
+cbuffer nrOfParticles
 {
-    normalize(float3(1.0f, 1.0f, 1.0f)),
-    normalize(float3(-1.0f, 1.0f, 1.0f)),
-    normalize(float3(-1.0f, -1.0f, 1.0f)),
-    normalize(float3(1.0f, -1.0f, 1.0f)),
-    normalize(float3(1.0f, 1.0f, -1.0f)),
-    normalize(float3(-1.0f, 1.0f, -1.0f)),
-    normalize(float3(-1.0f, -1.0f, -1.0f)),
-    normalize(float3(1.0f, -1.0f, -1.0f))
+    uint nrOfParticles;
+};
 
-    //float3(1.0f, 0.0f, 0.0f),
-    //float3(-1.0f,0.0f, 0.0f),
-    //float3(0.0f, 1.0f, 0.0f),
-    //float3(0.0f, -1.0f, 0.0f),
-    //float3(0.0f, 0.0f, 1.0f),
-    //float3(0.0f, 0.0f, -1.0f),
-    //float3(-1.0f, 1.0f, 0.0f),
-    //float3(-1.0f, -1.0f, 0.0f)
+static const float3 reflectVectors[8] =
+{
+    float3(1.0f, 0.0f, 0.0f),
+    float3(-1.0f,0.0f, 0.0f),
+    float3(0.0f, 1.0f, 0.0f),
+    float3(0.0f, -1.0f, 0.0f),
+    float3(0.0f, 0.0f, 1.0f),
+    float3(0.0f, 0.0f, -1.0f),
+    float3(-1.0f, 1.0f, 0.0f),
+    float3(-1.0f, -1.0f, 0.0f)
 };
 
 
 [numthreads(8, 1, 1)]
 void main( uint3 GTID : SV_GroupThreadID )
 {
-    Particle newParticle;
+    //checks that this insert doesnt overflow the buffer
+    if(nrOfParticles <= 506)
+    {
+        Particle newParticle;
 
-    newParticle.position = emitterLocation;
+        newParticle.position = emitterLocation;
 
-    newParticle.velocity = reflect(direction[GTID.x], randomVector.xyz);
-    //newParticle.velocity = direction[GTID.x];
+        //using reflect for a smoth distibution. 
+        newParticle.velocity = reflect(randomVector.xyz, reflectVectors[GTID.x]);
 
-    newParticle.age = 0.0f;
+        //so the particle has a random lifetime 
+        newParticle.age = saturate(randomVector.x) * 200.0f;
 
-    nextSimState.Append(newParticle);
+        nextSimState.Append(newParticle);
+    }
 }

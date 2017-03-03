@@ -15,8 +15,8 @@ VS_OUT main( uint vertexID : SV_VertexID)
 {
     VS_OUT output;
 	
+    //creates the verticies with the vertexId as the index of current sim buffer
     output.position = currentSimState[vertexID].position.xyz;
     
-
     return output;
 }

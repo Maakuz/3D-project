@@ -3,8 +3,8 @@
 CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, HWND window, int width, int height)
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
-	this->defaultMovementRate = 10.0f;
-	this->defaultMouseSensitivity = 0.001f;
+	this->defaultMovementRate = 0.0003f;
+	this->defaultMouseSensitivity = 0.01f;
 	this->rotationValue = 0;
 
 	this->m_keyboard = std::make_unique<DirectX::Keyboard>();
@@ -62,13 +62,13 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 	this->zNear = 0.1f;
 	this->zFar = 200.f;
 
-	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(M_PI / 6.f, M_PI / 6.f, 0);
+	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(0, 0, 0);
 
 	DirectX::XMVECTOR eyePosition;
 	eyePosition = DirectX::XMVectorSet(0, 0, -3, 0);
 
 	DirectX::XMVECTOR focusPosition;
-	focusPosition = DirectX::XMVectorSet(0, 0, 0, 0);
+	focusPosition = DirectX::XMVectorSet(0, 0, 0, 1);
 
 	DirectX::XMVECTOR upDirection;
 	upDirection = DirectX::XMVectorSet(0, 1, 0, 0);
@@ -132,6 +132,7 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 {
 	D3D11_MAPPED_SUBRESOURCE dataPtr;
+	ZeroMemory(&dataPtr, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
 	this->rotationValue += 0.0005;
 
@@ -157,32 +158,64 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 	this->gDeviceContext->Unmap(VSConstantBuffer, 0);
 }
 
+ID3D11Buffer * CameraClass::createCamrePosBuffer()
+{
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.ByteWidth = sizeof(DirectX::XMFLOAT4);
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+
+	ID3D11Buffer* pBuffer = nullptr;
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+	data.pSysMem = &this->mPosition;
+
+	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &pBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"Camera buffer cration failed", L"error", MB_OK);
+	}
+
+	return pBuffer;
+}
+
+void CameraClass::updatecameraPosBuffer(ID3D11Buffer *CameraConstantBuffer)
+{
+	D3D11_MAPPED_SUBRESOURCE data;
+	ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+	this->gDeviceContext->Map(CameraConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+	memcpy(data.pData, &this->mPosition, sizeof(DirectX::XMFLOAT3));
+
+	this->gDeviceContext->Unmap(CameraConstantBuffer, 0);
+}
+
 void CameraClass::update(float dt)
 {
 	DirectX::XMFLOAT2 keyboardAmount = DirectX::XMFLOAT2(0, 0);
 
-	//Add gametime variable
-
-	//keyboard
+	//Change defaultMovementRate to change speed
 	auto ks = this->m_keyboard->GetState();
 	if (ks.W)
 	{
-		keyboardAmount.y = 0.003f;
+		keyboardAmount.y = 1;
 	}
 	
 	if (ks.S)
 	{
-		keyboardAmount.y = -0.003f;
+		keyboardAmount.y = -1;
 	}
 
 	if (ks.A)
 	{
-		keyboardAmount.x = -0.003f;
+		keyboardAmount.x = -1;
 	}
 	
 	if (ks.D)
 	{
-		keyboardAmount.x = 0.003f;
+		keyboardAmount.x = 1;
 	}
 
 	if (ks.Escape)

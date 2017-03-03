@@ -16,7 +16,7 @@ cbuffer lightBuffer : register(b0)
 
 cbuffer cameraPos : register(b1)
 {
-    float4 camPos;
+    float3 camPos;
 };
 
 struct mtlStruct
@@ -95,5 +95,8 @@ float4 main(VS_OUT input) : SV_TARGET
 
 //********************Shadow mapping end*********************************
 
-    return  lighting;
+    //return  lighting;
+
+    //for test purpouses
+    return float4(colors.Sample(sSampler, input.uv));
 }
