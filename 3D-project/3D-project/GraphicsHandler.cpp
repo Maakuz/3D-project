@@ -71,8 +71,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext, wHandler, width, height);
 	this->terrainHandler = new TerrainHandler(
 		this->gDevice, 
-		"../resource/maps/HeightMap3.bmp", 
-		30.f);
+		"../resource/maps/HeightMapSmall.bmp", 
+		10.f);
 	
 
 	this->createShaders();
@@ -771,7 +771,7 @@ void GraphicsHandler::loadObj()
 		file.close();
 
 		//fill objInfo with the data
-		vertexInfo tempVInfo;
+		VertexInfo tempVInfo;
 
 
 		for (size_t i = 0; i < f.size(); i++)
@@ -1202,7 +1202,7 @@ void GraphicsHandler::createVertexBuffer()
 
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.ByteWidth = (UINT)(this->objInfo.vInfo.size() * sizeof(vertexInfo));
+	bufferDesc.ByteWidth = (UINT)(this->objInfo.vInfo.size() * sizeof(VertexInfo));
 
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
@@ -1553,7 +1553,7 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 	
 	//Draw objects
-	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 vertexSize = sizeof(VertexInfo);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1617,7 +1617,9 @@ void GraphicsHandler::update(float currentTime)
 {
 	this->updateParticleCBuffers(currentTime);
 	this->updateParticles();
-	this->terrainHandler->walkOnTerrain(DirectX::XMFLOAT3(0,1,0));
+
+	//Should make an ifstate to get noclip
+	this->terrainHandler->walkOnTerrain(this->cameraClass->getCamPos());
 
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
 	this->updateLightBuffer();
@@ -1759,7 +1761,7 @@ void GraphicsHandler::renderShadows()
 	this->terrainHandler->renderTerrain(this->gDeviceContext);
 
 
-	UINT32 vertexSize = sizeof(vertexInfo);
+	UINT32 vertexSize = sizeof(VertexInfo);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
 
