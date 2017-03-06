@@ -227,10 +227,10 @@ void CameraClass::update(float dt)
 		keyboardAmount.x = 1;
 	}
 
+	//this makes the mouse not snap to the middle
 	if (ks.Escape)
 	{
 		this->escapePressed = true;
-		//exit(1);
 	}
 
 	if (ks.Enter)

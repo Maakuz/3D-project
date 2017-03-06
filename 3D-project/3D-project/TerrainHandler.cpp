@@ -15,6 +15,7 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float he
 	this->camHeightFromTerrain = 1.f;
 	this->heightMap = nullptr;
 	this->vertexLength = 0.3f;
+	this->offsetY = 35;
 	this->loadHeightMap(gDevice, path);
 	
 	this->createVertices();
@@ -136,7 +137,6 @@ void TerrainHandler::createVertices()
 	}
 
 	float offsetX = ((this->width - 1) * 	this->vertexLength) / 2.f;
-	float offsetY = 30.f;
 	float offsetZ = ((this->height - 1) * this->vertexLength) / 2.f;
 
 	int count = 0;
@@ -160,7 +160,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i].x * this->vertexLength - offsetX,
-			this->heightMap[i].y * this->heightMultiple - offsetY,
+			this->heightMap[i].y * this->heightMultiple - this->offsetY,
 			this->heightMap[i].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -174,7 +174,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1].x * this->vertexLength - offsetX,
-			this->heightMap[i + 1].y * this->heightMultiple - offsetY,
+			this->heightMap[i + 1].y * this->heightMultiple - this->offsetY,
 			this->heightMap[i + 1].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -189,7 +189,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + this->width].x * this->vertexLength - offsetX,
-			this->heightMap[i + this->width].y * this->heightMultiple - offsetY,
+			this->heightMap[i + this->width].y * this->heightMultiple - this->offsetY,
 			this->heightMap[i + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -233,7 +233,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1].x * this->vertexLength - offsetX,
-			this->heightMap[i + 1].y * this->heightMultiple - offsetY,
+			this->heightMap[i + 1].y * this->heightMultiple - this->offsetY,
 			this->heightMap[i + 1].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -248,7 +248,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1 + this->width].x * this->vertexLength - offsetX,
-			this->heightMap[i + 1 + this->width].y * this->heightMultiple - offsetY,
+			this->heightMap[i + 1 + this->width].y * this->heightMultiple - this->offsetY,
 			this->heightMap[i + 1 + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -263,7 +263,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + this->width].x * this->vertexLength - offsetX,
-			this->heightMap[i + this->width].y * this->heightMultiple - offsetY,
+			this->heightMap[i + this->width].y * this->heightMultiple - this->offsetY,
 			this->heightMap[i + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later

@@ -21,6 +21,7 @@ private:
 	VertexInfo* vertices;
 	int nrOfVertices;
 	float vertexLength;
+	float offsetY;
 
 	float determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c);
 public:
