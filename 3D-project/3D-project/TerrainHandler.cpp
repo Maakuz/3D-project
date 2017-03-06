@@ -14,7 +14,7 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float he
 	this->heightMultiple = heightMultiple;
 	this->heightMap = nullptr;
 	this->loadHeightMap(path);
-	this->vertexLength = 1.f;
+	this->vertexLength = 2.f;
 
 	this->createVertices();
 	this->createVertexBuffer(gDevice);
@@ -41,7 +41,7 @@ TerrainHandler::~TerrainHandler()
 void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDeviceContext)
 {
 	//gDeviceContext->Draw(this->nrOfVertices, 0);
-	gDeviceContext->DrawIndexed(this->nrOfVertices, 0, 0);
+	gDeviceContext->DrawIndexed(this->nrOfindices, 0, 0);
 }
 
 void TerrainHandler::loadHeightMap(std::string path)
@@ -149,9 +149,9 @@ void TerrainHandler::createVertices()
 		this->indices[i] = 0;
 	}
 
-	float offsetX = 1;// ((this->width - 1) * this->vertexLength) / 2.f;
+	float offsetX = ((this->width - 1) * this->vertexLength) / 2.f;
 	float offsetY = 10.f;
-	float offsetZ = 1;// ((this->height - 1) * this->vertexLength) / 2.f;
+	float offsetZ = ((this->height - 1) * this->vertexLength) / 2.f;
 	int count = 0;
 
 	DirectX::XMFLOAT3 edge1;
@@ -170,9 +170,9 @@ void TerrainHandler::createVertices()
 			this->heightMap[i].y * this->heightMultiple - offsetY,
 			this->heightMap[i].z * this->vertexLength - offsetZ,
 
-			//Normals goes here later
+			//This normal will be overwritten later
 			0.f, 1.f, 0.f,
-			//UV
+			//Same for this UV
 			0.f, 0.f
 		};
 	}
@@ -192,36 +192,6 @@ void TerrainHandler::createVertices()
 		//Create one under the first
 		this->indices[count++] = i + this->width;
 		
-		/*//Determin the normal for the first triangle
-		edge1 = DirectX::XMFLOAT3(
-			this->vertices[count - 2].vpx - this->vertices[count].vpx,
-			this->vertices[count - 2].vpy - this->vertices[count].vpy,
-			this->vertices[count - 2].vpz - this->vertices[count].vpz);
-
-		edge2 = DirectX::XMFLOAT3(
-			this->vertices[count - 1].vpx - this->vertices[count].vpx,
-			this->vertices[count - 1].vpy - this->vertices[count].vpy,
-			this->vertices[count - 1].vpz - this->vertices[count].vpz);
-
-		temp1 = DirectX::XMLoadFloat3(&edge1);
-		temp2 = DirectX::XMLoadFloat3(&edge2);
-
-		norm = DirectX::XMVector3Cross(temp1, temp2);
-
-		DirectX::XMStoreFloat3(&normal, norm);
-		
-		//Set the normal for the first three vertices and the mtl
-		for (int i = 0; i < 3; i++)
-		{
-			this->vertices[count - i].vnx = normal.x;
-			this->vertices[count - i].vny = normal.y;
-			this->vertices[count - i].vnz = normal.z;
-
-			this->vertices[count - i].mtlType = 0;
-		}
-
-		*/
-		
 		//Create the first vertex in the second triangle (Same as 2)
 		this->indices[count++] = i + 1;
 
@@ -232,12 +202,48 @@ void TerrainHandler::createVertices()
 		this->indices[count++] = i + this->width;
 	}
 
-	
+
+
+	//Set the normals and uv's for each vertex
+
+	for (size_t i = 0; i < this->nrOfindices- 2; i+= 3)
+	{
+		//Determin the normal for the first triangle
+		edge1 = DirectX::XMFLOAT3(
+		this->vertices[this->indices[i + 2]].vpx - this->vertices[this->indices[i]].vpx,
+		this->vertices[this->indices[i + 2]].vpy - this->vertices[this->indices[i]].vpy,
+		this->vertices[this->indices[i + 2]].vpz - this->vertices[this->indices[i]].vpz);
+
+		edge2 = DirectX::XMFLOAT3(
+		this->vertices[this->indices[i + 2]].vpx - this->vertices[this->indices[i + 1]].vpx,
+		this->vertices[this->indices[i + 2]].vpy - this->vertices[this->indices[i + 1]].vpy,
+		this->vertices[this->indices[i + 2]].vpz - this->vertices[this->indices[i + 1]].vpz);
+
+		temp1 = DirectX::XMLoadFloat3(&edge1);
+		temp2 = DirectX::XMLoadFloat3(&edge2);
+
+		norm = DirectX::XMVector3Cross(temp1, temp2);
+
+		DirectX::XMStoreFloat3(&normal, norm);
+
+		//Set the normal for the first three vertices and the mtl
+		for (int j = 0; j < 3; j++)
+		{
+			this->vertices[this->indices[i + j]].vnx = normal.x;
+			this->vertices[this->indices[i + j]].vny = normal.y;
+			this->vertices[this->indices[i + j]].vnz = normal.z;
+
+			this->vertices[this->indices[i + j]].mtlType = 0;
+		}
+
+		
+	}
+
+	//This exist for test purposes only.
 	for (size_t i = 0; i < this->nrOfindices; i++)
 	{
 		this->vertices[indices[i]] = this->vertices[indices[i]];
 	}
-
 }
 
 void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)

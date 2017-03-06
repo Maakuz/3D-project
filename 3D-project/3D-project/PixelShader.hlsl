@@ -55,7 +55,7 @@ float4 main(VS_OUT input) : SV_TARGET
 
     float4 lVec;
     float4 lighting;
-    float3 diffuse;
+    float3 diffuse = 1;
     float distance;
     float attenuation;
 
@@ -70,7 +70,7 @@ float4 main(VS_OUT input) : SV_TARGET
 
     //lVec /= distance;
 
-    diffuse = saturate(dot(normalize(lVec.xyz), normals.Sample(sSampler, input.uv)));
+    //diffuse = saturate(dot(normalize(lVec.xyz), normals.Sample(sSampler, input.uv)));
     diffuse *= lightColor.xyz * colors.Sample(sSampler, input.uv);
     
    //TODO: Specularity
