@@ -1499,7 +1499,7 @@ void GraphicsHandler::render()
 
 void GraphicsHandler::renderGeometry()
 {
-	float clearColor[] = { 0, 0, 0, 1 };
+	float clearColor[] = { 102/255.0f, 152/255.0f, 255/255.0f, 1 };
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
 
 	for (int i = 0; i < NROFBUFFERS; i++)
@@ -1552,8 +1552,7 @@ void GraphicsHandler::renderGeometry()
 
 void GraphicsHandler::renderParticles()
 {
-	float clearColor[] = { 0, 0, 0, 1 };
-
+	
 	this->gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 	this->setViewPort(this->height, this->width);
