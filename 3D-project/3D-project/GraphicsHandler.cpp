@@ -1455,7 +1455,7 @@ void GraphicsHandler::render()
 
 	//setting shadow map
 	this->gDeviceContext->PSSetShaderResources(4, 1, &this->shadowSRV);
-	this->gDeviceContext->PSSetShaderResources(5, 1, &this->normalMapView);
+	
 
 	this->gDeviceContext->IASetInputLayout(this->vertexLayout);
 
@@ -1518,6 +1518,8 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
 	this->gDeviceContext->GSSetConstantBuffers(0, 1, &this->cameraPos);
 	this->gDeviceContext->PSSetConstantBuffers(0, 1, &this->mtlLightbuffer);
+	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+	this->gDeviceContext->PSSetShaderResources(1, 1, &this->normalMapView);
 
 	
 	this->setViewPort(this->height, this->width);
@@ -1528,7 +1530,7 @@ void GraphicsHandler::renderGeometry()
 	this->terrainHandler->renderTerrain(this->gDeviceContext);
 
 	//Swap the texture
-	this->gDeviceContext->PSSetShaderResources(0, 1, &this->textureView);
+	
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 	
 	//Draw objects

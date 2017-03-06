@@ -4,7 +4,7 @@ texture2D normals : register(t1);
 texture2D colors : register(t2);
 texture2D mtl : register(t3);
 texture2D shadowMap : register(t4);
-texture2D normalMap : register(t5);
+
 
 cbuffer lightBuffer : register(b0)
 {
