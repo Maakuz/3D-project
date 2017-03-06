@@ -108,6 +108,5 @@ float4 main(VS_OUT input) : SV_TARGET
 		lighting *= float4(0.5, 0.5, 0.5, 1);
 
 //********************Shadow mapping end*********************************
-
     return  lighting;
 }
