@@ -66,6 +66,7 @@ public:
 	void update(float dt);
 
 	matrixStruct getMatrix() const;
+	DirectX::XMFLOAT3& getCameraPos();
 };
 
 #endif

@@ -26,7 +26,7 @@ struct indexInfo
 	int mtlNr;
 };
 
-struct vertexInfo
+struct VertexInfo
 {
 	//vertex positions
 	float vpx, vpy, vpz;
@@ -67,7 +67,7 @@ struct objectInfo
 	int nrOfMaterials;
 
 	//VertexInfo is located in BufferClass.h
-	std::vector<vertexInfo> vInfo;
+	std::vector<VertexInfo> vInfo;
 	std::vector<indexInfo> iInfo;
 	std::vector<mtlInfo> mInfo;
 };
