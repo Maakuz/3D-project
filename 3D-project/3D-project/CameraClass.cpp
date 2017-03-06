@@ -4,8 +4,8 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
 
-	this->defaultMovementRate = 0.01f;
-	this->defaultMouseSensitivity = 0.01f;
+	this->defaultMovementRate = 0.1f;
+	this->defaultMouseSensitivity = 0.1f;
 
 	this->rotationValue = 0;
 
@@ -246,27 +246,22 @@ void CameraClass::update(float dt)
 	movement.y = (keyboardAmount.y * this->defaultMovementRate);
 	movement.z = 0;
 
-	DirectX::XMFLOAT3 floatStrafe; //hmm snurrar runt
-	floatStrafe.x = this->mRight.x * movement.x;
-	floatStrafe.y = this->mRight.y * movement.x;
-	floatStrafe.z = this->mRight.z * movement.x;
+	DirectX::XMVECTOR strafe = DirectX::XMLoadFloat3(&this->mRight);
 
-	DirectX::XMVECTOR strafe = DirectX::XMLoadFloat3(&floatStrafe);
+	position = DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + (DirectX::XMVectorGetX(strafe) * movement.x)); //bara denna behövs?
+	position = DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + (DirectX::XMVectorGetY(strafe) * movement.x));
+	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + (DirectX::XMVectorGetZ(strafe) * movement.x));
 
-	position = DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + DirectX::XMVectorGetX(strafe)); //bara denna behövs?
-	position = DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(strafe));
-	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(strafe));
-	
-	DirectX::XMFLOAT3 floatForward;	//funkar?
-	floatForward.x = this->mDirection.x * movement.y;
-	floatForward.y = this->mDirection.y * movement.y;
-	floatForward.z = this->mDirection.z * movement.y;
+	//Get the cameras z vector
+	DirectX::XMVECTOR temp1 = DirectX::XMLoadFloat3(&DirectX::XMFLOAT3(0, 1, 0));
+	DirectX::XMVECTOR temp2 = DirectX::XMLoadFloat3(&this->mRight);
 
-	DirectX::XMVECTOR forward = DirectX::XMLoadFloat3(&floatForward);
+	DirectX::XMVECTOR forward = DirectX::XMVector3Cross(temp2, temp1);
+	forward = DirectX::XMVector3Normalize(forward);
 
-	position = DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + DirectX::XMVectorGetX(forward));
-	position = DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(forward));
-	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(forward)); //bara denna behövs
+	position = DirectX::XMVectorSetX(position, DirectX::XMVectorGetX(position) + (DirectX::XMVectorGetX(forward) * movement.y));
+	position = DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + (DirectX::XMVectorGetY(forward) * movement.y));
+	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + (DirectX::XMVectorGetZ(forward) * movement.y)); //bara denna behövs
 
 	setPosition(position); //sparar den i mPosition
 	
@@ -300,8 +295,9 @@ void CameraClass::update(float dt)
 		previousMouseLocation.x = newMouseLocation.x;
 		previousMouseLocation.y = newMouseLocation.y;
 
-		this->mPitch += deltaMouseMovement.y * defaultMouseSensitivity * dt;
-		this->mYaw += deltaMouseMovement.x * defaultMouseSensitivity * dt;
+		//Removed dt from here as well, nasty hickups existed
+		this->mPitch += deltaMouseMovement.y * defaultMouseSensitivity;
+		this->mYaw += deltaMouseMovement.x * defaultMouseSensitivity;
 
 		this->mPitch = max(min(this->mPitch, 89.f), -89.f); //89 för inte flipp kamera vid 90
 
