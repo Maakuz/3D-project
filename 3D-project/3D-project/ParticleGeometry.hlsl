@@ -52,5 +52,4 @@ void main(point VS_OUT input[1], inout TriangleStream< GS_OUT> tStream)
         output.uv = quadTexCoords[i];
         tStream.Append(output);
     }
-    tStream.RestartStrip();
 }
