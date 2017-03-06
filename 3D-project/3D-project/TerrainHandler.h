@@ -13,15 +13,16 @@ class TerrainHandler
 private:
 	int height, width;
 	float heightMultiple;
+	float camHeightFromTerrain;
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Resource* res;
 	ID3D11ShaderResourceView* srv;
 	HeightMap* heightMap;
-	vertexInfo* vertices;
+	VertexInfo* vertices;
 	int nrOfVertices;
+	float vertexLength;
 
 	float determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c);
-
 public:
 	TerrainHandler(ID3D11Device* gDevice, std::string path, float heightMultiple = 0);
 	virtual ~TerrainHandler();

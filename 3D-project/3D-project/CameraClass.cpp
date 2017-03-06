@@ -3,7 +3,7 @@
 CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceContext, HWND window, int width, int height)
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
-	this->defaultMovementRate = 10.0f;
+	this->defaultMovementRate = 10.f;
 	this->defaultMouseSensitivity = 0.001f;
 	this->rotationValue = 0;
 
@@ -65,7 +65,7 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(M_PI / 6.f, M_PI / 6.f, 0);
 
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(0, -30, -3, 0);
+	eyePosition = DirectX::XMVectorSet(0, 3, 3, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 0);
@@ -188,12 +188,20 @@ void CameraClass::update(float dt)
 	if (ks.Escape)
 	{
 		this->escapePressed = true;
+		//exit(1);
+	}
+
+	if (ks.Enter)
+	{
+		this->escapePressed = false;
 	}
 
 	DirectX::XMVECTOR position = DirectX::XMLoadFloat3(&this->mPosition);
 	DirectX::XMFLOAT3 movement;
-	movement.x = (keyboardAmount.x * this->defaultMovementRate * dt);
-	movement.y = (keyboardAmount.y * this->defaultMovementRate * dt);
+
+	//removed dt because it felt horrible
+	movement.x = (keyboardAmount.x * this->defaultMovementRate);
+	movement.y = (keyboardAmount.y * this->defaultMovementRate);
 	movement.z = 0;
 
 	DirectX::XMFLOAT3 floatStrafe; //hmm snurrar runt
@@ -307,5 +315,10 @@ void CameraClass::updateViewMatrix()
 matrixStruct CameraClass::getMatrix() const
 {
 	return this->matrices;
+}
+
+DirectX::XMFLOAT3 & CameraClass::getCameraPos()
+{
+	return this->mPosition;
 }
 

@@ -12,7 +12,9 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float he
 	this->height = 0;
 	this->width = 0;
 	this->heightMultiple = heightMultiple;
+	this->camHeightFromTerrain = 1.f;
 	this->heightMap = nullptr;
+	this->vertexLength = 0.3f;
 	this->loadHeightMap(gDevice, path);
 	
 	this->createVertices();
@@ -44,8 +46,6 @@ void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDeviceContext)
 
 void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::string path)
 {
-
-	//Depricated maybe //No, not quite
 	std::ifstream file(path, std::ios::binary);
 	if (file.is_open())
 	{
@@ -96,11 +96,6 @@ void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::string path)
 
 			file.close();
 
-			/*for (size_t i = 0; i < size; i++)
-			{
-				colors[i] = 0;
-			}*/
-
 			//Create vectors from the color array
 			int count = 0;
 			int pos = 0;
@@ -135,17 +130,17 @@ void TerrainHandler::createVertices()
 {
 
 	this->nrOfVertices = (this->height - 1) * (this->width - 1) * 6;
-	this->vertices = new vertexInfo[this->nrOfVertices];
+	this->vertices = new VertexInfo[this->nrOfVertices];
 	
+	//Initializing
 	for (size_t i = 0; i < this->nrOfVertices; i++)
 	{
 		this->vertices[i] = { 0 };
 	}
 
-	float length = 0.3f;
-	float offsetX = ((this->width - 1) * length) / 2.f;
-	float offsetY = 10.f;
-	float offsetZ = ((this->height - 1) * length) / 2.f;
+	float offsetX = ((this->width - 1) * 	this->vertexLength) / 2.f;
+	float offsetY = 1.f;
+	float offsetZ = ((this->height - 1) * this->vertexLength) / 2.f;
 	int count = 0;
 
 	DirectX::XMFLOAT3 edge1;
@@ -166,9 +161,9 @@ void TerrainHandler::createVertices()
 		//Create the first
 		this->vertices[count] =
 		{
-			this->heightMap[i].x * length - offsetX,
+			this->heightMap[i].x * this->vertexLength - offsetX,
 			this->heightMap[i].y * this->heightMultiple - offsetY,
-			this->heightMap[i].z * length - offsetZ,
+			this->heightMap[i].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -180,9 +175,9 @@ void TerrainHandler::createVertices()
 		//Create one to the right of the first
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1].x * length - offsetX,
+			this->heightMap[i + 1].x * this->vertexLength - offsetX,
 			this->heightMap[i + 1].y * this->heightMultiple - offsetY,
-			this->heightMap[i + 1].z * length - offsetZ,
+			this->heightMap[i + 1].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -195,9 +190,9 @@ void TerrainHandler::createVertices()
 		//Create one under the first
 		this->vertices[count] =
 		{
-			this->heightMap[i + this->width].x * length - offsetX,
+			this->heightMap[i + this->width].x * this->vertexLength - offsetX,
 			this->heightMap[i + this->width].y * this->heightMultiple - offsetY,
-			this->heightMap[i + this->width].z * length - offsetZ,
+			this->heightMap[i + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -239,9 +234,9 @@ void TerrainHandler::createVertices()
 		//Create the first vertex in the second triangle (Same as 2)
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1].x * length - offsetX,
+			this->heightMap[i + 1].x * this->vertexLength - offsetX,
 			this->heightMap[i + 1].y * this->heightMultiple - offsetY,
-			this->heightMap[i + 1].z * length - offsetZ,
+			this->heightMap[i + 1].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -254,9 +249,9 @@ void TerrainHandler::createVertices()
 		//Create one under the last one
 		this->vertices[count] =
 		{
-			this->heightMap[i + 1 + this->width].x * length - offsetX,
+			this->heightMap[i + 1 + this->width].x * this->vertexLength - offsetX,
 			this->heightMap[i + 1 + this->width].y * this->heightMultiple - offsetY,
-			this->heightMap[i + 1 + this->width].z * length - offsetZ,
+			this->heightMap[i + 1 + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -269,9 +264,9 @@ void TerrainHandler::createVertices()
 		//Create one to the left of the last one (same as vertex 3)
 		this->vertices[count] =
 		{
-			this->heightMap[i + this->width].x * length - offsetX,
+			this->heightMap[i + this->width].x * this->vertexLength - offsetX,
 			this->heightMap[i + this->width].y * this->heightMultiple - offsetY,
-			this->heightMap[i + this->width].z * length - offsetZ,
+			this->heightMap[i + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
 			0.f, 1.f, 0.f,
@@ -310,19 +305,13 @@ void TerrainHandler::createVertices()
 
 		count++;
 	}
-
-	/*for (size_t i = 0; i < this->nrOfVertices; i++)
-	{
-		this->vertices[i] = { 1 };
-	}*/
-
 }
 
 void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 {
 	D3D11_BUFFER_DESC desc;
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	desc.ByteWidth = sizeof(vertexInfo) * this->nrOfVertices;
+	desc.ByteWidth = sizeof(VertexInfo) * this->nrOfVertices;
 	desc.CPUAccessFlags = 0;
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = 0;
@@ -338,7 +327,7 @@ void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 
 void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
 {
-	UINT32 stride = sizeof(vertexInfo);
+	UINT32 stride = sizeof(VertexInfo);
 	UINT32 offset = 0;
 	gDeviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
 	gDeviceContext->PSSetShaderResources(0, 1, &this->srv);
@@ -347,43 +336,94 @@ void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
 
 void TerrainHandler::walkOnTerrain(DirectX::XMFLOAT3& camPos)
 {
-	bool found = false;
+	//Someone messed up and made z into x in the terrain so this is the game we're playing now
+	float norCamX = camPos.z + ((this->width - 1) * this->vertexLength) / 2.f;
+	float norCamZ = camPos.x + ((this->height - 1) * this->vertexLength) / 2.f;
 
-	for (size_t i = 0; i < this->nrOfVertices && found == false; i+=3)
+	norCamX /= this->vertexLength;
+	norCamZ /= this->vertexLength;
+
+	int roundedX = (int)(norCamX + 0.5f);
+	int roundedZ = (int)(norCamZ + 0.5f);
+	
+	int whatVertex = ((this->width - 1) * 6 * (int)norCamZ) + ((int)norCamX * 6);
+
+	//If we are outside the array we don't bother check
+	if (norCamX >= 0 && norCamZ >= 0 && whatVertex <= this->nrOfVertices)
 	{
-		vertexInfo v1 = this->vertices[i];
-		vertexInfo v2 = this->vertices[i + 1];
-		vertexInfo v3 = this->vertices[i + 2];
+		VertexInfo* v1 = &this->vertices[whatVertex];
+		VertexInfo* v2 = nullptr;
+		VertexInfo* v3 = nullptr;
 
-		DirectX::XMFLOAT3 e0(v1.vpx - v2.vpx, v1.vpy - v2.vpy, v1.vpz - v2.vpz);
-		DirectX::XMFLOAT3 e1(v3.vpx - v2.vpx, v3.vpy - v2.vpy, v3.vpz - v2.vpz);
-		DirectX::XMFLOAT3 s(camPos.x - v2.vpx, camPos.y - v2.vpy, camPos.x - v2.vpz);
-		
-		//Direction is actually (0, -1, 0) but we only need the invers
+		//Might need to create a drawing to explain this sorcery
+
+		//The first vertex is always the top left in the quad and the two other will 
+		//be the ones adjacent to the coordinate
+
+		//if the rounded value and the normal as an int is the same we are in the NW corner
+		if (roundedX == (int)norCamX && roundedZ == (int)norCamZ)
+		{
+			//Right
+			v2 = &this->vertices[whatVertex + 1];
+			//under
+			v3 = &this->vertices[whatVertex + 2];
+		}
+
+		//If Z is different we're SW 
+		else if (roundedX == (int)norCamX && roundedZ != (int)norCamZ)
+		{
+			//Under
+			v2 = &this->vertices[whatVertex + 2];
+			//Right
+			v3 = &this->vertices[whatVertex + 4];
+		}
+
+		//If X is different we're NE
+		else if (roundedX != (int)norCamX && roundedZ == (int)norCamZ)
+		{
+			//right
+			v2 = &this->vertices[whatVertex + 1];
+			//down-right
+			v3 = &this->vertices[whatVertex + 4];
+		}
+
+		//If both is different we're SE 
+		else
+		{
+			//down
+			v2 = &this->vertices[whatVertex + 2];
+			//down-right
+			v3 = &this->vertices[whatVertex + 4];
+
+			//We also needs to change v1 since it is NW and that is not adjacent
+			v1 = &this->vertices[whatVertex + 1];
+		}
+
+		DirectX::XMFLOAT3 e0(v1->vpx - v2->vpx, v1->vpy - v2->vpy, v1->vpz - v2->vpz);
+		DirectX::XMFLOAT3 e1(v3->vpx - v2->vpx, v3->vpy - v2->vpy, v3->vpz - v2->vpz);
+		DirectX::XMFLOAT3 s(camPos.x - v2->vpx, camPos.y - v2->vpy, camPos.z - v2->vpz);
+
 		DirectX::XMFLOAT3 dir(0, 1, 0);
 
 		float divisionDet = this->determinateDeterminant(dir, e0, e1);
 
-		if (abs(divisionDet) > DBL_EPSILON)
+
+		float det1 = determinateDeterminant(s, e0, e1);
+		float det2 = determinateDeterminant(dir, s, e1);
+		float det3 = determinateDeterminant(dir, e0, s);
+
+		divisionDet = 1 / divisionDet;
+
+
+		float t = det1 * divisionDet;
+		float u = det2 * divisionDet;
+		float v = det3 * divisionDet;
+
+		if (u + v <= 1 && u > 0 && v > 0)
 		{
-			float det1 = determinateDeterminant(s, e0, e1);
-			float det2 = determinateDeterminant(dir, s, e1);
-			float det3 = determinateDeterminant(dir, e0, s);
-
-			divisionDet = 1 / divisionDet;
-
-
-			float t = det1 * divisionDet;
-			float u = det2 * divisionDet;
-			float v = det3 * divisionDet;
-
-			if (u + v >= 0 && u + v < 1
-				&& u <= 1 && v <= 1
-				&& u >= 0 && v >= 0)
-			{
-
-			}
+			camPos.y += -1 * t;
+			camPos.y += this->camHeightFromTerrain;
 		}
+
 	}
 }
-
