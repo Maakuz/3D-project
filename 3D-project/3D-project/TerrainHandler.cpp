@@ -136,7 +136,7 @@ void TerrainHandler::createVertices()
 	}
 
 	float offsetX = ((this->width - 1) * 	this->vertexLength) / 2.f;
-	float offsetY = 30.f;
+	float offsetY = 38.f;
 	float offsetZ = ((this->height - 1) * this->vertexLength) / 2.f;
 
 	int count = 0;
