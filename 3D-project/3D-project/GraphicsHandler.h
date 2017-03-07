@@ -109,6 +109,7 @@ private:
 	float currentTime;
 	float lastInsert;
 	float lastFrame;
+	float lastUpdate;
 	
 
 	void loadObj();
@@ -132,7 +133,7 @@ private:
 	void updateParticles();
 	void swapParticleBuffers();
 	void particleFirstTimeInit();
-	void updateParticleCBuffers(float currentTime);
+	void updateParticleCBuffers();
 	
 	
 	

@@ -8,6 +8,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->deltaTime = 0;
 	this->lastInsert = this->currentTime;
 	this->lastFrame = 0;
+	this->lastUpdate = 0;;
 	this->height = height;
 	this->width = width;
 
@@ -1614,14 +1615,21 @@ void GraphicsHandler::renderParticles()
 
 void GraphicsHandler::update(float deltaT)
 {
-	this->updateParticleCBuffers(deltaT);
-	this->updateParticles();
-	//this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+	this->deltaTime = deltaT;
+	this->currentTime += deltaT;
 
-	this->cameraClass->update(deltaT);
-	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
-	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-	this->updateLightBuffer();
+	if (this->currentTime - this->lastUpdate >= 0.8f)
+	{
+		this->lastUpdate = this->currentTime;
+		this->updateParticleCBuffers();
+		this->updateParticles();
+		this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+
+		this->cameraClass->update(deltaT);
+		this->cameraClass->updatecameraPosBuffer(this->cameraPos);
+		this->cameraClass->updateConstantBuffer(this->matrixBuffer);
+		this->updateLightBuffer();
+	}
 	
 
 	//locks fps at 60
@@ -1637,6 +1645,7 @@ void GraphicsHandler::update(float deltaT)
 
 void GraphicsHandler::updateParticles()
 {
+
 	if (this->currentTime - this->lastInsert > 500.0f)
 	{
 		this->lastInsert = currentTime;
@@ -1722,7 +1731,7 @@ void GraphicsHandler::particleFirstTimeInit()
 	this->gDeviceContext->CSSetUnorderedAccessViews(1, 1, &this->nullUAV, &startParticleCount);
 }
 
-void GraphicsHandler::updateParticleCBuffers(float deltaTime)
+void GraphicsHandler::updateParticleCBuffers()
 {
 	D3D11_MAPPED_SUBRESOURCE data;
 	this->gDeviceContext->Map(this->emitterlocation, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
@@ -1750,8 +1759,7 @@ void GraphicsHandler::updateParticleCBuffers(float deltaTime)
 	this->gDeviceContext->Map(this->deltaTimeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 
 
-	this->deltaTime = deltaTime;
-	this->currentTime += deltaTime;
+	
 
 	memcpy(data.pData, &this->deltaTime, sizeof(this->deltaTime));
 
