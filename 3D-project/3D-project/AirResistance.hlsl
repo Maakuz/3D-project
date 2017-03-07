@@ -35,11 +35,11 @@ void main(uint3 DTID : SV_DispatchThreadID)
         currentParticle.position.xyz += float3(currentParticle.velocity * time * 0.001);
 
 
-        currentParticle.velocity.y = currentParticle.velocity.y  - 9.82f * time * 0.001;
+        //currentParticle.velocity.y = currentParticle.velocity.y  - 9.82f * time * 0.001;
         //f = ((p * Cd * A)/2) * v^2
-        float arx = ((0.00129f * 0.8f * (0.016f * 0.016f)) / 2.0f) * currentParticle.velocity.x * currentParticle.velocity.x;
-        float ary = ((0.00129f * 0.8f * (0.016f * 0.016f)) / 2.0f) * currentParticle.velocity.y * currentParticle.velocity.y;
-        float arz = ((0.00129f * 0.8f * (0.016f * 0.016f)) / 2.0f) * currentParticle.velocity.z * currentParticle.velocity.z;
+        float arx = ((0.00129f * 1.05f * (0.016f * 0.016f)) / 2.0f) * currentParticle.velocity.x * currentParticle.velocity.x;
+        float ary = ((0.00129f * 1.05f * (0.016f * 0.016f)) / 2.0f) * currentParticle.velocity.y * currentParticle.velocity.y;
+        float arz = ((0.00129f * 1.05f * (0.016f * 0.016f)) / 2.0f) * currentParticle.velocity.z * currentParticle.velocity.z;
 
         // f = ma, a = f/m
         float ax = arx / 0.01f;
