@@ -90,6 +90,7 @@ private:
 	ID3D11Buffer* deltaTimeBuffer;
 	ID3D11UnorderedAccessView* UAVS[2];
 	ID3D11ShaderResourceView* SRVS[2];
+	ID3D11ComputeShader* airResistance;
 	
 	
 	
@@ -132,6 +133,7 @@ private:
 	void swapParticleBuffers();
 	void particleFirstTimeInit();
 	void updateParticleCBuffers(float currentTime);
+	
 	
 	
 	

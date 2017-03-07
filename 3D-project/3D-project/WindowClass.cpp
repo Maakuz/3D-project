@@ -40,7 +40,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-
 WindowClass::WindowClass(HINSTANCE hInstance)
 {
 	this->width = 640;

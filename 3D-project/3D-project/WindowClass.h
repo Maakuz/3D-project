@@ -17,6 +17,7 @@ private:
 
 
 	GraphicsHandler *graphicsHandler;
+	void setAirResistance();
 
 
 public:

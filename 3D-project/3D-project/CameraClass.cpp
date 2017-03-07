@@ -201,6 +201,11 @@ void CameraClass::kill()
 	test = this->gDeviceContext->Release();;
 }
 
+bool CameraClass::airResistance()
+{
+	return this->airRe;
+}
+
 void CameraClass::update(float dt)
 {
 	DirectX::XMFLOAT2 keyboardAmount = DirectX::XMFLOAT2(0, 0);
@@ -236,6 +241,17 @@ void CameraClass::update(float dt)
 	if (ks.Enter)
 	{
 		this->escapePressed = false;
+	}
+	if (ks.X)
+	{
+		if (this->airRe)
+		{
+			this->airRe = false;
+		}
+		else
+		{
+			this->airRe = true;
+		}
 	}
 
 	DirectX::XMVECTOR position = DirectX::XMLoadFloat3(&this->mPosition);

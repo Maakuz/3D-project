@@ -11,6 +11,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->height = height;
 	this->width = width;
 
+
 	this->gDevice = nullptr;
 	this->gDeviceContext = nullptr;
 	this->rtvBackBuffer = nullptr;
@@ -54,6 +55,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->cameraPos = nullptr;
 	this->debugDevice = nullptr;
 	this->normalMapView = nullptr;
+	this->airResistance = nullptr;
 
 	
 
@@ -365,6 +367,28 @@ void GraphicsHandler::createShaders()
 		MessageBox(0, L"compute Shader creation failed", L"error", MB_OK);
 	}
 	csBlob->Release();
+
+	ID3D10Blob *arcsBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"AirResistance.hlsl",
+		NULL,
+		NULL,
+		"main",
+		"cs_5_0",
+		0,
+		0,
+		&arcsBlob,
+		NULL);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"compute shader compile failed", L"error", MB_OK);
+	}
+	hr = this->gDevice->CreateComputeShader(arcsBlob->GetBufferPointer(), arcsBlob->GetBufferSize(), nullptr, &this->airResistance);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"compute Shader creation failed", L"error", MB_OK);
+	}
+	arcsBlob->Release();
 
 	ID3D10Blob *icsBlob = nullptr;
 	hr = D3DCompileFromFile(
@@ -1592,7 +1616,7 @@ void GraphicsHandler::update(float deltaT)
 {
 	this->updateParticleCBuffers(deltaT);
 	this->updateParticles();
-	this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+	//this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
 
 	this->cameraClass->update(deltaT);
 	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
@@ -1636,7 +1660,16 @@ void GraphicsHandler::updateParticles()
 	this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, &this->UAVS[0], &UAVFLAG);
 	this->gDeviceContext->CSSetUnorderedAccessViews(1, 1, &this->UAVS[1], &startParticleCount);
 
-	this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
+	if (this->cameraClass->airResistance())
+	{
+		this->gDeviceContext->CSSetShader(this->airResistance, nullptr, 0);
+	}
+	else
+	{
+		this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
+	}
+	
+	
 
 
 	this->gDeviceContext->Dispatch(512, 1, 1);
@@ -1725,6 +1758,7 @@ void GraphicsHandler::updateParticleCBuffers(float deltaTime)
 	this->gDeviceContext->Unmap(this->deltaTimeBuffer, 0);
 }
 
+
 void GraphicsHandler::kill()
 {
 	ULONG test = 0;
@@ -1788,6 +1822,7 @@ void GraphicsHandler::kill()
 	test = this->UAVS[1]->Release();
 	test = this->SRVS[0]->Release();
 	test = this->SRVS[1]->Release();
+	test = this->airResistance->Release();
 	test = this->rState->Release();
 	test = this->cameraPos->Release();
 	test = this->normalMapView->Release();

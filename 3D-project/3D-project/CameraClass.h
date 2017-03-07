@@ -43,6 +43,7 @@ private:
 	float mYaw;	//rotation RUNT y/up
 
 	bool escapePressed;
+	bool airRe;
 
 	float rotationValue;
 public:
@@ -61,6 +62,7 @@ public:
 	ID3D11Buffer* createCamrePosBuffer();
 	void updatecameraPosBuffer(ID3D11Buffer* cameraConstantBuffer);
 	void kill();
+	bool airResistance();
 
 
 	void update(float dt);

@@ -46,7 +46,7 @@ void main(point VS_OUT input[1], inout TriangleStream< GS_OUT> tStream)
 
     for (int i = 0; i < 4; i++)
     {
-        //this results in a billboarded particle since the quad is created facing the camera in projection space
+        //this results in a billboarded particle since the quad is created facing the camera in clip space
         output.pos = pos + quadCorners[i];
         output.norm = normal;
         output.uv = quadTexCoords[i];
