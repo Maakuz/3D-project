@@ -1617,18 +1617,17 @@ void GraphicsHandler::update(float deltaT)
 {
 	this->deltaTime = deltaT;
 	this->currentTime += deltaT;
+	this->cameraClass->update(deltaT);
+	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
+	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
+	//this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+	this->updateLightBuffer();
 
 	if (this->currentTime - this->lastUpdate >= 0.8f)
 	{
 		this->lastUpdate = this->currentTime;
 		this->updateParticleCBuffers();
 		this->updateParticles();
-		this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
-
-		this->cameraClass->update(deltaT);
-		this->cameraClass->updatecameraPosBuffer(this->cameraPos);
-		this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-		this->updateLightBuffer();
 	}
 	
 
@@ -1669,14 +1668,17 @@ void GraphicsHandler::updateParticles()
 	this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, &this->UAVS[0], &UAVFLAG);
 	this->gDeviceContext->CSSetUnorderedAccessViews(1, 1, &this->UAVS[1], &startParticleCount);
 
-	if (this->cameraClass->airResistance())
+	/*if (this->cameraClass->airResistance())
 	{
 		this->gDeviceContext->CSSetShader(this->airResistance, nullptr, 0);
 	}
 	else
 	{
 		this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
-	}
+	}*/
+
+	this->gDeviceContext->CSSetShader(this->airResistance, nullptr, 0);
+	//this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
 	
 	
 
