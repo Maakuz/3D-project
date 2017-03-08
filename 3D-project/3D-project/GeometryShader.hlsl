@@ -35,7 +35,7 @@ void main(triangle VS_OUT input[3] : SV_POSITION, inout TriangleStream<GS_OUT> o
     if (sign(check) >= 0)
     {
 
-        //maybe it is that this only  works because our world matrix is a identity matrix.
+     
         //calculats tangent and bitangent for normal mapping
         float3 e1 = input[1].wPos - input[0].wPos;
         float3 e2 = input[2].wPos - input[0].wPos;
