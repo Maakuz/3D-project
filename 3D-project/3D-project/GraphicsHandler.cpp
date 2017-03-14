@@ -11,6 +11,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->lastUpdate = 0;;
 	this->height = height;
 	this->width = width;
+	this->nrOfverticies = 0;
 
 
 	this->gDevice = nullptr;
@@ -28,7 +29,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->particleInserter = nullptr;
 	this->deltaTimeBuffer = nullptr;
 
-	this->computeShader = nullptr;
 	this->particleGeometry = nullptr;
 	this->particlePixel = nullptr;
 	this->particleVertex = nullptr;
@@ -57,6 +57,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->debugDevice = nullptr;
 	this->normalMapView = nullptr;
 	this->airResistance = nullptr;
+	this->verticies = nullptr;
 
 	
 
@@ -84,6 +85,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createSamplers();
 	this->loadMtl();
 	this->loadObj();
+	this->linkVertecies();
 
 	this->createTriangleData();
 
@@ -346,28 +348,6 @@ void GraphicsHandler::createShaders()
 	}
 
 	dpsBlob->Release();
-
-	ID3D10Blob *csBlob = nullptr;
-	hr = D3DCompileFromFile(
-		L"ComputeShader.hlsl",
-		NULL,
-		NULL,
-		"main",
-		"cs_5_0",
-		0,
-		0,
-		&csBlob,
-		NULL);
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"compute shader compile failed", L"error", MB_OK);
-	}
-	hr = this->gDevice->CreateComputeShader(csBlob->GetBufferPointer(), csBlob->GetBufferSize(), nullptr, &this->computeShader);
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"compute Shader creation failed", L"error", MB_OK);
-	}
-	csBlob->Release();
 
 	ID3D10Blob *arcsBlob = nullptr;
 	hr = D3DCompileFromFile(
@@ -1668,17 +1648,10 @@ void GraphicsHandler::updateParticles()
 	this->gDeviceContext->CSSetUnorderedAccessViews(0, 1, &this->UAVS[0], &UAVFLAG);
 	this->gDeviceContext->CSSetUnorderedAccessViews(1, 1, &this->UAVS[1], &startParticleCount);
 
-	/*if (this->cameraClass->airResistance())
-	{
-		this->gDeviceContext->CSSetShader(this->airResistance, nullptr, 0);
-	}
-	else
-	{
-		this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
-	}*/
+	
 
 	this->gDeviceContext->CSSetShader(this->airResistance, nullptr, 0);
-	//this->gDeviceContext->CSSetShader(this->computeShader, nullptr, 0);
+
 	
 	
 
@@ -1785,7 +1758,6 @@ void GraphicsHandler::kill()
 	test = this->shadowVertexShader->Release();
 	test = this->pixelShader->Release();
 	test = this->defferedPixelShader->Release();
-	test = this->computeShader->Release();
 	test = this->geometryShader->Release();
 	test = this->vertexLayout->Release();
 	test = this->defferedVertexLayout->Release();
@@ -1843,6 +1815,7 @@ void GraphicsHandler::kill()
 	
 	test = this->gDeviceContext->Release();
 	test = this->gDevice->Release();
+	delete[] this->verticies;
 
 
 	/*this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
@@ -1947,4 +1920,35 @@ void GraphicsHandler::updateLightBuffer()
 	memcpy(dataPtr.pData, &this->light, sizeof(matrixStruct));
 
 	this->gDeviceContext->Unmap(lightbuffer, 0);
+}
+
+void GraphicsHandler::linkVertecies()
+{
+	this->nrOfverticies = this->objInfo.nrOfVertices + this->terrainHandler->getNrOfVertices();
+	this->verticies = new VertexInfo[this->nrOfverticies];
+	VertexInfo* temp = this->terrainHandler->getVerticies();
+
+	for (size_t i = 0; i < this->objInfo.nrOfVertices; i++)
+	{
+		this->verticies[i] = this->objInfo.vInfo.at(i);
+	}
+	for (size_t i = this->objInfo.nrOfVertices; i < this->nrOfverticies; i++)
+	{
+		this->verticies[i] = temp[i];
+	}
+
+}
+
+void GraphicsHandler::sortTriangles()
+{
+	sortableTriangels* triangels = new sortableTriangels[this->nrOfverticies / 3];
+
+	for (size_t i = 0; i < this->nrOfverticies; i += 3)
+	{
+		triangels[i].startVertex = i;
+		//avrages the three vertices distance to camera.
+		triangels[i].distance2Camera = (sqrt(this->verticies[i].vnx * this->verticies[i].vnx + this->verticies[i].vny * this->verticies[i].vny + this->verticies[i].vnz * this->verticies[i].vnz) + sqrt(this->verticies[i+1].vnx * this->verticies[i+1].vnx + this->verticies[i+1].vny * this->verticies[i+1].vny + this->verticies[i+1].vnz * this->verticies[i+1].vnz) + sqrt(this->verticies[i+2].vnx * this->verticies[i+2].vnx + this->verticies[i+2].vny * this->verticies[i + 2].vny + this->verticies[i + 2].vnz * this->verticies[i + 2].vnz)) / 3;
+	}
+	//sorts triangles
+
 }

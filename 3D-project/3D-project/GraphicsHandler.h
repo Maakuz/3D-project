@@ -7,6 +7,7 @@
 #include "WICTextureLoader.h"
 #include <time.h>
 #include "TerrainHandler.h"
+#include "sortableTriangels.h"
 
 
 const int NROFBUFFERS = 4;
@@ -31,7 +32,6 @@ private:
 	ID3D11VertexShader* shadowVertexShader;
 	ID3D11PixelShader* pixelShader;
 	ID3D11PixelShader* defferedPixelShader;
-	ID3D11ComputeShader* computeShader;
 
 	ID3D11GeometryShader* geometryShader;
 	
@@ -105,11 +105,14 @@ private:
 	ID3D11DepthStencilView* nullDSV;
 	ID3D11ShaderResourceView* normalMapView;
 
+	VertexInfo *verticies;
+
 	float deltaTime;
 	float currentTime;
 	float lastInsert;
 	float lastFrame;
 	float lastUpdate;
+	int nrOfverticies;
 	
 
 	void loadObj();
@@ -141,6 +144,8 @@ private:
 	void renderShadows();
 	void createLightMatrices();
 	void updateLightBuffer();
+	void linkVertecies();
+	void sortTriangles();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);

@@ -66,7 +66,6 @@ struct objectInfo
 	int norOfIndexcies;
 	int nrOfMaterials;
 
-	//VertexInfo is located in BufferClass.h
 	std::vector<VertexInfo> vInfo;
 	std::vector<indexInfo> iInfo;
 	std::vector<mtlInfo> mInfo;

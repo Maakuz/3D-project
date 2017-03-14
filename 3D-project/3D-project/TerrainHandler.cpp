@@ -435,3 +435,13 @@ void TerrainHandler::walkOnTerrain(DirectX::XMFLOAT3& camPos)
 
 	}
 }
+
+int TerrainHandler::getNrOfVertices() const
+{
+	return this->nrOfVertices;
+}
+
+VertexInfo* TerrainHandler::getVerticies() const
+{
+	return this->vertices;
+}

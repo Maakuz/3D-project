@@ -35,6 +35,8 @@ public:
 	void setShaderResources(ID3D11DeviceContext* gDeviceContext);
 	void kill();
 	void walkOnTerrain(DirectX::XMFLOAT3& camPos);
+	int getNrOfVertices() const;
+	VertexInfo* getVerticies() const;
 };
 
 

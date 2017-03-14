@@ -17,7 +17,7 @@ cbuffer nrOfParticles
     uint nrOfParticles;
 };
 
-static const float3 reflectVectors[8] =
+static const float3 reflectVectors[12] =
 {
     float3(1.0f, 0.0f, 0.0f),
     float3(-1.0f,0.0f, 0.0f),
@@ -25,16 +25,20 @@ static const float3 reflectVectors[8] =
     float3(0.0f, -1.0f, 0.0f),
     float3(0.0f, 0.0f, 1.0f),
     float3(0.0f, 0.0f, -1.0f),
-    float3(-1.0f, 1.0f, 0.0f),
-    float3(-1.0f, -1.0f, 0.0f)
+    float3(1.0f, 1.0f, 0.0f),
+    float3(-1.0f, -1.0f, 0.0f),
+    float3(0.0f, 1.0f, 1.0f),
+    float3(0.0f, -1.0f, -1.0f),
+    float3(1.0f, 0.0f, 1.0f),
+    float3(-1.0f, 0.0f, -1.0f)
 };
 
 
-[numthreads(8, 1, 1)]
+[numthreads(12, 1, 1)]
 void main( uint3 GTID : SV_GroupThreadID )
 {
     //checks that this insert doesnt overflow the buffer
-    if(nrOfParticles <= 506)
+    if(nrOfParticles <= 500)
     {
         Particle newParticle;
 

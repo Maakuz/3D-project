@@ -91,9 +91,6 @@
     <FxCompile Include="PixelShader.hlsl">
       <Filter>Source Files\shaders\Light</Filter>
     </FxCompile>
-    <FxCompile Include="ComputeShader.hlsl">
-      <Filter>Source Files\shaders\Particles</Filter>
-    </FxCompile>
     <FxCompile Include="ParticleGeometry.hlsl">
       <Filter>Source Files\shaders\Particles</Filter>
     </FxCompile>
