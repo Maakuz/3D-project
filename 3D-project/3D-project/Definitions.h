@@ -111,7 +111,11 @@ struct Instance
 
 };
 
-
+struct AABB
+{
+	DirectX::XMFLOAT3 p0;
+	DirectX::XMFLOAT3 p1;
+};
 
 
 

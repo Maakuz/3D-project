@@ -7,10 +7,54 @@
 
 struct HeightMap { float x, y, z; };
 
+struct Quad
+{
+	VertexInfo vertices[6];
+};
+
+struct Chunk
+{
+	Quad* quads;
+};
+
+struct FrustumBounds
+{
+	int xStart, xStop, yStart, yStop;
+};
 
 class TerrainHandler
 {
 private:
+	class FrustumTree 
+	{
+	public:
+		FrustumTree* NW;
+		FrustumTree* NE;
+		FrustumTree* SW;
+		FrustumTree* SE;
+		AABB boundingVolume;
+		Chunk* data;
+
+		FrustumTree(AABB boundingVolume, FrustumTree* NW = nullptr, FrustumTree* SW = nullptr, FrustumTree* NE = nullptr, FrustumTree* SE = nullptr)
+		{
+			this->NE = NE;
+			this->SE = SE;
+			this->NW = NW;
+			this->SW = SW;
+			this->boundingVolume = boundingVolume;
+			this->data = nullptr;
+		}
+
+		virtual ~FrustumTree()
+		{
+			delete this->NW;
+			delete this->SW;
+			delete this->SE;
+			delete this->NE;
+		}
+	};
+
+
 	int height, width;
 	float heightMultiple;
 	float camHeightFromTerrain;
@@ -22,6 +66,11 @@ private:
 	int nrOfVertices;
 	float vertexLength;
 	float offsetY;
+	FrustumTree* tree;
+	Chunk chunks;
+
+	void createFrustumTree(int nrOfSplits = 4);
+	void _CreateFrustumTree(int nrOfSplits, FrustumBounds bound, FrustumTree* branch, Chunk* chunks);
 
 	float determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c);
 public:
