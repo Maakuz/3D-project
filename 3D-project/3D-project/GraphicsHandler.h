@@ -104,8 +104,10 @@ private:
 	ID3D11RenderTargetView* nullRTV;
 	ID3D11DepthStencilView* nullDSV;
 	ID3D11ShaderResourceView* normalMapView;
+	ID3D11Buffer* fVertexBuffer;
 
 	VertexInfo *verticies;
+	sortableTriangels* triangels;
 
 	float deltaTime;
 	float currentTime;
@@ -146,6 +148,10 @@ private:
 	void updateLightBuffer();
 	void linkVertecies();
 	void sortTriangles();
+	DirectX::XMFLOAT3 minus(DirectX::XMFLOAT3 first, DirectX::XMFLOAT3 second);
+	void createfVertexBuffer();
+	void updateVertexBuffer();
+	void quickSort(int left, int right);
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);

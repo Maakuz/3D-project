@@ -58,6 +58,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->normalMapView = nullptr;
 	this->airResistance = nullptr;
 	this->verticies = nullptr;
+	this->fVertexBuffer = nullptr;
 
 	
 
@@ -86,6 +87,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->loadMtl();
 	this->loadObj();
 	this->linkVertecies();
+	this->createfVertexBuffer();
 
 	this->createTriangleData();
 
@@ -1506,6 +1508,7 @@ void GraphicsHandler::renderGeometry()
 {
 	float clearColor[] = { 102/255.0f, 152/255.0f, 255/255.0f, 1 };
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
+	this->sortTriangles();
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
@@ -1600,7 +1603,7 @@ void GraphicsHandler::update(float deltaT)
 	this->cameraClass->update(deltaT);
 	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-	//this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+	this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
 	this->updateLightBuffer();
 
 	if (this->currentTime - this->lastUpdate >= 0.8f)
@@ -1808,6 +1811,7 @@ void GraphicsHandler::kill()
 	test = this->rState->Release();
 	test = this->cameraPos->Release();
 	test = this->normalMapView->Release();
+	test = this->fVertexBuffer->Release();
 	
 
 	
@@ -1936,19 +1940,131 @@ void GraphicsHandler::linkVertecies()
 	{
 		this->verticies[i] = temp[i];
 	}
-
+	this->triangels = new sortableTriangels[this->nrOfverticies / 3];
+	this->quickSort(0, this->nrOfverticies/3);
 }
 
 void GraphicsHandler::sortTriangles()
 {
-	sortableTriangels* triangels = new sortableTriangels[this->nrOfverticies / 3];
 
-	for (size_t i = 0; i < this->nrOfverticies; i += 3)
+	//this is fucked dont use
+	DirectX::XMFLOAT3 temp;
+	DirectX::XMFLOAT3 tempVert;
+	for (size_t i = 0; i < this->nrOfverticies/3; i += 3)
 	{
-		triangels[i].startVertex = i;
+		this->triangels[i].startVertex = i;
 		//avrages the three vertices distance to camera.
-		triangels[i].distance2Camera = (sqrt(this->verticies[i].vnx * this->verticies[i].vnx + this->verticies[i].vny * this->verticies[i].vny + this->verticies[i].vnz * this->verticies[i].vnz) + sqrt(this->verticies[i+1].vnx * this->verticies[i+1].vnx + this->verticies[i+1].vny * this->verticies[i+1].vny + this->verticies[i+1].vnz * this->verticies[i+1].vnz) + sqrt(this->verticies[i+2].vnx * this->verticies[i+2].vnx + this->verticies[i+2].vny * this->verticies[i + 2].vny + this->verticies[i + 2].vnz * this->verticies[i + 2].vnz)) / 3;
+		tempVert.x = verticies[i].vpx;
+		tempVert.y = verticies[i].vpy;
+		tempVert.z = verticies[i].vpz;
+		temp = this->minus(this->cameraClass->getCameraPos(), tempVert);
+		this->triangels[i].distance2Camera = sqrt(temp.x * temp.x + temp.y * temp.y + temp.z + temp.z);
+
+		tempVert.x = verticies[i+1].vpx;
+		tempVert.y = verticies[i+1].vpy;
+		tempVert.z = verticies[i+1].vpz;
+		temp = this->minus(this->cameraClass->getCameraPos(), tempVert);
+		this->triangels[i].distance2Camera += sqrt(temp.x * temp.x + temp.y * temp.y + temp.z + temp.z);
+
+		tempVert.x = verticies[i + 2].vpx;
+		tempVert.y = verticies[i + 2].vpy;
+		tempVert.z = verticies[i + 2].vpz;
+		temp = this->minus(this->cameraClass->getCameraPos(), tempVert);
+		this->triangels[i].distance2Camera += sqrt(temp.x * temp.x + temp.y * temp.y + temp.z + temp.z);
+
+		this->triangels[i].distance2Camera /= 3;
+
 	}
 	//sorts triangles
+
+
+	/*int j = 0;
+	sortableTriangels tmp;
+	for (size_t j = 0; j < this->nrOfverticies/3 -1; j++)
+	{
+		for (size_t i = 0; i < this->nrOfverticies/3 - j -1; i++)
+		{
+			if (this->triangels[i] > this->triangels[i+1])
+			{
+				tmp = this->triangels[i];
+				this->triangels[i] = triangels[i + 1];
+				triangels[i + 1] = tmp;
+			}
+		}
+	}*/
+
+}
+
+DirectX::XMFLOAT3 GraphicsHandler::minus(DirectX::XMFLOAT3 first, DirectX::XMFLOAT3 second)
+{
+	DirectX::XMFLOAT3 temp;
+	temp.x = first.x - second.x;
+	temp.y = first.y - second.y;
+	temp.z = first.z - second.z;
+
+	return temp;
+}
+
+void GraphicsHandler::createfVertexBuffer()
+{
+	D3D11_BUFFER_DESC bufferDesc;
+	ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
+
+
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.ByteWidth = this->nrOfverticies * sizeof(VertexInfo);
+
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	data.pSysMem = this->verticies;
+
+	HRESULT hr = this->gDevice->CreateBuffer(&bufferDesc, &data, &this->fVertexBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"vertex buffer creation failed", L"error", MB_OK);
+	}
+}
+
+void GraphicsHandler::updateVertexBuffer()
+{
+}
+
+void GraphicsHandler::quickSort(int left, int right)
+{
+	int i = left;
+	int j = right;
+	sortableTriangels pivot = this->triangels[(left + right) / 2];
+	sortableTriangels tmp;
+
+	while (i <= j)
+	{
+		while (this->triangels[i] < pivot)
+		{
+			i++;
+		}
+		while (this->triangels[i] > pivot)
+		{
+			j--;
+		}
+		if (i <= j)
+		{
+			tmp = this->triangels[i];
+			this->triangels[i] = this->triangels[j];
+			this->triangels[j] = tmp;
+			i++;
+			j--;
+		}
+	}
+
+	if (left < j)
+	{
+		this->quickSort(left, j);
+	}
+	if (i < right)
+	{
+		this->quickSort(i, right);
+	}
 
 }

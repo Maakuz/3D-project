@@ -9,8 +9,19 @@ sortableTriangels::sortableTriangels()
 sortableTriangels::~sortableTriangels()
 {
 }
+bool sortableTriangels::operator>(const sortableTriangels &other) const
+{
+	if (this->distance2Camera > other.distance2Camera)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
-inline bool sortableTriangels::operator<(const sortableTriangels &other) const
+bool sortableTriangels::operator<(const sortableTriangels &other) const
 {
 	if (this->distance2Camera < other.distance2Camera)
 	{
