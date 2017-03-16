@@ -97,6 +97,7 @@ private:
 	ID3D11RasterizerState* rState;
 	ID3D11Buffer* cameraPos;
 	ID3D11Debug* debugDevice;
+	ID3D11Buffer* instanceBuffer;
 
 	
 	ID3D11UnorderedAccessView* nullUAV;
@@ -115,6 +116,8 @@ private:
 	float lastFrame;
 	float lastUpdate;
 	int nrOfverticies;
+	int instanceCount;
+	Instance *intancies;
 	
 
 	void loadObj();
@@ -140,7 +143,8 @@ private:
 	void particleFirstTimeInit();
 	void updateParticleCBuffers();
 	
-	
+	void updateParticleCBuffers(float currentTime);
+	void createInstanceBuffer();
 	
 	
 	void renderShadows();

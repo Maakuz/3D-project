@@ -64,11 +64,17 @@ public:
 	void kill();
 	bool airResistance();
 
-
 	void update(float dt);
 
 	matrixStruct getMatrix() const;
 	DirectX::XMFLOAT3& getCameraPos();
+	float getNearPlane();
+	float getFarPlane();
+	float getFovAngleY();
+	float getAspectRatio();
+	DirectX::XMFLOAT3 getMDirection();
+	DirectX::XMFLOAT3 getMRight();
+	DirectX::XMFLOAT3 getMUp();
 };
 
 #endif

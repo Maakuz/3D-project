@@ -148,6 +148,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CameraClass.cpp" />
+    <ClCompile Include="FrustrumCulling.cpp" />
     <ClCompile Include="GraphicsHandler.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="sortableTriangels.cpp" />
@@ -157,6 +158,7 @@
   <ItemGroup>
     <ClInclude Include="CameraClass.h" />
     <ClInclude Include="Definitions.h" />
+    <ClInclude Include="FrustrumCulling.h" />
     <ClInclude Include="GraphicsHandler.h" />
     <ClInclude Include="sortableTriangels.h" />
     <ClInclude Include="TerrainHandler.h" />
