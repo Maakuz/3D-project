@@ -3,9 +3,23 @@
 
 #include "CameraClass.h"
 
+class Plane
+{
+private:
+	float d; //eh? gör inget nu
+	DirectX::XMFLOAT3 normal;
+public:
+	Plane(float d, DirectX::XMVECTOR normal);
+	Plane();
+	~Plane();
+	void setPoints(DirectX::XMFLOAT3 firstPoint, DirectX::XMFLOAT3 secondPoint, DirectX::XMFLOAT3 lastPoint);
+};
+
 class FrustrumCulling
 {
 private:
+	Plane plane[6];
+
 	float nearPlaneDistance;
 	float nearPlaneWidth;
 	float nearPlaneHeight;
@@ -23,21 +37,26 @@ private:
 	DirectX::XMFLOAT3 mUp;	//normaliserad
 
 	//points
-	DirectX::XMFLOAT4 closeUpLeft;
-	DirectX::XMFLOAT4 closeUpRight;
-	DirectX::XMFLOAT4 closeDownRight;
-	DirectX::XMFLOAT4 closeDownLeft;
+	DirectX::XMFLOAT3 nearUpLeft;
+	DirectX::XMFLOAT3 nearUpRight;
+	DirectX::XMFLOAT3 nearDownRight;
+	DirectX::XMFLOAT3 nearDownLeft;
 
-	DirectX::XMFLOAT4 farUpLeft;
-	DirectX::XMFLOAT4 farUpRight;
-	DirectX::XMFLOAT4 farDownRight;
-	DirectX::XMFLOAT4 farDownLeft;
+	DirectX::XMFLOAT3 farUpLeft;
+	DirectX::XMFLOAT3 farUpRight;
+	DirectX::XMFLOAT3 farDownRight;
+	DirectX::XMFLOAT3 farDownLeft;
+
+	//experementella saker enligt guide
+	
+	//kolla hur planet jämförs med punkterna och vad som definierar ett plan
 
 public:
 	FrustrumCulling(CameraClass camera);
 	virtual ~FrustrumCulling();
 	
 	void makePoints();
+	void makePlanes();
 };
 
 
