@@ -106,5 +106,11 @@ struct EmitterLocation
 	DirectX::XMFLOAT4 randomVector;
 };
 
+struct Instance
+{
+	DirectX::XMFLOAT3 offset;
+
+};
+
 
 #endif

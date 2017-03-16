@@ -53,6 +53,9 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->rState = nullptr;
 	this->cameraPos = nullptr;
 	this->debugDevice = nullptr;
+	this->instanceBuffer = nullptr;
+	this->instanceCount = 4;
+	this->intancies = nullptr;
 
 	
 
@@ -82,6 +85,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->loadObj();
 
 	this->createTriangleData();
+	this->createInstanceBuffer();
 
 	this->createLightBuffer();
 	this->createVertexBuffer();
@@ -167,6 +171,9 @@ GraphicsHandler::~GraphicsHandler()
 
 	this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 	this->debugDevice->Release();
+	this->instanceBuffer->Release();
+
+	delete[] this->intancies;
 
 }
 
@@ -313,10 +320,12 @@ void GraphicsHandler::createShaders()
 
 	D3D11_INPUT_ELEMENT_DESC inputDescDeffered[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "MTLNR", 0, DXGI_FORMAT_R32_SINT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "OFFSET", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "MTLNR", 0, DXGI_FORMAT_R32_SINT, 0, 44, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+		
 	};
 
 	hr = this->gDevice->CreateInputLayout(inputDescDeffered, ARRAYSIZE(inputDescDeffered), dvsBlob->GetBufferPointer(), dvsBlob->GetBufferSize(), &this->defferedVertexLayout);
@@ -1599,10 +1608,13 @@ void GraphicsHandler::renderGeometry()
 	//Draw objects
 	UINT32 vertexSize = sizeof(vertexInfo);
 	UINT32 offset = 0;
+	UINT32 intanceSize = sizeof(Instance);
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
+	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	this->gDeviceContext->Draw(36, 0);
+	//this->gDeviceContext->Draw(36, 0);
+	this->gDeviceContext->DrawInstanced(this->objInfo.nrOfVertices, this->instanceCount, 0, 0);
 
 
 	//Null stuff
@@ -1786,6 +1798,33 @@ void GraphicsHandler::updateParticleCBuffers(float deltaTime)
 	memcpy(data.pData, &this->deltaTime, sizeof(this->deltaTime));
 
 	this->gDeviceContext->Unmap(this->deltaTimeBuffer, 0);
+}
+
+void GraphicsHandler::createInstanceBuffer()
+{
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+	this->intancies = new Instance[this->instanceCount];
+
+	this->intancies[0].offset = DirectX::XMFLOAT3(10.0f, -10.0f, 5.0f);
+	this->intancies[1].offset = DirectX::XMFLOAT3(-5.0f, 10.0f, 10.0f);
+	this->intancies[2].offset = DirectX::XMFLOAT3(-10.0f, 5.0f, -10.0f);
+	this->intancies[3].offset = DirectX::XMFLOAT3(-5.0f, 10.0f, -5.0f);
+
+	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	desc.ByteWidth = sizeof(Instance) * this->instanceCount;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+	data.pSysMem = this->intancies;
+
+	HRESULT hr = this->gDevice->CreateBuffer(&desc, &data, &this->instanceBuffer);
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"instance buffer creation failed", L"error", MB_OK);
+	}
+
 }
 
 void GraphicsHandler::renderShadows()
