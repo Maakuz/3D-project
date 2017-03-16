@@ -58,12 +58,13 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->normalMapView = nullptr;
 	this->airResistance = nullptr;
 	this->verticies = nullptr;
-	this->fVertexBuffer = nullptr;
+	
 
 	this->instanceBuffer = nullptr;
-	this->instanceCount = 4;
+	this->instanceCount = 8;
 	this->intancies = nullptr;
-
+	this->terrainVS = nullptr;
+	this->terrainLayout = nullptr;
 
 	
 
@@ -79,12 +80,13 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 
+	
+
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext, wHandler, width, height);
 	this->terrainHandler = new TerrainHandler(
-		this->gDevice, 
-		"../resource/maps/HeightMap4.bmp", 
+		this->gDevice,
+		"../resource/maps/HeightMap4.bmp",
 		50.f);
-	
 
 	this->createShaders();
 	this->createTexture();
@@ -92,7 +94,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->loadMtl();
 	this->loadObj();
 	this->linkVertecies();
-	this->createfVertexBuffer();
+	
 
 	this->createTriangleData();
 	this->createInstanceBuffer();
@@ -119,71 +121,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 
 GraphicsHandler::~GraphicsHandler()
 {
-	
-
-	this->gDeviceContext->ClearState();
-
-	this->swapChain->Release();
-	this->gDevice->Release();
-	this->gDeviceContext->Release();
-	this->rtvBackBuffer->Release();
-	this->vertexShader->Release();
-	this->defferedVertexShader->Release();
-	this->shadowVertexShader->Release();
-	this->pixelShader->Release();
-	this->defferedPixelShader->Release();
-	this->geometryShader->Release();
-	this->vertexLayout->Release();
-	this->defferedVertexLayout->Release();
-	//this->shadowPixelShader->Release();
-	this->vertexBuffer->Release();
-	this->defferedVertexBuffer->Release();
-	this->matrixBuffer->Release();
-	this->lightbuffer->Release();
-	this->mtlLightbuffer->Release();
-	this->lightMatrixBuffer->Release();
-	this->sState->Release();
-	this->textureResoure->Release();
-	this->textureView->Release();
-
-	for (int i = 0; i < NROFBUFFERS; i++)
-	{
-		this->renderTargets[i]->Release();
-		this->renderTargetViews[i]->Release();
-		this->shaderResourceViews[i]->Release();
-	}
-
-	this->disableDepthState->Release();
-	this->depthBuffer->Release();
-	this->dsState->Release();
-	this->DSV->Release();
-	this->shadowDepthBuffer->Release();
-	this->shadowDSV->Release();
-	this->shadowSRV->Release();
-
-	delete this->cameraClass;
-	delete this->terrainHandler;
-
-	this->particlePixel->Release();
-	this->particleVertex->Release();
-	this->particleGeometry->Release();
-	this->particleInserter->Release();
-	this->emitterlocation->Release();
-	this->particleCountBuffer->Release();
-	this->IndirectArgsBuffer->Release();
-	this->deltaTimeBuffer->Release();
-	this->UAVS[0]->Release();
-	this->UAVS[1]->Release();
-	this->SRVS[0]->Release();
-	this->SRVS[1]->Release();
-	this->rState->Release();
-	this->cameraPos->Release();
-
-	this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
-	this->debugDevice->Release();
-	this->instanceBuffer->Release();
-
-	delete[] this->intancies;
 
 }
 
@@ -330,11 +267,11 @@ void GraphicsHandler::createShaders()
 
 	D3D11_INPUT_ELEMENT_DESC inputDescDeffered[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "OFFSET", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-		{ "MTLNR", 0, DXGI_FORMAT_R32_SINT, 0, 44, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "MTLNR", 0, DXGI_FORMAT_R32_SINT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "OFFSET", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
 		
 	};
 
@@ -346,6 +283,49 @@ void GraphicsHandler::createShaders()
 	}
 
 	dvsBlob->Release();
+
+	ID3DBlob* tvsBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"TerrainVS.hlsl",
+		nullptr,
+		nullptr,
+		"main",
+		"vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&tvsBlob,
+		nullptr);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"dvsblob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateVertexShader(tvsBlob->GetBufferPointer(), tvsBlob->GetBufferSize(), NULL, &this->terrainVS);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"terrain vertex shader creation failed", L"error", MB_OK);
+	}
+
+	D3D11_INPUT_ELEMENT_DESC inputDescTerrain[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "MTLNR", 0, DXGI_FORMAT_R32_SINT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+
+	};
+
+	hr = this->gDevice->CreateInputLayout(inputDescTerrain, ARRAYSIZE(inputDescTerrain), tvsBlob->GetBufferPointer(), tvsBlob->GetBufferSize(), &this->terrainLayout);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"terraininput desc creation failed", L"error", MB_OK);
+	}
+
+	tvsBlob->Release();
+
 
 	ID3DBlob* shadowVSBlob = nullptr;
 	hr = D3DCompileFromFile(
@@ -1588,11 +1568,12 @@ void GraphicsHandler::renderGeometry()
 	}
 
 	//Set deffered shaders and resources
-	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
+	this->gDeviceContext->VSSetShader(this->terrainVS, nullptr, 0);
 	this->gDeviceContext->GSSetShader(this->geometryShader, nullptr, 0);
 	this->gDeviceContext->PSSetShader(this->defferedPixelShader, nullptr, 0);
 
-	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
+	this->gDeviceContext->IASetInputLayout(this->terrainLayout);
+	
 
 	
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->matrixBuffer);
@@ -1611,6 +1592,8 @@ void GraphicsHandler::renderGeometry()
 
 	//Swap the texture
 	
+	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
+	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
 	
 	//Draw objects
@@ -1621,8 +1604,7 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	//this->gDeviceContext->Draw(36, 0);
-	this->gDeviceContext->DrawInstanced(this->objInfo.nrOfVertices, this->instanceCount, 0, 0);
+	this->gDeviceContext->DrawInstanced(36, this->instanceCount, 0, 0);
 
 
 	//Null stuff
@@ -1678,7 +1660,7 @@ void GraphicsHandler::update(float deltaT)
 	this->cameraClass->update(deltaT);
 	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-	this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+	//this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
 	this->updateLightBuffer();
 
 	if (this->currentTime - this->lastUpdate >= 0.8f)
@@ -1885,7 +1867,8 @@ void GraphicsHandler::kill()
 	test = this->rState->Release();
 	test = this->cameraPos->Release();
 	test = this->normalMapView->Release();
-	test = this->fVertexBuffer->Release();
+	test = this->terrainVS->Release();
+	test = this->terrainLayout->Release();
 
 
 
@@ -1894,6 +1877,7 @@ void GraphicsHandler::kill()
 	test = this->gDeviceContext->Release();
 	test = this->gDevice->Release();
 	delete[] this->verticies;
+	delete[] this->intancies;
 
 
 	/*this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
@@ -1906,10 +1890,14 @@ void GraphicsHandler::createInstanceBuffer()
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 	this->intancies = new Instance[this->instanceCount];
 
-	this->intancies[0].offset = DirectX::XMFLOAT3(10.0f, -10.0f, 5.0f);
-	this->intancies[1].offset = DirectX::XMFLOAT3(-5.0f, 10.0f, 10.0f);
-	this->intancies[2].offset = DirectX::XMFLOAT3(-10.0f, 5.0f, -10.0f);
-	this->intancies[3].offset = DirectX::XMFLOAT3(-5.0f, 10.0f, -5.0f);
+	this->intancies[0].offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	this->intancies[1].offset = DirectX::XMFLOAT3(-5.0f, 0.0f, 10.0f);
+	this->intancies[2].offset = DirectX::XMFLOAT3(10.0f, 0.0f, 5.0f);
+	this->intancies[3].offset = DirectX::XMFLOAT3(-5.0f, 0.0f, -5.0f);
+	this->intancies[4].offset = DirectX::XMFLOAT3(0.0f, 5.0f, 0.0f);
+	this->intancies[5].offset = DirectX::XMFLOAT3(-5.0f, 5.0f, -5.0f);
+	this->intancies[6].offset = DirectX::XMFLOAT3(5.0f, 5.0f, 5.0f);
+	this->intancies[7].offset = DirectX::XMFLOAT3(-0.0f, 5.0f, -5.0f);
 
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	desc.ByteWidth = sizeof(Instance) * this->instanceCount;
@@ -1946,11 +1934,13 @@ void GraphicsHandler::renderShadows()
 
 
 	UINT32 vertexSize = sizeof(VertexInfo);
+	UINT32 intanceSize = sizeof(Instance);
 	UINT32 offset = 0;
 	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
+	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->gDeviceContext->Draw(36, 0);
+	this->gDeviceContext->DrawInstanced(36, this->instanceCount, 0, 0);
 	
 	//Nulling
 	ID3D11DepthStencilView* nullshadowDSV = nullptr;
@@ -1973,7 +1963,7 @@ void GraphicsHandler::createLightMatrices()
 	DirectX::XMMATRIX vLight = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
 	vLight = DirectX::XMMatrixTranspose(vLight);
 
-	DirectX::XMMATRIX pLight = DirectX::XMMatrixOrthographicLH(this->width/100.f, this->height/100.f, 0.1f, 200);
+	DirectX::XMMATRIX pLight = DirectX::XMMatrixOrthographicLH(this->width/10.f, this->height/10.f, 0.1f, 200);
 	pLight = DirectX::XMMatrixTranspose(pLight);
 
 	this->lightMatrices.projection = pLight;
@@ -2039,131 +2029,6 @@ void GraphicsHandler::linkVertecies()
 	{
 		this->verticies[i] = temp[i];
 	}
-	this->triangels = new sortableTriangels[this->nrOfverticies / 3];
-	this->quickSort(0, this->nrOfverticies/3);
 }
 
-void GraphicsHandler::sortTriangles()
-{
 
-	//this is fucked dont use
-	DirectX::XMFLOAT3 temp;
-	DirectX::XMFLOAT3 tempVert;
-	for (size_t i = 0; i < this->nrOfverticies/3; i += 3)
-	{
-		this->triangels[i].startVertex = i;
-		//avrages the three vertices distance to camera.
-		tempVert.x = verticies[i].vpx;
-		tempVert.y = verticies[i].vpy;
-		tempVert.z = verticies[i].vpz;
-		temp = this->minus(this->cameraClass->getCameraPos(), tempVert);
-		this->triangels[i].distance2Camera = sqrt(temp.x * temp.x + temp.y * temp.y + temp.z + temp.z);
-
-		tempVert.x = verticies[i+1].vpx;
-		tempVert.y = verticies[i+1].vpy;
-		tempVert.z = verticies[i+1].vpz;
-		temp = this->minus(this->cameraClass->getCameraPos(), tempVert);
-		this->triangels[i].distance2Camera += sqrt(temp.x * temp.x + temp.y * temp.y + temp.z + temp.z);
-
-		tempVert.x = verticies[i + 2].vpx;
-		tempVert.y = verticies[i + 2].vpy;
-		tempVert.z = verticies[i + 2].vpz;
-		temp = this->minus(this->cameraClass->getCameraPos(), tempVert);
-		this->triangels[i].distance2Camera += sqrt(temp.x * temp.x + temp.y * temp.y + temp.z + temp.z);
-
-		this->triangels[i].distance2Camera /= 3;
-
-	}
-	//sorts triangles
-
-
-	/*int j = 0;
-	sortableTriangels tmp;
-	for (size_t j = 0; j < this->nrOfverticies/3 -1; j++)
-	{
-		for (size_t i = 0; i < this->nrOfverticies/3 - j -1; i++)
-		{
-			if (this->triangels[i] > this->triangels[i+1])
-			{
-				tmp = this->triangels[i];
-				this->triangels[i] = triangels[i + 1];
-				triangels[i + 1] = tmp;
-			}
-		}
-	}*/
-
-}
-
-DirectX::XMFLOAT3 GraphicsHandler::minus(DirectX::XMFLOAT3 first, DirectX::XMFLOAT3 second)
-{
-	DirectX::XMFLOAT3 temp;
-	temp.x = first.x - second.x;
-	temp.y = first.y - second.y;
-	temp.z = first.z - second.z;
-
-	return temp;
-}
-
-void GraphicsHandler::createfVertexBuffer()
-{
-	D3D11_BUFFER_DESC bufferDesc;
-	ZeroMemory(&bufferDesc, sizeof(D3D11_BUFFER_DESC));
-
-
-	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.ByteWidth = this->nrOfverticies * sizeof(VertexInfo);
-
-	D3D11_SUBRESOURCE_DATA data;
-	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	data.pSysMem = this->verticies;
-
-	HRESULT hr = this->gDevice->CreateBuffer(&bufferDesc, &data, &this->fVertexBuffer);
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"vertex buffer creation failed", L"error", MB_OK);
-	}
-}
-
-void GraphicsHandler::updateVertexBuffer()
-{
-}
-
-void GraphicsHandler::quickSort(int left, int right)
-{
-	int i = left;
-	int j = right;
-	sortableTriangels pivot = this->triangels[(left + right) / 2];
-	sortableTriangels tmp;
-
-	while (i <= j)
-	{
-		while (this->triangels[i] < pivot)
-		{
-			i++;
-		}
-		while (this->triangels[i] > pivot)
-		{
-			j--;
-		}
-		if (i <= j)
-		{
-			tmp = this->triangels[i];
-			this->triangels[i] = this->triangels[j];
-			this->triangels[j] = tmp;
-			i++;
-			j--;
-		}
-	}
-
-	if (left < j)
-	{
-		this->quickSort(left, j);
-	}
-	if (i < right)
-	{
-		this->quickSort(i, right);
-	}
-
-}
