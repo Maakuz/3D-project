@@ -108,11 +108,11 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createRasterState();
 	
 	
-	/*HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
+	HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
 	if (FAILED(hr))
 	{
 		MessageBox(0, L"debug device creation failed", L"error", MB_OK);
-	}*/
+	}
 
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
