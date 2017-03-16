@@ -61,10 +61,14 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	
 
 	this->instanceBuffer = nullptr;
-	this->instanceCount = 8;
+
 	this->intancies = nullptr;
 	this->terrainVS = nullptr;
 	this->terrainLayout = nullptr;
+
+	this->visibleInstance = new Instance[INSTANCECOUNT];
+	this->visibleInstance = 0;
+	this->root = new BoxTree();
 
 	
 
@@ -107,15 +111,16 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createRasterState();
 	
 	
-	/*HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"debug device creation failed", L"error", MB_OK);
-	}*/
+	//HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
+	//if (FAILED(hr))
+	//{
+	//	MessageBox(0, L"debug device creation failed", L"error", MB_OK);
+	//}
 
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
+	this->createBoxTree(4);
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -1603,7 +1608,7 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	this->gDeviceContext->DrawInstanced(36, this->instanceCount, 0, 0);
+	this->gDeviceContext->DrawInstanced(36, INSTANCECOUNT, 0, 0);
 
 
 	//Null stuff
@@ -1868,6 +1873,7 @@ void GraphicsHandler::kill()
 	test = this->normalMapView->Release();
 	test = this->terrainVS->Release();
 	test = this->terrainLayout->Release();
+	test = this->instanceBuffer->Release();
 
 
 
@@ -1877,6 +1883,7 @@ void GraphicsHandler::kill()
 	test = this->gDevice->Release();
 	delete[] this->verticies;
 	delete[] this->intancies;
+	delete this->root;
 
 
 	/*this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
@@ -1887,19 +1894,19 @@ void GraphicsHandler::createInstanceBuffer()
 {
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-	this->intancies = new Instance[this->instanceCount];
+	this->intancies = new Instance[INSTANCECOUNT];
 
 	this->intancies[0].offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	this->intancies[1].offset = DirectX::XMFLOAT3(-5.0f, 0.0f, 10.0f);
 	this->intancies[2].offset = DirectX::XMFLOAT3(10.0f, 0.0f, 5.0f);
 	this->intancies[3].offset = DirectX::XMFLOAT3(-5.0f, 0.0f, -5.0f);
-	this->intancies[4].offset = DirectX::XMFLOAT3(0.0f, 5.0f, 0.0f);
-	this->intancies[5].offset = DirectX::XMFLOAT3(-5.0f, 5.0f, -5.0f);
+	this->intancies[4].offset = DirectX::XMFLOAT3(0.0f, 5.0f, 4.0f);
+	this->intancies[5].offset = DirectX::XMFLOAT3(-10.0f, 5.0f, -5.0f);
 	this->intancies[6].offset = DirectX::XMFLOAT3(5.0f, 5.0f, 5.0f);
-	this->intancies[7].offset = DirectX::XMFLOAT3(-0.0f, 5.0f, -5.0f);
+	this->intancies[7].offset = DirectX::XMFLOAT3(0.0f, 5.0f, -5.0f);
 
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	desc.ByteWidth = sizeof(Instance) * this->instanceCount;
+	desc.ByteWidth = sizeof(Instance) * INSTANCECOUNT;
 	desc.Usage = D3D11_USAGE_DEFAULT;
 
 	D3D11_SUBRESOURCE_DATA data;
@@ -1939,7 +1946,7 @@ void GraphicsHandler::renderShadows()
 	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->gDeviceContext->DrawInstanced(36, this->instanceCount, 0, 0);
+	this->gDeviceContext->DrawInstanced(36, INSTANCECOUNT , 0, 0);
 	
 	//Nulling
 	ID3D11DepthStencilView* nullshadowDSV = nullptr;
@@ -2028,6 +2035,120 @@ void GraphicsHandler::linkVertecies()
 	{
 		this->verticies[i] = temp[i];
 	}
+}
+
+void GraphicsHandler::createBoxTree(int nrOfSplits)
+{
+	AABB aabb;
+	aabb.p0 = DirectX::XMFLOAT3(-15.0f, -15.0f, -15.0f);
+	aabb.p1 = DirectX::XMFLOAT3(15.0f, 15.0f, 15.0f);
+
+	this->root = this->_createBoxTree(nrOfSplits, aabb, this->root, this->intancies, INSTANCECOUNT);
+}
+
+GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, Instance *data, int instanceCount)
+{
+	if (nrOfSplits > 0)
+	{
+		nrOfSplits--;
+		branch = new BoxTree();
+		branch->boundingVolume = aabb;
+		branch->data = data;
+		branch->instanceCount = instanceCount;
+
+
+		//downLeft
+		AABB newAABB1;
+		newAABB1.p0 = aabb.p0;
+		newAABB1.p1.x = aabb.p1.x / 2;
+		newAABB1.p1.y = aabb.p1.y / 2;
+		newAABB1.p1.z = aabb.p1.z;
+
+		//downRight
+		AABB newAABB2;
+		newAABB2.p0.x = aabb.p1.x / 2;
+		newAABB2.p0.y = aabb.p0.y;
+		newAABB2.p0.z = aabb.p0.z;
+		newAABB2.p1.x = aabb.p1.x;
+		newAABB2.p1.y = aabb.p1.y / 2;
+		newAABB2.p1.z = aabb.p1.z;
+
+		
+		//upLeft
+		AABB newAABB3;
+		newAABB3.p0.x = aabb.p0.x;
+		newAABB3.p0.y = aabb.p1.y / 2;
+		newAABB3.p0.z = aabb.p0.z;
+		newAABB3.p1.x = aabb.p1.x / 2;
+		newAABB3.p1.y = aabb.p1.y;
+		newAABB3.p1.z = aabb.p1.z;
+
+		//upRight
+		AABB newAABB4;
+		newAABB4.p0.x = aabb.p1.x / 2;
+		newAABB4.p0.y = aabb.p1.y / 2;
+		newAABB4.p0.z = aabb.p0.z;
+		newAABB4.p1 = aabb.p1;
+
+		int dld = 0;
+		//Instance* downLeftData = new Instance[instanceCount];
+		Instance downLeftData[INSTANCECOUNT];
+		int uld = 0;
+		//Instance* upLeftData = new Instance[instanceCount];
+		Instance upLeftData[INSTANCECOUNT];
+		int drd = 0;
+		//Instance* downRightData = new Instance[instanceCount];
+		Instance downRightData[INSTANCECOUNT];
+		int urd = 0;
+		//Instance* upRightData = new Instance[instanceCount];
+		Instance upRightData[INSTANCECOUNT];
+
+		for (size_t i = 0; i < instanceCount; i++)
+		{
+			if (pointVSAABB(data[i].offset, newAABB1))
+			{
+				downLeftData[dld] = data[i];
+				dld++;
+			}
+			if (pointVSAABB(data[i].offset, newAABB2))
+			{
+				downRightData[drd] = data[i];
+				drd++;
+			}
+			if (pointVSAABB(data[i].offset, newAABB3))
+			{
+				upLeftData[uld] = data[i];
+				uld++;
+			}
+			if (pointVSAABB(data[i].offset, newAABB4))
+			{
+				upRightData[urd] = data[i];
+				urd++;
+			}
+		}
+		branch->downLeft = this->_createBoxTree(nrOfSplits, newAABB1, branch->downLeft, downLeftData, dld);
+		branch->upLeft = this->_createBoxTree(nrOfSplits, newAABB1, branch->upLeft, upLeftData, uld);
+		branch->downRight = this->_createBoxTree(nrOfSplits, newAABB1, branch->downRight, downRightData, drd);
+		branch->upRight = this->_createBoxTree(nrOfSplits, newAABB1, branch->upRight, upRightData, urd);
+		
+		
+	}
+	else
+	{
+		branch = nullptr;
+	
+	}
+	return branch;
+}
+
+bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
+{
+
+	if (point.x >= box.p0.x && point.y >= box.p0.y && point.z >= box.p0.z &&  point.x <= box.p1.x && point.y <= box.p1.y && point.z <= box.p1.z)
+	{
+		return true;
+	}
+	return false;
 }
 
 
