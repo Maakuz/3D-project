@@ -7,7 +7,6 @@
 #include "WICTextureLoader.h"
 #include <time.h>
 #include "TerrainHandler.h"
-#include "sortableTriangels.h"
 
 
 const int NROFBUFFERS = 4;
@@ -105,10 +104,11 @@ private:
 	ID3D11RenderTargetView* nullRTV;
 	ID3D11DepthStencilView* nullDSV;
 	ID3D11ShaderResourceView* normalMapView;
-	ID3D11Buffer* fVertexBuffer;
+	
 
 	VertexInfo *verticies;
-	sortableTriangels* triangels;
+	ID3D11VertexShader* terrainVS;
+	ID3D11InputLayout* terrainLayout;
 
 	float deltaTime;
 	float currentTime;
@@ -142,8 +142,6 @@ private:
 	void swapParticleBuffers();
 	void particleFirstTimeInit();
 	void updateParticleCBuffers();
-	
-	void updateParticleCBuffers(float currentTime);
 	void createInstanceBuffer();
 	
 	
@@ -151,11 +149,7 @@ private:
 	void createLightMatrices();
 	void updateLightBuffer();
 	void linkVertecies();
-	void sortTriangles();
-	DirectX::XMFLOAT3 minus(DirectX::XMFLOAT3 first, DirectX::XMFLOAT3 second);
-	void createfVertexBuffer();
-	void updateVertexBuffer();
-	void quickSort(int left, int right);
+
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);

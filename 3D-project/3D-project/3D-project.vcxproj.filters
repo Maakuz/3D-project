@@ -109,6 +109,9 @@
     <FxCompile Include="AirResistance.hlsl">
       <Filter>Source Files\shaders\Particles</Filter>
     </FxCompile>
+    <FxCompile Include="TerrainVS.hlsl">
+      <Filter>Source Files\shaders\Deffered</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
