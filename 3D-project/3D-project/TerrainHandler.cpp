@@ -4,24 +4,13 @@ void TerrainHandler::createFrustumTree(int nrOfSplits)
 {
 	AABB box;
 	box.p0.x = this->vertices[0].vpx;
-	box.p0.y = this->vertices[0].vpy;
+	box.p0.y = this->offsetY;
 	box.p0.z = this->vertices[0].vpz;
 
 	box.p1.x = this->vertices[this->nrOfVertices].vpx;
-	box.p1.y = this->vertices[this->nrOfVertices].vpy;
+	box.p1.y = this->heightMultiple + this->offsetY;
 	box.p1.z = this->vertices[this->nrOfVertices].vpz;
 
-	this->tree = new FrustumTree(box);
-
-	for (int i = 0; i < this->nrOfVertices; i+=6)
-	{
-		chunks.quads->vertices[0] = this->vertices[i];
-		chunks.quads->vertices[1] = this->vertices[i + 1];
-		chunks.quads->vertices[2] = this->vertices[i + 2];
-		chunks.quads->vertices[3] = this->vertices[i + 3];
-		chunks.quads->vertices[4] = this->vertices[i + 4];
-		chunks.quads->vertices[5] = this->vertices[i + 5];
-	}
 
 	FrustumBounds bound;
 	bound.xStart = 0;
@@ -29,11 +18,23 @@ void TerrainHandler::createFrustumTree(int nrOfSplits)
 	bound.xStop = this->width - 1;
 	bound.yStop = this->height - 1;
 
-	this->_CreateFrustumTree(nrOfSplits, bound, this->tree, &chunks);
+	this->_CreateFrustumTree(nrOfSplits, bound, box, this->tree, this->vertices);
 }
 
-void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, FrustumTree* branch, Chunk* chunks)
+void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AABB box, FrustumTree* branch, VertexInfo* chunks)
 {
+	branch = new FrustumTree(box);
+	if (nrOfSplits > 0)
+	{
+		//NW
+		FrustumBounds newBound;
+		newBound.xStart = 0;
+		newBound.xStop = bound.xStop / 2;
+		newBound.yStart = 0;
+		newBound.yStop = bound.yStop = 2;
+
+		//this->_CreateFrustumTree(nrOfSplits -1, newBound, );
+	}
 }
 
 float TerrainHandler::determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c)
@@ -51,10 +52,12 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path, float he
 	this->camHeightFromTerrain = 1.f;
 	this->heightMap = nullptr;
 	this->vertexLength = 0.3f;
-	this->offsetY = 35;
+	this->offsetY = -35;
 	this->loadHeightMap(gDevice, path);
 	
 	this->createVertices();
+	this->createFrustumTree(1);
+
 	this->createVertexBuffer(gDevice);
 
 	HRESULT hr = DirectX::CreateWICTextureFromFile(
@@ -196,7 +199,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i].x * this->vertexLength - offsetX,
-			this->heightMap[i].y * this->heightMultiple - this->offsetY,
+			this->heightMap[i].y * this->heightMultiple + this->offsetY,
 			this->heightMap[i].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -210,7 +213,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1].x * this->vertexLength - offsetX,
-			this->heightMap[i + 1].y * this->heightMultiple - this->offsetY,
+			this->heightMap[i + 1].y * this->heightMultiple + this->offsetY,
 			this->heightMap[i + 1].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -225,7 +228,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + this->width].x * this->vertexLength - offsetX,
-			this->heightMap[i + this->width].y * this->heightMultiple - this->offsetY,
+			this->heightMap[i + this->width].y * this->heightMultiple + this->offsetY,
 			this->heightMap[i + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -269,7 +272,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1].x * this->vertexLength - offsetX,
-			this->heightMap[i + 1].y * this->heightMultiple - this->offsetY,
+			this->heightMap[i + 1].y * this->heightMultiple + this->offsetY,
 			this->heightMap[i + 1].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -284,7 +287,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + 1 + this->width].x * this->vertexLength - offsetX,
-			this->heightMap[i + 1 + this->width].y * this->heightMultiple - this->offsetY,
+			this->heightMap[i + 1 + this->width].y * this->heightMultiple + this->offsetY,
 			this->heightMap[i + 1 + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -299,7 +302,7 @@ void TerrainHandler::createVertices()
 		this->vertices[count] =
 		{
 			this->heightMap[i + this->width].x * this->vertexLength - offsetX,
-			this->heightMap[i + this->width].y * this->heightMultiple - this->offsetY,
+			this->heightMap[i + this->width].y * this->heightMultiple + this->offsetY,
 			this->heightMap[i + this->width].z * this->vertexLength - offsetZ,
 
 			//Normals goes here later
@@ -354,7 +357,7 @@ void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	data.pSysMem = &this->chunks;
+	data.pSysMem = this->vertices;
 
 	gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
 }
