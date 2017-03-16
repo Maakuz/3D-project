@@ -51,6 +51,9 @@
     <ClCompile Include="FrustrumCulling.cpp">
       <Filter>Source Files\Classes</Filter>
     </ClCompile>
+    <ClCompile Include="sortableTriangels.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Definitions.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FrustrumCulling.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="sortableTriangels.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
   </ItemGroup>

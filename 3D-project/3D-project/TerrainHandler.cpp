@@ -1,5 +1,41 @@
 #include "TerrainHandler.h"
 
+void TerrainHandler::createFrustumTree(int nrOfSplits)
+{
+	AABB box;
+	box.p0.x = this->vertices[0].vpx;
+	box.p0.y = this->vertices[0].vpy;
+	box.p0.z = this->vertices[0].vpz;
+
+	box.p1.x = this->vertices[this->nrOfVertices].vpx;
+	box.p1.y = this->vertices[this->nrOfVertices].vpy;
+	box.p1.z = this->vertices[this->nrOfVertices].vpz;
+
+	this->tree = new FrustumTree(box);
+
+	for (int i = 0; i < this->nrOfVertices; i+=6)
+	{
+		chunks.quads->vertices[0] = this->vertices[i];
+		chunks.quads->vertices[1] = this->vertices[i + 1];
+		chunks.quads->vertices[2] = this->vertices[i + 2];
+		chunks.quads->vertices[3] = this->vertices[i + 3];
+		chunks.quads->vertices[4] = this->vertices[i + 4];
+		chunks.quads->vertices[5] = this->vertices[i + 5];
+	}
+
+	FrustumBounds bound;
+	bound.xStart = 0;
+	bound.yStart = 0;
+	bound.xStop = this->width - 1;
+	bound.yStop = this->height - 1;
+
+	this->_CreateFrustumTree(nrOfSplits, bound, this->tree, &chunks);
+}
+
+void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, FrustumTree* branch, Chunk* chunks)
+{
+}
+
 float TerrainHandler::determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c)
 {
 	return ((a.x * b.y * c.z) - (a.x * b.z * c.y)) +
@@ -318,7 +354,7 @@ void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	data.pSysMem = this->vertices;
+	data.pSysMem = &this->chunks;
 
 	gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
 }
