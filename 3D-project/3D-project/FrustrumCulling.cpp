@@ -69,22 +69,22 @@ DirectX::XMFLOAT3 Plane::getNormal()
 	return this->normal;
 }
 
-FrustrumCulling::FrustrumCulling(CameraClass camera)
+FrustrumCulling::FrustrumCulling(CameraClass *camera)
 {
-	this->cameraPosition = camera.getCameraPos();
-	this->cameraDirection = camera.getMDirection();
-	this->mRight = camera.getMRight();
-	this->mUp = camera.getMUp();
+	this->cameraPosition = camera->getCameraPos();
+	this->cameraDirection = camera->getMDirection();
+	this->mRight = camera->getMRight();
+	this->mUp = camera->getMUp();
 
-	this->fovAngleY = camera.getFovAngleY();
-	this->aspectRatio = camera.getAspectRatio();
+	this->fovAngleY = camera->getFovAngleY();
+	this->aspectRatio = camera->getAspectRatio();
 
 
-	this->nearPlaneDistance = camera.getNearPlane();
+	this->nearPlaneDistance = camera->getNearPlane();
 	this->nearPlaneHeight = 2 * (tan(DirectX::XMConvertToRadians(this->fovAngleY) / 2) * this->nearPlaneDistance);
 	this->nearPlaneWidth = this->nearPlaneHeight * this->aspectRatio;
 
-	this->farPlaneDistance = camera.getFarPlane();
+	this->farPlaneDistance = camera->getFarPlane();
 	this->farPlaneHeight = 2 * (tan(DirectX::XMConvertToRadians(this->fovAngleY) / 2) * this->farPlaneDistance);
 	this->farPlaneWidth = this->farPlaneHeight * this->aspectRatio;	
 }

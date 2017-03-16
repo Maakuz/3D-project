@@ -121,6 +121,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
 	this->createBoxTree(4);
+	this->frustrum = new FrustrumCulling(this->cameraClass);
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -1562,6 +1563,10 @@ void GraphicsHandler::render()
 
 void GraphicsHandler::renderGeometry()
 {
+	this->updateFrustrum();
+	this->cull();
+
+
 	float clearColor[] = { 102/255.0f, 152/255.0f, 255/255.0f, 1 };
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
 	//this->sortTriangles();
@@ -2151,10 +2156,23 @@ bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
 	return false;
 }
 
+void GraphicsHandler::updateFrustrum()
+{
+	delete this->frustrum;
+	this->frustrum = new FrustrumCulling(this->cameraClass);
+	this->frustrum->makePoints();
+	this->frustrum->makePlanes();
+	
+}
+
 void GraphicsHandler::cull()
 {
+	traverseBoxTree();
 
+}
 
+void GraphicsHandler::traverseBoxTree()
+{
 }
 
 
