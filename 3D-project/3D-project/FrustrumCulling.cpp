@@ -1,8 +1,7 @@
 #include "FrustrumCulling.h"
 
-Plane::Plane(float d, DirectX::XMVECTOR normalVector)
-{
-	this->d = d; 
+Plane::Plane(DirectX::XMVECTOR normalVector)
+{ 
 	DirectX::XMVector3Normalize(normalVector);
 	DirectX::XMStoreFloat3(&this->normal, normalVector);
 	//normalisera noprmalen? är den redan det?
@@ -27,6 +26,8 @@ void Plane::setPoints(DirectX::XMFLOAT3 firstPoint, DirectX::XMFLOAT3 secondPoin
 	DirectX::XMFLOAT3 p1 = secondPoint;
 	DirectX::XMFLOAT3 p2 = lastPoint;
 
+	this->pOnPlane = p0;
+
 	DirectX::XMFLOAT3 u;
 	u.x = p1.x - p0.x;
 	u.y = p1.y - p0.y;
@@ -44,14 +45,23 @@ void Plane::setPoints(DirectX::XMFLOAT3 firstPoint, DirectX::XMFLOAT3 secondPoin
 	normalVector = DirectX::XMVector3Cross(uVector, vVector);
 	DirectX::XMVector3Normalize(normalVector);
 	DirectX::XMStoreFloat3(&this->normal, normalVector);
+}
 
+float Plane::distance(DirectX::XMFLOAT3 pointToTry)
+{
 	DirectX::XMFLOAT3 A = DirectX::XMFLOAT3(this->normal.x, 0, 0);
 	DirectX::XMFLOAT3 B = DirectX::XMFLOAT3(0, this->normal.y, 0);
 	DirectX::XMFLOAT3 C = DirectX::XMFLOAT3(0, 0, this->normal.z);
 
+	DirectX::XMVECTOR normalVector = DirectX::XMLoadFloat3(&this->normal);
 
+	float D = ((this->normal.x * -1) * this->pOnPlane.x) + ((this->normal.y * -1) * this->pOnPlane.y) + ((this->normal.z * -1) * this->pOnPlane.z);  //en point i planet //normalen ska va negativ
 
-	float temp = this->normal * p0;//en point i planet //normalen ska va negativ
+	float normalDotPointToTry = ((this->normal.x * pointToTry.x) + (this->normal.y * pointToTry.y) + (this->normal.z * pointToTry.z));
+
+	float distance = normalDotPointToTry + D; //om positiv så är på normalens sida, annars andra sidan.
+
+	return distance;
 }
 
 FrustrumCulling::FrustrumCulling(CameraClass camera)
@@ -144,4 +154,22 @@ void FrustrumCulling::makePlanes()
 	this->plane[3] = rightPlane;
 	this->plane[4] = nearPlane;
 	this->plane[5] = farPlane;
+}
+
+bool FrustrumCulling::comparePointToFrustrum(DirectX::XMFLOAT3 &p)
+{
+	bool inside = true;
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (this->plane[i].distance(p) < 0)
+		{
+			inside = false;
+		}
+	}
+	return inside;
+
+	//testa mot alla planes, alla planes måste vara inside, men om en är outside så är objektet helt utanför.
+
+	//använda cirklar för stora objekt med extremt många polygoner. mindre accurate test men snabbare
 }
