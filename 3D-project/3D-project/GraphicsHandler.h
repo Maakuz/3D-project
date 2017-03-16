@@ -14,11 +14,59 @@ const UINT startParticleCount = 0;
 //makes it so the actual amount of particles in the buffers is used
 const UINT UAVFLAG = -1;
 const int MAXMTLS = 10;
+const int INSTANCECOUNT = 8;
 
 
 class GraphicsHandler
 {
 private:
+	class BoxTree
+	{
+	public:
+		BoxTree* upLeft;
+		BoxTree* downLeft;
+		BoxTree* upRight;
+		BoxTree* downRight;
+		AABB boundingVolume;
+		Instance* data;
+		int instanceCount;
+
+		
+		BoxTree()
+		{
+			this->upLeft = nullptr;
+			this->downLeft = nullptr;
+			this->upRight = nullptr;
+			this->downRight = nullptr;
+			this->data = nullptr;
+			this->instanceCount = 0;
+		}
+		BoxTree(BoxTree* upLeft, BoxTree* downLeft, BoxTree* upRight, BoxTree* downRight, Instance* data, AABB boundingVolume, int instanceCount)
+		{
+			this->upLeft = upLeft;
+			this->downLeft = downLeft;
+			this->upRight = upRight;
+			this->downRight = downRight;
+			this->data = data;
+			this->boundingVolume = boundingVolume;
+			this->instanceCount = instanceCount;
+		}
+
+		~BoxTree()
+		{
+			
+				delete this->downLeft;
+			
+				delete this->upLeft;
+			
+				delete this->upRight;
+			
+				delete this->downRight;
+		}
+	};
+
+	
+
 	unsigned int height, width;
 
 	IDXGISwapChain* swapChain;
@@ -116,10 +164,10 @@ private:
 	float lastFrame;
 	float lastUpdate;
 	int nrOfverticies;
-	int instanceCount;
 	int visibleInstanceCount;
 	Instance *intancies;
-	Instance * visibleInstance;
+	Instance *visibleInstance;
+	BoxTree* root;
 	
 
 	void loadObj();
@@ -151,6 +199,9 @@ private:
 	void createLightMatrices();
 	void updateLightBuffer();
 	void linkVertecies();
+	void createBoxTree(int nrOfSplits);
+	BoxTree* _createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, Instance *data, int instanceCount);
+	bool pointVSAABB(DirectX::XMFLOAT3 point, AABB box);
 
 
 public:
