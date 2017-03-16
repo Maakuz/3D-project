@@ -2152,4 +2152,10 @@ bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
 	return false;
 }
 
+void GraphicsHandler::cull()
+{
+
+
+}
+
 
