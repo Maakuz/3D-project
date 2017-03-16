@@ -46,7 +46,7 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 		{
 			for (size_t j = 0; j < width * 6; j++)
 			{
-				nextChunk[(i * width * 6) + j] = chunk[(i * (width * 2) * 6) + j];
+				nextChunk[(i * width * 6) + j] = chunk[(i * ((width * 2) + 1) * 6) + j];
 			}
 		}
 
@@ -80,7 +80,7 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 		{
 			for (size_t j = 0; j < width * 6; j++)
 			{
-				nextChunk[(i * width * 6) + j] = chunk[(i * (this->width - 1) * 6) + j + ((this->width - 1 - width) * 6)];
+				nextChunk[(i * width * 6) + j] = chunk[(i * ((width * 2) + 1) * 6) + j + (((width * 2) + 1 - width) * 6)];
 			}
 		}
 
@@ -407,7 +407,7 @@ void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 {
 	D3D11_BUFFER_DESC desc;
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	desc.ByteWidth = sizeof(VertexInfo) * this->tree->NW->NW->vertexCount;
+	desc.ByteWidth = sizeof(VertexInfo) * this->tree->NW->NE->vertexCount;
 	desc.CPUAccessFlags = 0;
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = 0;
@@ -416,7 +416,7 @@ void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	data.pSysMem = this->tree->NW->NW->data;
+	data.pSysMem = this->tree->NW->NE->data;
 
 	gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
 }
