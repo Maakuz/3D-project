@@ -1580,7 +1580,7 @@ void GraphicsHandler::renderGeometry()
 {
 	float clearColor[] = { 102/255.0f, 152/255.0f, 255/255.0f, 1 };
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
-	this->sortTriangles();
+	//this->sortTriangles();
 
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
