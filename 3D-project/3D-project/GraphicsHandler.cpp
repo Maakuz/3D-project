@@ -80,19 +80,20 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->CreateDirect3DContext(wHandler);
 	this->setViewPort(height, width);
 
+	
+
 	this->cameraClass = new CameraClass(this->gDevice, this->gDeviceContext, wHandler, width, height);
 	this->terrainHandler = new TerrainHandler(
-		this->gDevice, 
-		"../resource/maps/HeightMap4.bmp", 
+		this->gDevice,
+		"../resource/maps/HeightMap4.bmp",
 		50.f);
-	
 
 	this->createShaders();
 	this->createTexture();
 	this->createSamplers();
 	this->loadMtl();
 	this->loadObj();
-	//this->linkVertecies();
+	this->linkVertecies();
 	
 
 	this->createTriangleData();

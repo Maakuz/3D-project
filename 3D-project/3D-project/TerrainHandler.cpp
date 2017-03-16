@@ -354,7 +354,7 @@ void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	data.pSysMem = &this->chunks;
+	data.pSysMem = this->vertices;
 
 	gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
 }
