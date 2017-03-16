@@ -108,11 +108,11 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createRasterState();
 	
 	
-	HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"debug device creation failed", L"error", MB_OK);
-	}
+	//HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
+	//if (FAILED(hr))
+	//{
+	//	MessageBox(0, L"debug device creation failed", L"error", MB_OK);
+	//}
 
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
@@ -1869,6 +1869,7 @@ void GraphicsHandler::kill()
 	test = this->normalMapView->Release();
 	test = this->terrainVS->Release();
 	test = this->terrainLayout->Release();
+	test = this->instanceBuffer->Release();
 
 
 
@@ -1894,10 +1895,10 @@ void GraphicsHandler::createInstanceBuffer()
 	this->intancies[1].offset = DirectX::XMFLOAT3(-5.0f, 0.0f, 10.0f);
 	this->intancies[2].offset = DirectX::XMFLOAT3(10.0f, 0.0f, 5.0f);
 	this->intancies[3].offset = DirectX::XMFLOAT3(-5.0f, 0.0f, -5.0f);
-	this->intancies[4].offset = DirectX::XMFLOAT3(0.0f, 5.0f, 0.0f);
-	this->intancies[5].offset = DirectX::XMFLOAT3(-5.0f, 5.0f, -5.0f);
+	this->intancies[4].offset = DirectX::XMFLOAT3(0.0f, 5.0f, 4.0f);
+	this->intancies[5].offset = DirectX::XMFLOAT3(-10.0f, 5.0f, -5.0f);
 	this->intancies[6].offset = DirectX::XMFLOAT3(5.0f, 5.0f, 5.0f);
-	this->intancies[7].offset = DirectX::XMFLOAT3(-0.0f, 5.0f, -5.0f);
+	this->intancies[7].offset = DirectX::XMFLOAT3(0.0f, 5.0f, -5.0f);
 
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	desc.ByteWidth = sizeof(Instance) * this->instanceCount;
