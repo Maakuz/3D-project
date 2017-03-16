@@ -7,6 +7,7 @@
 #include "WICTextureLoader.h"
 #include <time.h>
 #include "TerrainHandler.h"
+#include "FrustrumCulling.h"
 
 
 const int NROFBUFFERS = 4;
@@ -168,6 +169,7 @@ private:
 	Instance *intancies;
 	Instance *visibleInstance;
 	BoxTree* root;
+	FrustrumCulling* frustrum;
 	
 
 	void loadObj();
@@ -202,6 +204,9 @@ private:
 	void createBoxTree(int nrOfSplits);
 	BoxTree* _createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, Instance *data, int instanceCount);
 	bool pointVSAABB(DirectX::XMFLOAT3 point, AABB box);
+	void updateFrustrum();
+	void cull();
+	void traverseBoxTree(BoxTree* branch);
 
 
 public:

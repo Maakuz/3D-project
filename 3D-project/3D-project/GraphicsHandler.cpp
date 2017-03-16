@@ -67,7 +67,12 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->terrainLayout = nullptr;
 
 	this->visibleInstance = new Instance[INSTANCECOUNT];
-	this->visibleInstance = 0;
+	for (size_t i = 0; i < INSTANCECOUNT; i++)
+	{
+		this->visibleInstance[i].offset = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+			
+	}
+	this->visibleInstanceCount = 0;
 	this->root = new BoxTree();
 
 	
@@ -121,6 +126,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
 	this->createBoxTree(4);
+	this->frustrum = new FrustrumCulling(this->cameraClass);
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -1562,6 +1568,10 @@ void GraphicsHandler::render()
 
 void GraphicsHandler::renderGeometry()
 {
+	this->updateFrustrum();
+	this->cull();
+
+
 	float clearColor[] = { 102/255.0f, 152/255.0f, 255/255.0f, 1 };
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
 	//this->sortTriangles();
@@ -1608,7 +1618,7 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	this->gDeviceContext->DrawInstanced(36, INSTANCECOUNT, 0, 0);
+	this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
 
 
 	//Null stuff
@@ -1907,7 +1917,8 @@ void GraphicsHandler::createInstanceBuffer()
 
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	desc.ByteWidth = sizeof(Instance) * INSTANCECOUNT;
-	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
 
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
@@ -1946,7 +1957,7 @@ void GraphicsHandler::renderShadows()
 	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->gDeviceContext->DrawInstanced(36, INSTANCECOUNT , 0, 0);
+	this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
 	
 	//Nulling
 	ID3D11DepthStencilView* nullshadowDSV = nullptr;
@@ -2135,8 +2146,7 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 	}
 	else
 	{
-		branch = nullptr;
-	
+		branch = nullptr;	
 	}
 	return branch;
 }
@@ -2149,6 +2159,64 @@ bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
 		return true;
 	}
 	return false;
+}
+
+void GraphicsHandler::updateFrustrum()
+{
+	delete this->frustrum;
+	this->frustrum = new FrustrumCulling(this->cameraClass);
+	this->frustrum->makePoints();
+	this->frustrum->makePlanes();
+	
+}
+
+void GraphicsHandler::cull()
+{
+	this->visibleInstanceCount = 0;
+	if (this->frustrum->compareBoxToFrustrum(this->root->boundingVolume))
+	{
+		this->traverseBoxTree(this->root);
+	}
+
+	D3D11_MAPPED_SUBRESOURCE data;
+	ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+	this->gDeviceContext->Map(this->instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+	memcpy(data.pData, this->visibleInstance, sizeof(Instance)*INSTANCECOUNT);
+	this->gDeviceContext->Unmap(this->instanceBuffer, 0);
+}
+
+void GraphicsHandler::traverseBoxTree(BoxTree* branch)
+{
+	if (branch->downLeft == nullptr && branch->downRight == nullptr && branch->upLeft == nullptr && branch->upRight == nullptr)
+	{
+		int temp = this->visibleInstanceCount;
+		for (size_t i = 0; i < branch->instanceCount; i++)
+		{
+			this->visibleInstance[temp + i] = branch->data[i];
+		}
+		this->visibleInstanceCount += branch->instanceCount;
+	}
+	else
+	{
+		if (branch->downLeft != nullptr && this->frustrum->compareBoxToFrustrum(branch->downLeft->boundingVolume))
+		{
+			this->traverseBoxTree(branch->downLeft);
+		}
+		if (branch->upLeft != nullptr && this->frustrum->compareBoxToFrustrum(branch->upLeft->boundingVolume))
+		{
+			this->traverseBoxTree(branch->upLeft);
+		}
+		if (branch->downRight != nullptr && this->frustrum->compareBoxToFrustrum(branch->downRight->boundingVolume))
+		{
+			this->traverseBoxTree(branch->downRight);
+		}
+		if (branch->upRight != nullptr && this->frustrum->compareBoxToFrustrum(branch->upRight->boundingVolume))
+		{
+			this->traverseBoxTree(branch->upRight);
+		}
+		
+	}
 }
 
 

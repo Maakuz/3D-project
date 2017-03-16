@@ -52,7 +52,7 @@ private:
 	//kolla hur planet jämförs med punkterna och vad som definierar ett plan
 
 public:
-	FrustrumCulling(CameraClass camera);
+	FrustrumCulling(CameraClass *camera);
 	virtual ~FrustrumCulling();
 	
 	void makePoints();
