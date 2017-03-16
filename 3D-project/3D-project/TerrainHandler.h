@@ -12,38 +12,41 @@ struct FrustumBounds
 	int xStart, xStop, yStart, yStop;
 };
 
-class TerrainHandler
+class FrustumTree
 {
-private:
-	class FrustumTree 
+public:
+	FrustumTree* NW;
+	FrustumTree* NE;
+	FrustumTree* SW;
+	FrustumTree* SE;
+	AABB boundingVolume;
+	VertexInfo* data;
+	int vertexCount;
+
+	FrustumTree(AABB boundingVolume, VertexInfo* data, int vertexCount)
 	{
-	public:
-		FrustumTree* NW;
-		FrustumTree* NE;
-		FrustumTree* SW;
-		FrustumTree* SE;
-		AABB boundingVolume;
-		VertexInfo* data;
+		this->NE = nullptr;
+		this->SE = nullptr;
+		this->NW = nullptr;
+		this->SW = nullptr;
+		this->boundingVolume = boundingVolume;
+		this->data = data;
+		this->vertexCount = vertexCount;
+	}
 
-		FrustumTree(AABB boundingVolume, FrustumTree* NW = nullptr, FrustumTree* SW = nullptr, FrustumTree* NE = nullptr, FrustumTree* SE = nullptr)
-		{
-			this->NE = NE;
-			this->SE = SE;
-			this->NW = NW;
-			this->SW = SW;
-			this->boundingVolume = boundingVolume;
-			this->data = nullptr;
-		}
+	virtual ~FrustumTree()
+	{
+		delete this->NW;
+		delete this->SW;
+		delete this->SE;
+		delete this->NE;
+	}
+};
 
-		virtual ~FrustumTree()
-		{
-			delete this->NW;
-			delete this->SW;
-			delete this->SE;
-			delete this->NE;
-		}
-	};
 
+class TerrainHandler
+{	
+private:
 
 	int height, width;
 	float heightMultiple;
@@ -59,11 +62,11 @@ private:
 	FrustumTree* tree;
 
 	void createFrustumTree(int nrOfSplits = 4);
-	void _CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AABB box, FrustumTree* branch, VertexInfo* chunks);
+	void _CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AABB box, FrustumTree*& branch, VertexInfo* chunks, int vertexAmount);
 
 	float determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c);
 public:
-	TerrainHandler(ID3D11Device* gDevice, std::string path, float heightMultiple = 0);
+	TerrainHandler(ID3D11Device* gDevice, std::string path);
 	virtual ~TerrainHandler();
 
 	void renderTerrain(ID3D11DeviceContext* gDeviceContext);
@@ -75,6 +78,7 @@ public:
 	void walkOnTerrain(DirectX::XMFLOAT3& camPos);
 	int getNrOfVertices() const;
 	VertexInfo* getVerticies() const;
+	FrustumTree* GetFrustumTree() const;
 };
 
 
