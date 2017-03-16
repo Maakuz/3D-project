@@ -117,7 +117,9 @@ private:
 	float lastUpdate;
 	int nrOfverticies;
 	int instanceCount;
+	int visibleInstanceCount;
 	Instance *intancies;
+	Instance * visibleInstance;
 	
 
 	void loadObj();

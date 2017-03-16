@@ -66,6 +66,9 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->terrainVS = nullptr;
 	this->terrainLayout = nullptr;
 
+	this->visibleInstance = new Instance[this->instanceCount];
+	this->visibleInstance = 0;
+
 	
 
 	
