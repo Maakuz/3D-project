@@ -64,6 +64,11 @@ float Plane::distance(DirectX::XMFLOAT3 pointToTry)
 	return distance;
 }
 
+DirectX::XMFLOAT3 Plane::getNormal()
+{
+	return this->normal;
+}
+
 FrustrumCulling::FrustrumCulling(CameraClass camera)
 {
 	this->cameraPosition = camera.getCameraPos();
@@ -82,8 +87,6 @@ FrustrumCulling::FrustrumCulling(CameraClass camera)
 	this->farPlaneDistance = camera.getFarPlane();
 	this->farPlaneHeight = 2 * (tan(DirectX::XMConvertToRadians(this->fovAngleY) / 2) * this->farPlaneDistance);
 	this->farPlaneWidth = this->farPlaneHeight * this->aspectRatio;	
-
-	//experementelle saker enligt guide
 }
 
 FrustrumCulling::~FrustrumCulling()
@@ -172,4 +175,63 @@ bool FrustrumCulling::comparePointToFrustrum(DirectX::XMFLOAT3 &p)
 	//testa mot alla planes, alla planes måste vara inside, men om en är outside så är objektet helt utanför.
 
 	//använda cirklar för stora objekt med extremt många polygoner. mindre accurate test men snabbare
+}
+
+bool FrustrumCulling::compareBoxToFrustrum(AABB box)
+{
+	bool inside = true;
+
+	DirectX::XMFLOAT3 point[8];
+	float distance[8];
+
+	int min = 0;
+	int max = 0;
+
+	point[0] = box.p0;
+	point[1] = box.p1;
+	point[2] = DirectX::XMFLOAT3(box.p1.x, box.p1.y, box.p0.z);
+	point[3] = DirectX::XMFLOAT3(box.p0.x, box.p1.y, box.p0.z);
+	point[4] = DirectX::XMFLOAT3(box.p0.x, box.p1.y, box.p1.z);
+	point[5] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p0.z);
+	point[6] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p1.z);
+	point[7] = DirectX::XMFLOAT3(box.p0.x, box.p0.y, box.p1.z);
+
+	for (int i = 0; i < 6 && inside == true; i++) //planes
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			DirectX::XMFLOAT3 temp;
+			temp.x = point[j].x - plane[i].getNormal().x;
+			temp.y = point[j].y - plane[i].getNormal().y;
+			temp.z = point[j].z - plane[i].getNormal().z;
+			float temp2 = sqrt(pow(temp.x, 2) + pow(temp.y, 2) + pow(temp.z, 2));
+			distance[j] = temp2;
+		}
+
+		for (int k = 0; k < 8; k++)
+		{
+			if (distance[k] <= distance[min])
+				min = k;
+			if (distance[k] >= distance[max])
+				max = k;
+		}
+
+		if (comparePointToFrustrum(point[min]) == true)
+		{
+			if (comparePointToFrustrum(point[max]) == true)
+			{
+				// all in, innanför frustrum
+				inside = true;
+			}
+			else
+			{
+				inside = false; //någon utanför
+			}
+		}
+		else
+		{
+			inside = true; //Same
+		}
+	}
+	return inside;
 }

@@ -14,6 +14,7 @@ public:
 	~Plane();
 	void setPoints(DirectX::XMFLOAT3 firstPoint, DirectX::XMFLOAT3 secondPoint, DirectX::XMFLOAT3 lastPoint);
 	float distance(DirectX::XMFLOAT3 pointToTry);
+	DirectX::XMFLOAT3 getNormal();
 };
 
 class FrustrumCulling
@@ -47,8 +48,6 @@ private:
 	DirectX::XMFLOAT3 farUpRight;
 	DirectX::XMFLOAT3 farDownRight;
 	DirectX::XMFLOAT3 farDownLeft;
-
-	//experementella saker enligt guide
 	
 	//kolla hur planet jämförs med punkterna och vad som definierar ett plan
 
@@ -60,6 +59,7 @@ public:
 	void makePlanes();
 
 	bool comparePointToFrustrum(DirectX::XMFLOAT3 &p);
+	bool compareBoxToFrustrum(AABB box);
 };
 
 
