@@ -25,7 +25,7 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 {
 	branch = new FrustumTree(box, chunk, vertexAmount);
 
-	if (nrOfSplits >= 0)
+	if (nrOfSplits > 0)
 	{
 		//********************************NW**************************************************************
 		//Get the bounds of the terrain in this region
@@ -53,22 +53,20 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 		//The box to test the frustum against
 		AABB nextBox;
 		nextBox.p0.x = nextChunk[0].vpx;
-		nextBox.p0.y = nextChunk[0].vpy;
+		box.p0.y = this->offsetY;
 		nextBox.p0.z = nextChunk[0].vpz;
 
 		nextBox.p1.x = nextChunk[0].vpx;
-		nextBox.p1.y = nextChunk[0].vpy;
+		box.p1.y = this->heightMultiple + this->offsetY;
 		nextBox.p1.z = nextChunk[0].vpz;
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, nextBox, branch->NW, nextChunk, verticeCount);
-
 		//*****************************************************NE***********************************************************
 		//Get the bounds of the terrain in this region
-		nextBound.xStart = bound.xStop / 2 + 1;
+		nextBound.xStart = bound.xStart + ((bound.xStop - bound.xStart) / 2) + 1;
 		nextBound.xStop = bound.xStop;
 		nextBound.yStart = bound.yStart;
-		nextBound.yStop = bound.yStop / 2;
-		PROBABLY WRONG HERE
+		nextBound.yStop = bound.yStart + ((bound.yStop - bound.yStart) / 2);
 
 		width = (nextBound.xStop - nextBound.xStart);
 		height = (nextBound.yStop - nextBound.yStart);
@@ -87,11 +85,11 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 
 		//The box to test the frustum against
 		nextBox.p0.x = nextChunk[0].vpx;
-		nextBox.p0.y = nextChunk[0].vpy;
+		box.p0.y = this->offsetY;
 		nextBox.p0.z = nextChunk[0].vpz;
 
 		nextBox.p1.x = nextChunk[0].vpx;
-		nextBox.p1.y = nextChunk[0].vpy;
+		box.p1.y = this->heightMultiple + this->offsetY;
 		nextBox.p1.z = nextChunk[0].vpz;
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, nextBox, branch->NE, nextChunk, verticeCount);
@@ -100,7 +98,7 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 		//Get the bounds of the terrain in this region
 		nextBound.xStart = bound.xStart;
 		nextBound.xStop = bound.xStart + ((bound.xStop - bound.xStart) / 2);
-		nextBound.yStart = bound.yStart + ((bound.yStop - bound.yStart) / 2);
+		nextBound.yStart = bound.yStart + ((bound.yStop - bound.yStart) / 2) + 1;
 		nextBound.yStop = bound.yStop;
 
 		width = (nextBound.xStop - nextBound.xStart);
@@ -120,21 +118,22 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 
 		//The box to test the frustum against
 		nextBox.p0.x = nextChunk[0].vpx;
-		nextBox.p0.y = nextChunk[0].vpy;
+		box.p0.y = this->offsetY;
 		nextBox.p0.z = nextChunk[0].vpz;
 
 		nextBox.p1.x = nextChunk[0].vpx;
-		nextBox.p1.y = nextChunk[0].vpy;
+		box.p1.y = this->heightMultiple + this->offsetY;
 		nextBox.p1.z = nextChunk[0].vpz;
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, nextBox, branch->SW, nextChunk, verticeCount);
 
 
 		//***********************************************SE*********************************************************
+		//This was originally SW but i did the magic formula wrong so it became SE
 		//Get the bounds of the terrain in this region
 		nextBound.xStart = bound.xStart;
 		nextBound.xStop = bound.xStart + ((bound.xStop - bound.xStart) / 2);
-		nextBound.yStart = bound.yStart + ((bound.yStop - bound.yStart) / 2);
+		nextBound.yStart = bound.yStart + ((bound.yStop - bound.yStart) / 2) + 1;
 		nextBound.yStop = bound.yStop;
 
 		width = (nextBound.xStop - nextBound.xStart);
@@ -154,15 +153,14 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 
 		//The box to test the frustum against
 		nextBox.p0.x = nextChunk[0].vpx;
-		nextBox.p0.y = nextChunk[0].vpy;
+		box.p0.y = this->offsetY;
 		nextBox.p0.z = nextChunk[0].vpz;
 
 		nextBox.p1.x = nextChunk[0].vpx;
-		nextBox.p1.y = nextChunk[0].vpy;
+		box.p1.y = this->heightMultiple + this->offsetY;
 		nextBox.p1.z = nextChunk[0].vpz;
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, nextBox, branch->SE, nextChunk, verticeCount);
-
 	}
 }
 
@@ -474,7 +472,7 @@ void TerrainHandler::createVertices()
 
 void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 {
-	FrustumTree* test = this->tree->NE->SE;
+	FrustumTree* test = this->tree->NW;
 
 
 	D3D11_BUFFER_DESC desc;
