@@ -2190,6 +2190,31 @@ void GraphicsHandler::updateFrustrum()
 
 void GraphicsHandler::cull()
 {
+	
+	this->cullBoxes();
+
+
+	//Not very performace efficient
+	//this->cullGeometry();
+
+	
+}
+
+void GraphicsHandler::cullGeometry()
+{
+	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume))
+	{
+		this->terrainVerticeAmount = 0;
+		traverseTerrainTree(terrainHandler->GetFrustumTree());
+
+		this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->visibleTerrainVertices, this->terrainVerticeAmount);
+
+		//this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->data, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->vertexCount);
+	}
+}
+
+void GraphicsHandler::cullBoxes()
+{
 	this->visibleInstanceCount = 0;
 	if (this->frustrum->compareBoxToFrustrum(this->root->boundingVolume))
 	{
@@ -2202,17 +2227,6 @@ void GraphicsHandler::cull()
 	this->gDeviceContext->Map(this->instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 	memcpy(data.pData, this->visibleInstance, sizeof(Instance)*INSTANCECOUNT);
 	this->gDeviceContext->Unmap(this->instanceBuffer, 0);
-
-
-	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume) || true)
-	{
-		this->terrainVerticeAmount = 0;
-		traverseTerrainTree(terrainHandler->GetFrustumTree());
-
-		this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->visibleTerrainVertices, this->terrainVerticeAmount);
-
-		//this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->data, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->vertexCount);
-	}
 }
 
 void GraphicsHandler::traverseBoxTree(BoxTree* branch)
