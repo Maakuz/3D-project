@@ -57,6 +57,7 @@ private:
 	HeightMap* heightMap;
 	VertexInfo* vertices;
 	int nrOfVertices;
+	int visibleVertices;
 	float vertexLength;
 	float offsetY;
 	FrustumTree* tree;
@@ -79,6 +80,7 @@ public:
 	int getNrOfVertices() const;
 	VertexInfo* getVerticies() const;
 	FrustumTree* GetFrustumTree() const;
+	void updateVertexBuffer(ID3D11DeviceContext* gDeviceContext, FrustumTree* branch);
 };
 
 

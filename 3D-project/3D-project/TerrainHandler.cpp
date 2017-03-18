@@ -7,9 +7,9 @@ void TerrainHandler::createFrustumTree(int nrOfSplits)
 	box.p0.y = this->offsetY;
 	box.p0.z = this->vertices[0].vpz;
 
-	box.p1.x = this->vertices[this->nrOfVertices].vpx;
+	box.p1.x = this->vertices[this->nrOfVertices-1].vpx;
 	box.p1.y = this->heightMultiple + this->offsetY;
-	box.p1.z = this->vertices[this->nrOfVertices].vpz;
+	box.p1.z = this->vertices[this->nrOfVertices-1].vpz;
 
 
 	FrustumBounds bound;
@@ -53,12 +53,12 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 		//The box to test the frustum against
 		AABB nextBox;
 		nextBox.p0.x = nextChunk[0].vpx;
-		box.p0.y = this->offsetY;
+		nextBox.p0.y = this->offsetY;
 		nextBox.p0.z = nextChunk[0].vpz;
 
-		nextBox.p1.x = nextChunk[0].vpx;
-		box.p1.y = this->heightMultiple + this->offsetY;
-		nextBox.p1.z = nextChunk[0].vpz;
+		nextBox.p1.x = nextChunk[verticeCount-1].vpx;
+		nextBox.p1.y = this->heightMultiple + this->offsetY;
+		nextBox.p1.z = nextChunk[verticeCount-1].vpz;
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, nextBox, branch->NW, nextChunk, verticeCount);
 		//*****************************************************NE***********************************************************
@@ -85,12 +85,12 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 
 		//The box to test the frustum against
 		nextBox.p0.x = nextChunk[0].vpx;
-		box.p0.y = this->offsetY;
+		nextBox.p0.y = this->offsetY;
 		nextBox.p0.z = nextChunk[0].vpz;
 
-		nextBox.p1.x = nextChunk[0].vpx;
-		box.p1.y = this->heightMultiple + this->offsetY;
-		nextBox.p1.z = nextChunk[0].vpz;
+		nextBox.p1.x = nextChunk[verticeCount-1].vpx;
+		nextBox.p1.y = this->heightMultiple + this->offsetY;
+		nextBox.p1.z = nextChunk[verticeCount-1].vpz;
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, nextBox, branch->NE, nextChunk, verticeCount);
 
@@ -118,12 +118,12 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 
 		//The box to test the frustum against
 		nextBox.p0.x = nextChunk[0].vpx;
-		box.p0.y = this->offsetY;
+		nextBox.p0.y = this->offsetY;
 		nextBox.p0.z = nextChunk[0].vpz;
 
-		nextBox.p1.x = nextChunk[0].vpx;
-		box.p1.y = this->heightMultiple + this->offsetY;
-		nextBox.p1.z = nextChunk[0].vpz;
+		nextBox.p1.x = nextChunk[verticeCount-1].vpx;
+		nextBox.p1.y = this->heightMultiple + this->offsetY;
+		nextBox.p1.z = nextChunk[verticeCount-1].vpz;
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, nextBox, branch->SW, nextChunk, verticeCount);
 
@@ -153,12 +153,12 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AAB
 
 		//The box to test the frustum against
 		nextBox.p0.x = nextChunk[0].vpx;
-		box.p0.y = this->offsetY;
+		nextBox.p0.y = this->offsetY;
 		nextBox.p0.z = nextChunk[0].vpz;
 
-		nextBox.p1.x = nextChunk[0].vpx;
-		box.p1.y = this->heightMultiple + this->offsetY;
-		nextBox.p1.z = nextChunk[0].vpz;
+		nextBox.p1.x = nextChunk[verticeCount-1].vpx;
+		nextBox.p1.y = this->heightMultiple + this->offsetY;
+		nextBox.p1.z = nextChunk[verticeCount-1].vpz;
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, nextBox, branch->SE, nextChunk, verticeCount);
 	}
@@ -180,10 +180,11 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 	this->heightMap = nullptr;
 	this->vertexLength = 0.3f;
 	this->offsetY = -35;
+	this->visibleVertices = 0;
 	this->loadHeightMap(gDevice, path);
 	
 	this->createVertices();
-	this->createFrustumTree(1);
+	this->createFrustumTree(6);
 
 	this->createVertexBuffer(gDevice);
 
@@ -205,7 +206,7 @@ TerrainHandler::~TerrainHandler()
 
 void TerrainHandler::renderTerrain(ID3D11DeviceContext* gDeviceContext)
 {
-	gDeviceContext->Draw(this->nrOfVertices, 0);
+	gDeviceContext->Draw(this->visibleVertices, 0);
 }
 
 void TerrainHandler::loadHeightMap(ID3D11Device* gDevice, std::string path)
@@ -472,23 +473,29 @@ void TerrainHandler::createVertices()
 
 void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 {
-	FrustumTree* test = this->tree->NW;
-
+	FrustumTree* test = this->tree->NW->SE->SE->SE->SE->SE;
+	this->visibleVertices = test->vertexCount;
 
 	D3D11_BUFFER_DESC desc;
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	desc.ByteWidth = sizeof(VertexInfo) * test->vertexCount;
-	desc.CPUAccessFlags = 0;
+	desc.ByteWidth = sizeof(VertexInfo) * this->nrOfVertices;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = 0;
-	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
 
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
 
 	data.pSysMem = test->data;
 
-	gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
+	HRESULT hr = gDevice->CreateBuffer(&desc, &data, &this->vertexBuffer);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"Terrain VB creation failed", L"error", MB_OK);
+		exit(-1);
+	}
 }
 
 void TerrainHandler::setShaderResources(ID3D11DeviceContext* gDeviceContext)
@@ -619,4 +626,18 @@ VertexInfo* TerrainHandler::getVerticies() const
 FrustumTree* TerrainHandler::GetFrustumTree() const
 {
 	return this->tree;
+}
+
+void TerrainHandler::updateVertexBuffer(ID3D11DeviceContext* gDeviceContext, FrustumTree* branch)
+{
+	D3D11_MAPPED_SUBRESOURCE data;
+	ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+	gDeviceContext->Map(this->vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+
+	memcpy(data.pData, branch->data, sizeof(VertexInfo));
+
+	gDeviceContext->Unmap(this->vertexBuffer, 0);
+
+	this->visibleVertices = branch->vertexCount;
 }

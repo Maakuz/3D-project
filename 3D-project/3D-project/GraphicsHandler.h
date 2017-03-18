@@ -207,7 +207,7 @@ private:
 	void updateFrustrum();
 	void cull();
 	void traverseBoxTree(BoxTree* branch);
-
+	void traverseTerrainTree(FrustumTree* branch);
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);

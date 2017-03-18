@@ -2184,6 +2184,12 @@ void GraphicsHandler::cull()
 	this->gDeviceContext->Map(this->instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 	memcpy(data.pData, this->visibleInstance, sizeof(Instance)*INSTANCECOUNT);
 	this->gDeviceContext->Unmap(this->instanceBuffer, 0);
+
+
+	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume) || true)
+	{
+		terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree());
+	}
 }
 
 void GraphicsHandler::traverseBoxTree(BoxTree* branch)
@@ -2217,6 +2223,11 @@ void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 		}
 		
 	}
+}
+
+void GraphicsHandler::traverseTerrainTree(FrustumTree* branch)
+{
+	//if ()
 }
 
 
