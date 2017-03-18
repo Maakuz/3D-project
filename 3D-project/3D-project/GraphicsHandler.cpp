@@ -127,6 +127,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
 	this->createBoxTree(2);
 	this->frustrum = new FrustrumCulling(this->cameraClass);
+	this->frustrum->makePlanes();
+	this->frustrum->makePoints();
 
 	this->visibleTerrainVertices = new VertexInfo[terrainHandler->getNrOfVertices()];
 	
@@ -1372,7 +1374,7 @@ void GraphicsHandler::createDepthBuffers()
 	shadowTexDesc.Height = this->height;
 	shadowTexDesc.MipLevels = 1;
 	shadowTexDesc.ArraySize = 1;
-	shadowTexDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	shadowTexDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	shadowTexDesc.SampleDesc.Count = 1;
 	shadowTexDesc.SampleDesc.Quality = 0;
 	shadowTexDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -1384,7 +1386,7 @@ void GraphicsHandler::createDepthBuffers()
 	D3D11_DEPTH_STENCIL_VIEW_DESC shadowdsvDesc;
 	ZeroMemory(&shadowdsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
 
-	shadowdsvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	shadowdsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	shadowdsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	shadowdsvDesc.Texture2D.MipSlice = 0;
 	shadowdsvDesc.Flags = 0;
@@ -1392,7 +1394,7 @@ void GraphicsHandler::createDepthBuffers()
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = shadowTexDesc.MipLevels;
 
