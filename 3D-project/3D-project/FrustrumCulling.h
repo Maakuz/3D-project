@@ -6,8 +6,7 @@
 class Plane
 {
 private:
-	DirectX::XMFLOAT3 pOnPlane;
-	DirectX::XMFLOAT3 normal;
+	
 public:
 	Plane(DirectX::XMVECTOR normal);
 	Plane();
@@ -15,6 +14,8 @@ public:
 	void setPoints(DirectX::XMFLOAT3 firstPoint, DirectX::XMFLOAT3 secondPoint, DirectX::XMFLOAT3 lastPoint);
 	float distance(DirectX::XMFLOAT3 pointToTry);
 	DirectX::XMFLOAT3 getNormal();
+	DirectX::XMFLOAT3 pOnPlane;
+	DirectX::XMFLOAT3 normal;
 };
 
 class FrustrumCulling
@@ -60,6 +61,7 @@ public:
 
 	bool comparePointToFrustrum(DirectX::XMFLOAT3 &p);
 	bool compareBoxToFrustrum(AABB box);
+	bool AABBVsFrustrum(AABB box) const;
 };
 
 

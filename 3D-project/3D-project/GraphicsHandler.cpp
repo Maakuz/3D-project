@@ -1372,7 +1372,7 @@ void GraphicsHandler::createDepthBuffers()
 	shadowTexDesc.Height = this->height;
 	shadowTexDesc.MipLevels = 1;
 	shadowTexDesc.ArraySize = 1;
-	shadowTexDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	shadowTexDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	shadowTexDesc.SampleDesc.Count = 1;
 	shadowTexDesc.SampleDesc.Quality = 0;
 	shadowTexDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -1384,7 +1384,7 @@ void GraphicsHandler::createDepthBuffers()
 	D3D11_DEPTH_STENCIL_VIEW_DESC shadowdsvDesc;
 	ZeroMemory(&shadowdsvDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
 
-	shadowdsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	shadowdsvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	shadowdsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	shadowdsvDesc.Texture2D.MipSlice = 0;
 	shadowdsvDesc.Flags = 0;
@@ -1392,7 +1392,7 @@ void GraphicsHandler::createDepthBuffers()
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = shadowTexDesc.MipLevels;
 
@@ -2189,7 +2189,7 @@ void GraphicsHandler::cull()
 {
 	//culls the cubes
 	this->visibleInstanceCount = 0;
-	if (this->frustrum->compareBoxToFrustrum(this->root->boundingVolume))
+	if (this->frustrum->AABBVsFrustrum(this->root->boundingVolume))
 	{
 		this->traverseBoxTree(this->root);
 	}
@@ -2205,9 +2205,9 @@ void GraphicsHandler::cull()
 	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume) || true)
 	{
 		this->terrainVerticeAmount = 0;
-		traverseTerrainTree(terrainHandler->GetFrustumTree());
+		//traverseTerrainTree(terrainHandler->GetFrustumTree());
 
-		this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->visibleTerrainVertices, this->terrainVerticeAmount);
+		//this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->visibleTerrainVertices, this->terrainVerticeAmount);
 
 		//this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->data, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->vertexCount);
 	}
@@ -2228,19 +2228,19 @@ void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 	else
 	{
 		//traverse down tree if bounding volume is within frustrum
-		if (branch->downLeft != nullptr && this->frustrum->compareBoxToFrustrum(branch->downLeft->boundingVolume))
+		if (branch->downLeft != nullptr && this->frustrum->AABBVsFrustrum(branch->downLeft->boundingVolume))
 		{
 			this->traverseBoxTree(branch->downLeft);
 		}
-		if (branch->upLeft != nullptr && this->frustrum->compareBoxToFrustrum(branch->upLeft->boundingVolume))
+		if (branch->upLeft != nullptr && this->frustrum->AABBVsFrustrum(branch->upLeft->boundingVolume))
 		{
 			this->traverseBoxTree(branch->upLeft);
 		}
-		if (branch->downRight != nullptr && this->frustrum->compareBoxToFrustrum(branch->downRight->boundingVolume))
+		if (branch->downRight != nullptr && this->frustrum->AABBVsFrustrum(branch->downRight->boundingVolume))
 		{
 			this->traverseBoxTree(branch->downRight);
 		}
-		if (branch->upRight != nullptr && this->frustrum->compareBoxToFrustrum(branch->upRight->boundingVolume))
+		if (branch->upRight != nullptr && this->frustrum->AABBVsFrustrum(branch->upRight->boundingVolume))
 		{
 			this->traverseBoxTree(branch->upRight);
 		}
