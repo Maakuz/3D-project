@@ -473,7 +473,7 @@ void TerrainHandler::createVertices()
 
 void TerrainHandler::createVertexBuffer(ID3D11Device* gDevice)
 {
-	FrustumTree* test = this->tree->NW->SE->SE->SE->SE->SE;
+	FrustumTree* test = this->tree;
 	this->visibleVertices = test->vertexCount;
 
 	D3D11_BUFFER_DESC desc;
@@ -633,11 +633,12 @@ void TerrainHandler::updateVertexBuffer(ID3D11DeviceContext* gDeviceContext, Fru
 	D3D11_MAPPED_SUBRESOURCE data;
 	ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
+	this->visibleVertices = branch->vertexCount;
+
+
 	gDeviceContext->Map(this->vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 
-	memcpy(data.pData, branch->data, sizeof(VertexInfo));
+	memcpy(data.pData, branch->data, sizeof(VertexInfo) * this->visibleVertices);
 
 	gDeviceContext->Unmap(this->vertexBuffer, 0);
-
-	this->visibleVertices = branch->vertexCount;
 }

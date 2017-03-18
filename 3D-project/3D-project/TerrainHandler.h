@@ -40,6 +40,7 @@ public:
 		delete this->SW;
 		delete this->SE;
 		delete this->NE;
+		delete[] this->data;
 	}
 };
 

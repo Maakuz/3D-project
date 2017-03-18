@@ -2198,7 +2198,7 @@ void GraphicsHandler::cull()
 
 	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume) || true)
 	{
-		terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree());
+		terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree()->NE);
 	}
 }
 
