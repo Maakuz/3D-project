@@ -8,7 +8,7 @@
 #include <time.h>
 #include "TerrainHandler.h"
 #include "FrustrumCulling.h"
-
+#include "Frustrum.h"
 
 const int NROFBUFFERS = 4;
 const UINT startParticleCount = 0;
@@ -172,6 +172,7 @@ private:
 	VertexInfo* visibleTerrainVertices;
 	int terrainVerticeAmount;
 	int terrainCounter;
+	Frustrum *mFrustrum;
 	
 
 	void loadObj();

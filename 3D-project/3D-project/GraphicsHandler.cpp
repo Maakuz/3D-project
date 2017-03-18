@@ -125,10 +125,13 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
-	this->createBoxTree(2);
+	this->createBoxTree(1);
 	this->frustrum = new FrustrumCulling(this->cameraClass);
 	this->frustrum->makePlanes();
 	this->frustrum->makePoints();
+
+	this->mFrustrum = new Frustrum();
+	this->mFrustrum->constructFrustrum(this->cameraClass->getProjM(), this->cameraClass->getViewM());
 
 	this->visibleTerrainVertices = new VertexInfo[terrainHandler->getNrOfVertices()];
 	
@@ -1692,13 +1695,17 @@ void GraphicsHandler::update(float deltaT)
 		this->updateParticleCBuffers();
 		this->updateParticles();
 	}
-	
+	if (this->cameraClass->airResistance())
+	{
+		this->updateFrustrum();
+	}
 
 	//locks fps at 60
 	if (this->currentTime - this->lastFrame >= 16.0f)
 	{
 		this->lastFrame = this->currentTime;
-		this->updateFrustrum();
+		
+		//this->updateFrustrum();
 		this->cull();
 		this->renderShadows();
 		this->renderGeometry();
@@ -1906,6 +1913,8 @@ void GraphicsHandler::kill()
 	delete[] this->intancies;
 	delete this->root;
 	delete[] this->visibleTerrainVertices;
+	delete this->frustrum;
+	delete this->mFrustrum;
 
 
 	/*this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
@@ -2180,10 +2189,12 @@ bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
 
 void GraphicsHandler::updateFrustrum()
 {
-	delete this->frustrum;
+	/*delete this->frustrum;
 	this->frustrum = new FrustrumCulling(this->cameraClass);
 	this->frustrum->makePoints();
-	this->frustrum->makePlanes();
+	this->frustrum->makePlanes();*/
+
+	this->mFrustrum->constructFrustrum(this->cameraClass->getProjM(), this->cameraClass->getViewM());
 	
 }
 
@@ -2191,7 +2202,7 @@ void GraphicsHandler::cull()
 {
 	//culls the cubes
 	this->visibleInstanceCount = 0;
-	if (this->frustrum->AABBVsFrustrum(this->root->boundingVolume))
+	if (this->mFrustrum->AABBVsFrustrum(this->root->boundingVolume))
 	{
 		this->traverseBoxTree(this->root);
 	}
@@ -2234,15 +2245,15 @@ void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 		{
 			this->traverseBoxTree(branch->downLeft);
 		}
-		if (branch->upLeft != nullptr && this->frustrum->AABBVsFrustrum(branch->upLeft->boundingVolume))
+		if (branch->upLeft != nullptr && this->mFrustrum->AABBVsFrustrum(branch->upLeft->boundingVolume))
 		{
 			this->traverseBoxTree(branch->upLeft);
 		}
-		if (branch->downRight != nullptr && this->frustrum->AABBVsFrustrum(branch->downRight->boundingVolume))
+		if (branch->downRight != nullptr && this->mFrustrum->AABBVsFrustrum(branch->downRight->boundingVolume))
 		{
 			this->traverseBoxTree(branch->downRight);
 		}
-		if (branch->upRight != nullptr && this->frustrum->AABBVsFrustrum(branch->upRight->boundingVolume))
+		if (branch->upRight != nullptr && this->mFrustrum->AABBVsFrustrum(branch->upRight->boundingVolume))
 		{
 			this->traverseBoxTree(branch->upRight);
 		}

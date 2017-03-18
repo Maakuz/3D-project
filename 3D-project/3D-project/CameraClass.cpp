@@ -29,6 +29,14 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 	this->mYaw = 0.f;
 
 	this->escapePressed = false;
+	this->airRe = false;
+
+	POINT p;
+	p.x = this->width / 2;
+	p.y = this->height / 2;
+
+	ClientToScreen(this->window, &p);
+	SetCursorPos(p.x, p.y);
 
 }
 
@@ -68,7 +76,7 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(0, 0, 0);
 
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(0, 3, 3, 0);
+	eyePosition = DirectX::XMVectorSet(50, 0, 50, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 1);
@@ -236,11 +244,13 @@ void CameraClass::update(float dt)
 	if (ks.Escape)
 	{
 		this->escapePressed = true;
+		ShowCursor(TRUE);
 	}
 
 	if (ks.Enter)
 	{
 		this->escapePressed = false;
+		ShowCursor(FALSE);
 	}
 	if (ks.X)
 	{
@@ -408,6 +418,18 @@ DirectX::XMFLOAT3 CameraClass::getMRight()
 DirectX::XMFLOAT3 CameraClass::getMUp()
 {
 	return this->mUp;
+}
+DirectX::XMFLOAT4X4 CameraClass::getProjM() const
+{
+	return this->mProjectionMatrix;
+}
+DirectX::XMFLOAT4X4 CameraClass::getViewM() const
+{
+	return this->mViewMatrix;
+}
+float CameraClass::getFarZ() const
+{
+	return this->zFar;
 }
 float CameraClass::getAspectRatio()
 {

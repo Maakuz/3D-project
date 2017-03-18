@@ -75,6 +75,9 @@ public:
 	DirectX::XMFLOAT3 getMDirection();
 	DirectX::XMFLOAT3 getMRight();
 	DirectX::XMFLOAT3 getMUp();
+	DirectX::XMFLOAT4X4 getProjM()const;
+	DirectX::XMFLOAT4X4 getViewM()const;
+	float getFarZ()const;
 };
 
 #endif
