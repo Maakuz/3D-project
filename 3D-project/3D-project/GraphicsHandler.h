@@ -209,6 +209,8 @@ private:
 	bool pointVSAABB(DirectX::XMFLOAT3 point, AABB box);
 	void updateFrustrum();
 	void cull();
+	void cullGeometry();
+	void cullBoxes();
 	void traverseBoxTree(BoxTree* branch);
 	void traverseTerrainTree(FrustumTree* branch);
 
