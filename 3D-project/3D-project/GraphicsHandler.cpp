@@ -2074,6 +2074,7 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 		branch->data = data;
 		branch->instanceCount = instanceCount;
 
+		//creates four new smaller aabbs for the four branches
 
 		//downLeft
 		AABB downL;
@@ -2125,25 +2126,21 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 			if (pointVSAABB(data[i].offset, downL))
 			{
 				downLeftData.push_back(data[i]);
-				//downLeftData[dld] = data[i];
 				dld++;
 			}
 			if (pointVSAABB(data[i].offset, downR))
 			{
 				downRightData.push_back(data[i]);
-				//downRightData[drd] = data[i];
 				drd++;
 			}
 			if (pointVSAABB(data[i].offset, upL))
 			{
 				upLeftData.push_back(data[i]);
-				//upLeftData[uld] = data[i];
 				uld++;
 			}
 			if (pointVSAABB(data[i].offset, upR))
 			{
 				upRightData.push_back(data[i]);
-				//upRightData[urd] = data[i];
 				urd++;
 			}
 		}
@@ -2163,7 +2160,7 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 
 bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
 {
-
+	//checks if point is within aabb
 	if (point.x >= box.p0.x && point.y >= box.p0.y && point.z >= box.p0.z &&  point.x <= box.p1.x && point.y <= box.p1.y && point.z <= box.p1.z)
 	{
 		return true;
@@ -2182,6 +2179,7 @@ void GraphicsHandler::updateFrustrum()
 
 void GraphicsHandler::cull()
 {
+	//culls the cubes
 	this->visibleInstanceCount = 0;
 	if (this->frustrum->compareBoxToFrustrum(this->root->boundingVolume))
 	{
@@ -2195,7 +2193,7 @@ void GraphicsHandler::cull()
 	memcpy(data.pData, this->visibleInstance, sizeof(Instance)*INSTANCECOUNT);
 	this->gDeviceContext->Unmap(this->instanceBuffer, 0);
 
-
+	//culls the terrain
 	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume) || true)
 	{
 		terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree()->NE);
@@ -2204,6 +2202,7 @@ void GraphicsHandler::cull()
 
 void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 {
+	//if leaf is found
 	if (branch->downLeft == nullptr && branch->downRight == nullptr && branch->upLeft == nullptr && branch->upRight == nullptr)
 	{
 		int temp = this->visibleInstanceCount;
@@ -2215,6 +2214,7 @@ void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 	}
 	else
 	{
+		//traverse down tree if bounding volume is within frustrum
 		if (branch->downLeft != nullptr && this->frustrum->compareBoxToFrustrum(branch->downLeft->boundingVolume))
 		{
 			this->traverseBoxTree(branch->downLeft);
