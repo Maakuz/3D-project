@@ -29,7 +29,7 @@ private:
 		BoxTree* upRight;
 		BoxTree* downRight;
 		AABB boundingVolume;
-		Instance* data;
+		std::vector<Instance> data;
 		int instanceCount;
 
 		
@@ -39,10 +39,9 @@ private:
 			this->downLeft = nullptr;
 			this->upRight = nullptr;
 			this->downRight = nullptr;
-			this->data = nullptr;
 			this->instanceCount = 0;
 		}
-		BoxTree(BoxTree* upLeft, BoxTree* downLeft, BoxTree* upRight, BoxTree* downRight, Instance* data, AABB boundingVolume, int instanceCount)
+		BoxTree(BoxTree* upLeft, BoxTree* downLeft, BoxTree* upRight, BoxTree* downRight, std::vector<Instance> data, AABB boundingVolume, int instanceCount)
 		{
 			this->upLeft = upLeft;
 			this->downLeft = downLeft;
@@ -202,7 +201,7 @@ private:
 	void updateLightBuffer();
 	void linkVertecies();
 	void createBoxTree(int nrOfSplits);
-	BoxTree* _createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, Instance *data, int instanceCount);
+	BoxTree* _createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, std::vector<Instance> data, int instanceCount);
 	bool pointVSAABB(DirectX::XMFLOAT3 point, AABB box);
 	void updateFrustrum();
 	void cull();

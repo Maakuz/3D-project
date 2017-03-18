@@ -125,7 +125,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
-	this->createBoxTree(4);
+	this->createBoxTree(2);
 	this->frustrum = new FrustrumCulling(this->cameraClass);
 }
 
@@ -1503,6 +1503,7 @@ void GraphicsHandler::createDefferedBuffers()
 
 void GraphicsHandler::render()
 {
+	
 	float clearColor[] = { 0, 0, 0, 1 };
 
 	//disable depth stencil. Anledningen till det är för att vi nu renderar i 2D på en stor quad, det finns inget djup längre
@@ -1568,8 +1569,7 @@ void GraphicsHandler::render()
 
 void GraphicsHandler::renderGeometry()
 {
-	this->updateFrustrum();
-	this->cull();
+	
 
 
 	float clearColor[] = { 102/255.0f, 152/255.0f, 255/255.0f, 1 };
@@ -1689,6 +1689,8 @@ void GraphicsHandler::update(float deltaT)
 	if (this->currentTime - this->lastFrame >= 16.0f)
 	{
 		this->lastFrame = this->currentTime;
+		this->updateFrustrum();
+		this->cull();
 		this->renderShadows();
 		this->renderGeometry();
 		this->renderParticles();
@@ -2053,11 +2055,16 @@ void GraphicsHandler::createBoxTree(int nrOfSplits)
 	AABB aabb;
 	aabb.p0 = DirectX::XMFLOAT3(-15.0f, -15.0f, -15.0f);
 	aabb.p1 = DirectX::XMFLOAT3(15.0f, 15.0f, 15.0f);
+	std::vector<Instance> temp;
+	for (size_t i = 0; i < INSTANCECOUNT; i++)
+	{
+		temp.push_back(this->intancies[i]);
+	}
 
-	this->root = this->_createBoxTree(nrOfSplits, aabb, this->root, this->intancies, INSTANCECOUNT);
+	this->root = this->_createBoxTree(nrOfSplits, aabb, this->root, temp, INSTANCECOUNT);
 }
 
-GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, Instance *data, int instanceCount)
+GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, std::vector<Instance> data, int instanceCount)
 {
 	if (nrOfSplits > 0)
 	{
@@ -2069,78 +2076,81 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 
 
 		//downLeft
-		AABB newAABB1;
-		newAABB1.p0 = aabb.p0;
-		newAABB1.p1.x = aabb.p1.x / 2;
-		newAABB1.p1.y = aabb.p1.y / 2;
-		newAABB1.p1.z = aabb.p1.z;
+		AABB downL;
+		downL.p0 = aabb.p0;
+		downL.p1.x = aabb.p1.x / 2;
+		downL.p1.y = aabb.p1.y / 2;
+		downL.p1.z = aabb.p1.z;
 
 		//downRight
-		AABB newAABB2;
-		newAABB2.p0.x = aabb.p1.x / 2;
-		newAABB2.p0.y = aabb.p0.y;
-		newAABB2.p0.z = aabb.p0.z;
-		newAABB2.p1.x = aabb.p1.x;
-		newAABB2.p1.y = aabb.p1.y / 2;
-		newAABB2.p1.z = aabb.p1.z;
+		AABB downR;
+		downR.p0.x = aabb.p1.x / 2;
+		downR.p0.y = aabb.p0.y;
+		downR.p0.z = aabb.p0.z;
+		downR.p1.x = aabb.p1.x;
+		downR.p1.y = aabb.p1.y / 2;
+		downR.p1.z = aabb.p1.z;
 
 		
 		//upLeft
-		AABB newAABB3;
-		newAABB3.p0.x = aabb.p0.x;
-		newAABB3.p0.y = aabb.p1.y / 2;
-		newAABB3.p0.z = aabb.p0.z;
-		newAABB3.p1.x = aabb.p1.x / 2;
-		newAABB3.p1.y = aabb.p1.y;
-		newAABB3.p1.z = aabb.p1.z;
+		AABB upL;
+		upL.p0.x = aabb.p0.x;
+		upL.p0.y = aabb.p1.y / 2;
+		upL.p0.z = aabb.p0.z;
+		upL.p1.x = aabb.p1.x / 2;
+		upL.p1.y = aabb.p1.y;
+		upL.p1.z = aabb.p1.z;
 
 		//upRight
-		AABB newAABB4;
-		newAABB4.p0.x = aabb.p1.x / 2;
-		newAABB4.p0.y = aabb.p1.y / 2;
-		newAABB4.p0.z = aabb.p0.z;
-		newAABB4.p1 = aabb.p1;
+		AABB upR;
+		upR.p0.x = aabb.p1.x / 2;
+		upR.p0.y = aabb.p1.y / 2;
+		upR.p0.z = aabb.p0.z;
+		upR.p1 = aabb.p1;
 
 		int dld = 0;
-		//Instance* downLeftData = new Instance[instanceCount];
-		Instance downLeftData[INSTANCECOUNT];
+		std::vector<Instance> downLeftData;
+
 		int uld = 0;
-		//Instance* upLeftData = new Instance[instanceCount];
-		Instance upLeftData[INSTANCECOUNT];
+		std::vector<Instance> upLeftData;
+
 		int drd = 0;
-		//Instance* downRightData = new Instance[instanceCount];
-		Instance downRightData[INSTANCECOUNT];
+		std::vector<Instance> downRightData;
+
 		int urd = 0;
-		//Instance* upRightData = new Instance[instanceCount];
-		Instance upRightData[INSTANCECOUNT];
+		std::vector<Instance> upRightData;
 
 		for (size_t i = 0; i < instanceCount; i++)
 		{
-			if (pointVSAABB(data[i].offset, newAABB1))
+			if (pointVSAABB(data[i].offset, downL))
 			{
-				downLeftData[dld] = data[i];
+				downLeftData.push_back(data[i]);
+				//downLeftData[dld] = data[i];
 				dld++;
 			}
-			if (pointVSAABB(data[i].offset, newAABB2))
+			if (pointVSAABB(data[i].offset, downR))
 			{
-				downRightData[drd] = data[i];
+				downRightData.push_back(data[i]);
+				//downRightData[drd] = data[i];
 				drd++;
 			}
-			if (pointVSAABB(data[i].offset, newAABB3))
+			if (pointVSAABB(data[i].offset, upL))
 			{
-				upLeftData[uld] = data[i];
+				upLeftData.push_back(data[i]);
+				//upLeftData[uld] = data[i];
 				uld++;
 			}
-			if (pointVSAABB(data[i].offset, newAABB4))
+			if (pointVSAABB(data[i].offset, upR))
 			{
-				upRightData[urd] = data[i];
+				upRightData.push_back(data[i]);
+				//upRightData[urd] = data[i];
 				urd++;
 			}
 		}
-		branch->downLeft = this->_createBoxTree(nrOfSplits, newAABB1, branch->downLeft, downLeftData, dld);
-		branch->upLeft = this->_createBoxTree(nrOfSplits, newAABB1, branch->upLeft, upLeftData, uld);
-		branch->downRight = this->_createBoxTree(nrOfSplits, newAABB1, branch->downRight, downRightData, drd);
-		branch->upRight = this->_createBoxTree(nrOfSplits, newAABB1, branch->upRight, upRightData, urd);
+		branch->downLeft = this->_createBoxTree(nrOfSplits, downL, branch->downLeft, downLeftData, dld);
+		branch->upLeft = this->_createBoxTree(nrOfSplits, upL, branch->upLeft, upLeftData, uld);
+		branch->downRight = this->_createBoxTree(nrOfSplits, downR, branch->downRight, downRightData, drd);
+		branch->upRight = this->_createBoxTree(nrOfSplits, upR, branch->upRight, upRightData, urd);
 		
 		
 	}
