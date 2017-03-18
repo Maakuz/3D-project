@@ -169,6 +169,9 @@ private:
 	Instance *visibleInstance;
 	BoxTree* root;
 	FrustrumCulling* frustrum;
+	VertexInfo* visibleTerrainVertices;
+	int terrainVerticeAmount;
+	int terrainCounter;
 	
 
 	void loadObj();

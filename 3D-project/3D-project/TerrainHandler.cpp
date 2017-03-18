@@ -184,7 +184,7 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 	this->loadHeightMap(gDevice, path);
 	
 	this->createVertices();
-	this->createFrustumTree(6);
+	this->createFrustumTree(4);
 
 	this->createVertexBuffer(gDevice);
 
@@ -628,17 +628,17 @@ FrustumTree* TerrainHandler::GetFrustumTree() const
 	return this->tree;
 }
 
-void TerrainHandler::updateVertexBuffer(ID3D11DeviceContext* gDeviceContext, FrustumTree* branch)
+void TerrainHandler::updateVertexBuffer(ID3D11DeviceContext* gDeviceContext, VertexInfo* info, int size)
 {
 	D3D11_MAPPED_SUBRESOURCE data;
 	ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	this->visibleVertices = branch->vertexCount;
+	this->visibleVertices = size;
 
 
 	gDeviceContext->Map(this->vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
 
-	memcpy(data.pData, branch->data, sizeof(VertexInfo) * this->visibleVertices);
+	memcpy(data.pData, info, sizeof(VertexInfo) * size);
 
 	gDeviceContext->Unmap(this->vertexBuffer, 0);
 }

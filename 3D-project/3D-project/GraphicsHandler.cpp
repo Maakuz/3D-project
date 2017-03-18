@@ -127,6 +127,13 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
 	this->createBoxTree(2);
 	this->frustrum = new FrustrumCulling(this->cameraClass);
+
+	this->visibleTerrainVertices = new VertexInfo[terrainHandler->getNrOfVertices()];
+	
+	for (int i = 0; i < terrainHandler->getNrOfVertices(); i++)
+	{
+		this->visibleTerrainVertices[i] = {0};
+	}
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -1896,6 +1903,7 @@ void GraphicsHandler::kill()
 	delete[] this->verticies;
 	delete[] this->intancies;
 	delete this->root;
+	delete[] this->visibleTerrainVertices;
 
 
 	/*this->debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
@@ -2198,7 +2206,12 @@ void GraphicsHandler::cull()
 
 	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume) || true)
 	{
-		terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree()->NE);
+		this->terrainVerticeAmount = 0;
+		traverseTerrainTree(terrainHandler->GetFrustumTree());
+
+		this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->visibleTerrainVertices, this->terrainVerticeAmount);
+
+		//this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->data, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->vertexCount);
 	}
 }
 
@@ -2237,7 +2250,27 @@ void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 
 void GraphicsHandler::traverseTerrainTree(FrustumTree* branch)
 {
-	//if ()
+	if (branch->NE != nullptr)
+	{
+		if (frustrum->compareBoxToFrustrum(branch->NE->boundingVolume))
+			traverseTerrainTree(branch->NE);
+
+		if (frustrum->compareBoxToFrustrum(branch->NW->boundingVolume))
+			traverseTerrainTree(branch->NW);
+
+		if (frustrum->compareBoxToFrustrum(branch->SW->boundingVolume))
+			traverseTerrainTree(branch->SW);
+
+		if (frustrum->compareBoxToFrustrum(branch->SE->boundingVolume))
+			traverseTerrainTree(branch->SE);
+	}
+
+	else
+	{
+		memcpy(&this->visibleTerrainVertices[this->terrainVerticeAmount], branch->data, sizeof(VertexInfo) * branch->vertexCount);
+
+		this->terrainVerticeAmount += branch->vertexCount;
+	}
 }
 
 
