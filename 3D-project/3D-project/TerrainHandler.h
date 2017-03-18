@@ -40,7 +40,7 @@ public:
 		delete this->SW;
 		delete this->SE;
 		delete this->NE;
-		delete[] this->data;
+		//delete[] this->data;
 	}
 };
 
@@ -81,7 +81,7 @@ public:
 	int getNrOfVertices() const;
 	VertexInfo* getVerticies() const;
 	FrustumTree* GetFrustumTree() const;
-	void updateVertexBuffer(ID3D11DeviceContext* gDeviceContext, FrustumTree* branch);
+	void updateVertexBuffer(ID3D11DeviceContext* gDeviceContext, VertexInfo* info, int size);
 };
 
 
