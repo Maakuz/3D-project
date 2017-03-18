@@ -188,13 +188,13 @@ bool FrustrumCulling::compareBoxToFrustrum(AABB box)
 	int max = 0;
 
 	point[0] = box.p0;
-	point[1] = box.p1;
-	point[2] = DirectX::XMFLOAT3(box.p1.x, box.p1.y, box.p0.z);
-	point[3] = DirectX::XMFLOAT3(box.p0.x, box.p1.y, box.p0.z);
-	point[4] = DirectX::XMFLOAT3(box.p0.x, box.p1.y, box.p1.z);
-	point[5] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p0.z);
-	point[6] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p1.z);
-	point[7] = DirectX::XMFLOAT3(box.p0.x, box.p0.y, box.p1.z);
+	point[1] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p0.z);
+	point[2] = DirectX::XMFLOAT3(box.p0.x, box.p0.y, box.p1.z);
+	point[3] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p1.z);
+	point[4] = DirectX::XMFLOAT3(box.p0.x, box.p1.y, box.p0.z);
+	point[5] = DirectX::XMFLOAT3(box.p1.x, box.p1.y, box.p0.z);
+	point[6] = DirectX::XMFLOAT3(box.p0.x, box.p1.y, box.p1.z);
+	point[7] = box.p1;
 
 	for (int i = 0; i < 6 && inside == true; i++) //planes
 	{
@@ -234,4 +234,40 @@ bool FrustrumCulling::compareBoxToFrustrum(AABB box)
 		}
 	}
 	return inside;
+}
+
+bool FrustrumCulling::AABBVsFrustrum(AABB box) const
+{
+	DirectX::XMFLOAT3 point[8];
+
+	point[0] = box.p0;
+	point[1] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p0.z);
+	point[2] = DirectX::XMFLOAT3(box.p0.x, box.p0.y, box.p1.z);
+	point[3] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p1.z);
+	point[4] = DirectX::XMFLOAT3(box.p0.x, box.p1.y, box.p0.z);
+	point[5] = DirectX::XMFLOAT3(box.p1.x, box.p1.y, box.p0.z);
+	point[6] = DirectX::XMFLOAT3(box.p0.x, box.p1.y, box.p1.z);
+	point[7] = box.p1;
+
+	int inside = 0;
+	for (size_t i = 0; i < 6; i++)
+	{
+		inside = 0;
+		for (size_t j = 0; j < 8; j++)
+		{
+			DirectX::XMFLOAT3 p2p = DirectX::XMFLOAT3(point[j].x - this->plane[i].pOnPlane.x, point[j].y - this->plane[i].pOnPlane.y, point[j].z - this->plane[i].pOnPlane.z );
+			float dotP = (p2p.x * this->plane[i].normal.x, p2p.y * this->plane[i].normal.y, p2p.z * this->plane[i].normal.z);
+			if (dotP > 0)
+			{
+				inside++;
+			}
+		}
+		if (inside == 0)
+		{
+			return false;
+		}
+	}
+	
+
+	return true;
 }

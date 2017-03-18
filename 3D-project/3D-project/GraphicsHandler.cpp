@@ -127,6 +127,8 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
 	this->createBoxTree(2);
 	this->frustrum = new FrustrumCulling(this->cameraClass);
+	this->frustrum->makePlanes();
+	this->frustrum->makePoints();
 
 	this->visibleTerrainVertices = new VertexInfo[terrainHandler->getNrOfVertices()];
 	
@@ -2082,6 +2084,7 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 		branch->data = data;
 		branch->instanceCount = instanceCount;
 
+		//creates four new smaller aabbs for the four branches
 
 		//downLeft
 		AABB downL;
@@ -2133,25 +2136,21 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 			if (pointVSAABB(data[i].offset, downL))
 			{
 				downLeftData.push_back(data[i]);
-				//downLeftData[dld] = data[i];
 				dld++;
 			}
 			if (pointVSAABB(data[i].offset, downR))
 			{
 				downRightData.push_back(data[i]);
-				//downRightData[drd] = data[i];
 				drd++;
 			}
 			if (pointVSAABB(data[i].offset, upL))
 			{
 				upLeftData.push_back(data[i]);
-				//upLeftData[uld] = data[i];
 				uld++;
 			}
 			if (pointVSAABB(data[i].offset, upR))
 			{
 				upRightData.push_back(data[i]);
-				//upRightData[urd] = data[i];
 				urd++;
 			}
 		}
@@ -2171,7 +2170,7 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 
 bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
 {
-
+	//checks if point is within aabb
 	if (point.x >= box.p0.x && point.y >= box.p0.y && point.z >= box.p0.z &&  point.x <= box.p1.x && point.y <= box.p1.y && point.z <= box.p1.z)
 	{
 		return true;
@@ -2189,11 +2188,10 @@ void GraphicsHandler::updateFrustrum()
 }
 
 void GraphicsHandler::cull()
-{
-	
+{	
+	//culls the cubes
 	this->cullBoxes();
-
-
+	
 	//Not very performace efficient
 	//this->cullGeometry();
 
@@ -2202,6 +2200,7 @@ void GraphicsHandler::cull()
 
 void GraphicsHandler::cullGeometry()
 {
+	//culls the terrain
 	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume))
 	{
 		this->terrainVerticeAmount = 0;
@@ -2216,7 +2215,7 @@ void GraphicsHandler::cullGeometry()
 void GraphicsHandler::cullBoxes()
 {
 	this->visibleInstanceCount = 0;
-	if (this->frustrum->compareBoxToFrustrum(this->root->boundingVolume))
+	if (this->frustrum->AABBVsFrustrum(this->root->boundingVolume))
 	{
 		this->traverseBoxTree(this->root);
 	}
@@ -2231,6 +2230,7 @@ void GraphicsHandler::cullBoxes()
 
 void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 {
+	//if leaf is found
 	if (branch->downLeft == nullptr && branch->downRight == nullptr && branch->upLeft == nullptr && branch->upRight == nullptr)
 	{
 		int temp = this->visibleInstanceCount;
@@ -2242,19 +2242,20 @@ void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 	}
 	else
 	{
-		if (branch->downLeft != nullptr && this->frustrum->compareBoxToFrustrum(branch->downLeft->boundingVolume))
+		//traverse down tree if bounding volume is within frustrum
+		if (branch->downLeft != nullptr && this->frustrum->AABBVsFrustrum(branch->downLeft->boundingVolume))
 		{
 			this->traverseBoxTree(branch->downLeft);
 		}
-		if (branch->upLeft != nullptr && this->frustrum->compareBoxToFrustrum(branch->upLeft->boundingVolume))
+		if (branch->upLeft != nullptr && this->frustrum->AABBVsFrustrum(branch->upLeft->boundingVolume))
 		{
 			this->traverseBoxTree(branch->upLeft);
 		}
-		if (branch->downRight != nullptr && this->frustrum->compareBoxToFrustrum(branch->downRight->boundingVolume))
+		if (branch->downRight != nullptr && this->frustrum->AABBVsFrustrum(branch->downRight->boundingVolume))
 		{
 			this->traverseBoxTree(branch->downRight);
 		}
-		if (branch->upRight != nullptr && this->frustrum->compareBoxToFrustrum(branch->upRight->boundingVolume))
+		if (branch->upRight != nullptr && this->frustrum->AABBVsFrustrum(branch->upRight->boundingVolume))
 		{
 			this->traverseBoxTree(branch->upRight);
 		}
