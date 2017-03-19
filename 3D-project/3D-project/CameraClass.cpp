@@ -4,7 +4,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
 
-	this->defaultMovementRate = 0.01f;
+	this->defaultMovementRate = 1.01f;
 	this->defaultMouseSensitivity = 0.01f;
 
 	this->rotationValue = 0;
@@ -280,27 +280,28 @@ void CameraClass::update(float dt)
 	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(strafe));
 	
 	///TERRAIN WALKING CHANGES PLEASE NO DISSAPEAR THIS TIME
-	DirectX::XMFLOAT3 wUp(0, 1, 0);
-	DirectX::XMVECTOR WUp = DirectX::XMLoadFloat3(&wUp);
+	//DirectX::XMFLOAT3 wUp(0, 1, 0);
+	//DirectX::XMVECTOR WUp = DirectX::XMLoadFloat3(&wUp);
 
-	DirectX::XMVECTOR RIGHT = DirectX::XMLoadFloat3(&this->mRight);
+	//DirectX::XMVECTOR RIGHT = DirectX::XMLoadFloat3(&this->mRight);
 
-	DirectX::XMVECTOR TERRAINWALKDIR = DirectX::XMVector3Cross(RIGHT, WUp);
+	//DirectX::XMVECTOR TERRAINWALKDIR = DirectX::XMVector3Cross(RIGHT, WUp);
 
-	DirectX::XMFLOAT3 terrainWalkDir;
-	DirectX::XMStoreFloat3(&terrainWalkDir, TERRAINWALKDIR);
+	//DirectX::XMFLOAT3 terrainWalkDir;
+	//DirectX::XMStoreFloat3(&terrainWalkDir, TERRAINWALKDIR);
 
-	DirectX::XMFLOAT3 floatForward;	//funkar?
-	floatForward.x = terrainWalkDir.x * movement.y;
-	floatForward.y = terrainWalkDir.y * movement.y;
-	floatForward.z = terrainWalkDir.z * movement.y;
+	//DirectX::XMFLOAT3 floatForward;
+	//floatForward.x = terrainWalkDir.x * movement.y;
+	//floatForward.y = terrainWalkDir.y * movement.y;
+	//floatForward.z = terrainWalkDir.z * movement.y;
 	/////END
 
 
-	/*NOCLIPMODE (Disable terrain walk)
+	//NOCLIPMODE (Disable terrain walk)
+	DirectX::XMFLOAT3 floatForward;
 	floatForward.x = this->mDirection.x * movement.y;
 	floatForward.y = this->mDirection.y * movement.y;
-	floatForward.z = this->mDirection.z * movement.y;*/
+	floatForward.z = this->mDirection.z * movement.y;
 
 	DirectX::XMVECTOR forward = DirectX::XMLoadFloat3(&floatForward);
 

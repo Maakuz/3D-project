@@ -1690,7 +1690,7 @@ void GraphicsHandler::update(float deltaT)
 	this->cameraClass->update(deltaT);
 	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-	this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+	//this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
 	this->updateLightBuffer();
 
 	if (this->currentTime - this->lastUpdate >= 0.8f)
@@ -2209,7 +2209,7 @@ void GraphicsHandler::cull()
 	this->cullBoxes();
 	
 	//Not very performace efficient
-	//this->cullGeometry();
+	this->cullGeometry();
 
 	
 }
@@ -2217,13 +2217,14 @@ void GraphicsHandler::cull()
 void GraphicsHandler::cullGeometry()
 {
 	//culls the terrain
-	if (this->frustrum->compareBoxToFrustrum(terrainHandler->GetFrustumTree()->boundingVolume))
+	if (this->frustrum->AABBVsFrustrum(terrainHandler->GetFrustumTree()->boundingVolume))
 	{
 		this->terrainVerticeAmount = 0;
 		traverseTerrainTree(terrainHandler->GetFrustumTree());
 
-		this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->visibleTerrainVertices, this->terrainVerticeAmount);
 	}
+
+	this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->visibleTerrainVertices, this->terrainVerticeAmount);
 }
 
 void GraphicsHandler::cullBoxes()
