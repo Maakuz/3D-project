@@ -1686,7 +1686,7 @@ void GraphicsHandler::update(float deltaT)
 	this->cameraClass->update(deltaT);
 	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-	//this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+	this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
 	this->updateLightBuffer();
 
 	if (this->currentTime - this->lastUpdate >= 0.8f)

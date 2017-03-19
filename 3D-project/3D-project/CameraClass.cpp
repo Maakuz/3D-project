@@ -93,7 +93,6 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 	matrices.view = DirectX::XMMatrixTranspose(temp);
 
 	this->matrices.projection = DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, zNear, zFar);
-	//this->matrices.projection = DirectX::XMMatrixOrthographicLH(width / 100.f, height / 100.f, 0.1f, 20);
 	
 	temp = matrices.projection;
 	this->matrices.projection = DirectX::XMMatrixTranspose(temp);
@@ -283,10 +282,28 @@ void CameraClass::update(float dt)
 	position = DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(strafe));
 	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(strafe));
 	
+	///TERRAIN WALKING CHANGES PLEASE NO DISSAPEAR THIS TIME
+	DirectX::XMFLOAT3 wUp(0, 1, 0);
+	DirectX::XMVECTOR WUp = DirectX::XMLoadFloat3(&wUp);
+
+	DirectX::XMVECTOR RIGHT = DirectX::XMLoadFloat3(&this->mRight);
+
+	DirectX::XMVECTOR TERRAINWALKDIR = DirectX::XMVector3Cross(RIGHT, WUp);
+
+	DirectX::XMFLOAT3 terrainWalkDir;
+	DirectX::XMStoreFloat3(&terrainWalkDir, TERRAINWALKDIR);
+
 	DirectX::XMFLOAT3 floatForward;	//funkar?
+	floatForward.x = terrainWalkDir.x * movement.y;
+	floatForward.y = terrainWalkDir.y * movement.y;
+	floatForward.z = terrainWalkDir.z * movement.y;
+	/////END
+
+
+	/*NOCLIPMODE (Disable terrain walk)
 	floatForward.x = this->mDirection.x * movement.y;
 	floatForward.y = this->mDirection.y * movement.y;
-	floatForward.z = this->mDirection.z * movement.y;
+	floatForward.z = this->mDirection.z * movement.y;*/
 
 	DirectX::XMVECTOR forward = DirectX::XMLoadFloat3(&floatForward);
 
