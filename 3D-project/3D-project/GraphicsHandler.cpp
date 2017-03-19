@@ -57,7 +57,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->debugDevice = nullptr;
 	this->normalMapView = nullptr;
 	this->airResistance = nullptr;
-	this->verticies = nullptr;
 	
 
 	this->instanceBuffer = nullptr;
@@ -102,7 +101,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->createSamplers();
 	this->loadMtl();
 	this->loadObj();
-	this->linkVertecies();
 	
 
 	this->createTriangleData();
@@ -127,9 +125,6 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
 	this->createBoxTree(2);
-	this->frustrum = new FrustrumCulling(this->cameraClass);
-	this->frustrum->makePlanes();
-	this->frustrum->makePoints();
 
 	this->mFrustrum = new Frustrum();
 	this->mFrustrum->constructFrustrum(this->cameraClass->getProjM(), this->cameraClass->getViewM());
@@ -1749,6 +1744,7 @@ void GraphicsHandler::update(float deltaT)
 void GraphicsHandler::updateParticles()
 {
 
+	//creates new particles every 5th second
 	if (this->currentTime - this->lastInsert > 500.0f)
 	{
 		this->lastInsert = currentTime;
@@ -1884,7 +1880,6 @@ void GraphicsHandler::kill()
 	test = this->geometryShader->Release();
 	test = this->vertexLayout->Release();
 	test = this->defferedVertexLayout->Release();
-	//this->shadowPixelShader->Release();
 	test = this->vertexBuffer->Release();
 	test = this->defferedVertexBuffer->Release();
 	test = this->matrixBuffer->Release();
@@ -1942,11 +1937,10 @@ void GraphicsHandler::kill()
 
 	test = this->gDeviceContext->Release();
 	test = this->gDevice->Release();
-	delete[] this->verticies;
 	delete[] this->intancies;
+	delete[] this->visibleInstance;
 	delete this->root;
 	delete[] this->visibleTerrainVertices;
-	delete this->frustrum;
 	delete this->mFrustrum;
 
 
@@ -2090,22 +2084,6 @@ void GraphicsHandler::updateLightBuffer()
 	this->gDeviceContext->Unmap(lightbuffer, 0);
 }
 
-void GraphicsHandler::linkVertecies()
-{
-	this->nrOfverticies = this->objInfo.nrOfVertices + this->terrainHandler->getNrOfVertices();
-	this->verticies = new VertexInfo[this->nrOfverticies];
-	VertexInfo* temp = this->terrainHandler->getVerticies();
-
-	for (size_t i = 0; i < this->objInfo.nrOfVertices; i++)
-	{
-		this->verticies[i] = this->objInfo.vInfo.at(i);
-	}
-	for (size_t i = this->objInfo.nrOfVertices; i < this->nrOfverticies; i++)
-	{
-		this->verticies[i] = temp[i];
-	}
-}
-
 void GraphicsHandler::createBoxTree(int nrOfSplits)
 {
 	AABB aabb;
@@ -2223,13 +2201,8 @@ bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
 
 void GraphicsHandler::updateFrustrum()
 {
-	/*delete this->frustrum;
-	this->frustrum = new FrustrumCulling(this->cameraClass);
-	this->frustrum->makePoints();
-	this->frustrum->makePlanes();*/
-
-	this->mFrustrum->constructFrustrum(this->cameraClass->getProjM(), this->cameraClass->getViewM());
 	
+	this->mFrustrum->constructFrustrum(this->cameraClass->getProjM(), this->cameraClass->getViewM());
 }
 
 void GraphicsHandler::cull()
@@ -2257,11 +2230,11 @@ void GraphicsHandler::cullGeometry()
 void GraphicsHandler::cullBoxes()
 {
 	this->visibleInstanceCount = 0;
-	/*if (this->mFrustrum->AABBVsFrustrum(this->root->boundingVolume))
+	if (this->mFrustrum->AABBVsFrustrum(this->root->boundingVolume))
 	{
 		this->traverseBoxTree(this->root);
-	}*/
-	this->test();
+	}
+
 
 	if (this->visibleInstanceCount > 0)
 	{
@@ -2310,17 +2283,6 @@ void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 	}
 }
 
-void GraphicsHandler::test()
-{
-	for (size_t i = 0; i < INSTANCECOUNT; i++)
-	{
-		if (this->mFrustrum->AABBVsFrustrum(this->intancies[i].offset, DirectX::XMFLOAT3(0.5f, 0.5f, 0.5f)))
-		{
-			this->visibleInstance[this->visibleInstanceCount] = this->intancies[i];
-			this->visibleInstanceCount++;
-		}
-	}
-}
 
 void GraphicsHandler::traverseTerrainTree(FrustumTree* branch)
 {

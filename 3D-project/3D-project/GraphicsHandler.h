@@ -7,7 +7,6 @@
 #include "WICTextureLoader.h"
 #include <time.h>
 #include "TerrainHandler.h"
-#include "FrustrumCulling.h"
 #include "Frustrum.h"
 
 const int NROFBUFFERS = 4;
@@ -154,7 +153,6 @@ private:
 	ID3D11ShaderResourceView* normalMapView;
 	
 
-	VertexInfo *verticies;
 	ID3D11VertexShader* terrainVS;
 	ID3D11InputLayout* terrainLayout;
 	ID3D11VertexShader* terraniShadowVertexShader;
@@ -169,7 +167,6 @@ private:
 	Instance *intancies;
 	Instance *visibleInstance;
 	BoxTree* root;
-	FrustrumCulling* frustrum;
 	VertexInfo* visibleTerrainVertices;
 	int terrainVerticeAmount;
 	Frustrum *mFrustrum;
@@ -203,7 +200,6 @@ private:
 	void renderShadows();
 	void createLightMatrices();
 	void updateLightBuffer();
-	void linkVertecies();
 	void createBoxTree(int nrOfSplits);
 	void _createBoxTree(int nrOfSplits, AABB aabb, BoxTree *&branch, std::vector<Instance> data, int instanceCount);
 	bool pointVSAABB(DirectX::XMFLOAT3 point, AABB box);
@@ -212,7 +208,6 @@ private:
 	void cullGeometry();
 	void cullBoxes();
 	void traverseBoxTree(BoxTree* branch);
-	void test();
 	void traverseTerrainTree(FrustumTree* branch);
 
 public:

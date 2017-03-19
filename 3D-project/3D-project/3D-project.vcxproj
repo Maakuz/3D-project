@@ -149,7 +149,6 @@
   <ItemGroup>
     <ClCompile Include="CameraClass.cpp" />
     <ClCompile Include="Frustrum.cpp" />
-    <ClCompile Include="FrustrumCulling.cpp" />
     <ClCompile Include="GraphicsHandler.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="TerrainHandler.cpp" />
@@ -159,7 +158,6 @@
     <ClInclude Include="CameraClass.h" />
     <ClInclude Include="Definitions.h" />
     <ClInclude Include="Frustrum.h" />
-    <ClInclude Include="FrustrumCulling.h" />
     <ClInclude Include="GraphicsHandler.h" />
     <ClInclude Include="TerrainHandler.h" />
     <ClInclude Include="WindowClass.h" />
