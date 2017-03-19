@@ -157,6 +157,7 @@ private:
 	VertexInfo *verticies;
 	ID3D11VertexShader* terrainVS;
 	ID3D11InputLayout* terrainLayout;
+	ID3D11VertexShader* terraniShadowVertexShader;
 
 	float deltaTime;
 	float currentTime;

@@ -65,6 +65,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->intancies = nullptr;
 	this->terrainVS = nullptr;
 	this->terrainLayout = nullptr;
+	this->terraniShadowVertexShader = nullptr;
 
 	this->visibleInstance = new Instance[INSTANCECOUNT];
 	for (size_t i = 0; i < INSTANCECOUNT; i++)
@@ -373,9 +374,33 @@ void GraphicsHandler::createShaders()
 		MessageBox(0, L"shadow vertex shader creation failed", L"error", MB_OK);
 	}
 
+	ID3DBlob* terrainShadowVSBlob = nullptr;
+	hr = D3DCompileFromFile(
+		L"TerrainShadowVS.hlsl",
+		nullptr,
+		nullptr,
+		"main",
+		"vs_5_0",
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+		0,
+		&terrainShadowVSBlob,
+		nullptr);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"vsblob creation failed", L"error", MB_OK);
+	}
+
+	hr = this->gDevice->CreateVertexShader(terrainShadowVSBlob->GetBufferPointer(), terrainShadowVSBlob->GetBufferSize(), NULL, &this->terraniShadowVertexShader);
+
+	if (FAILED(hr))
+	{
+		MessageBox(0, L"shadow vertex shader creation failed", L"error", MB_OK);
+	}
+
 	//Same input as deferred for easy managing
 
-	shadowVSBlob->Release();
+	terrainShadowVSBlob->Release();
 
 	ID3DBlob *psBlob = nullptr;
 	hr = D3DCompileFromFile(
@@ -1711,7 +1736,10 @@ void GraphicsHandler::update(float deltaT)
 		
 		//this->updateFrustrum();
 		this->cull();
-		this->renderShadows();
+		if (this->visibleInstanceCount > 0)
+		{
+			this->renderShadows();
+		}
 		this->renderGeometry();
 		this->renderParticles();
 		this->render();
@@ -1906,6 +1934,7 @@ void GraphicsHandler::kill()
 	test = this->terrainVS->Release();
 	test = this->terrainLayout->Release();
 	test = this->instanceBuffer->Release();
+	test = this->terraniShadowVertexShader->Release();
 
 
 
@@ -1963,18 +1992,21 @@ void GraphicsHandler::renderShadows()
 	this->gDeviceContext->OMSetRenderTargets(0, nullptr, this->shadowDSV);
 	this->gDeviceContext->ClearDepthStencilView(this->shadowDSV, D3D11_CLEAR_DEPTH, 1.f, 0);
 
-	this->gDeviceContext->VSSetShader(this->shadowVertexShader, nullptr, 0);
+	
+	this->gDeviceContext->VSSetShader(this->terraniShadowVertexShader, nullptr, 0);
 	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	this->gDeviceContext->PSSetShader(nullptr, nullptr, 0);
 
-	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
+	this->gDeviceContext->IASetInputLayout(this->terrainLayout);
+	
 
 	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->lightMatrixBuffer);
 
 	this->terrainHandler->setShaderResources(this->gDeviceContext);
 	this->terrainHandler->renderTerrain(this->gDeviceContext);
 
-
+	this->gDeviceContext->VSSetShader(this->shadowVertexShader, nullptr, 0);
+	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
 	UINT32 vertexSize = sizeof(VertexInfo);
 	UINT32 intanceSize = sizeof(Instance);
 	UINT32 offset = 0;
@@ -1982,12 +2014,9 @@ void GraphicsHandler::renderShadows()
 	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	if (this->visibleInstanceCount != 0)
-	{
-		this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
-	}
-	//this->gDeviceContext->DrawInstanced(36, INSTANCECOUNT, 0, 0);
 	
+	this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
+
 	//Nulling
 	ID3D11DepthStencilView* nullshadowDSV = nullptr;
 	this->gDeviceContext->OMSetRenderTargets(0, nullptr, nullshadowDSV);
@@ -2199,7 +2228,7 @@ void GraphicsHandler::updateFrustrum()
 	this->frustrum->makePoints();
 	this->frustrum->makePlanes();*/
 
-	this->mFrustrum->constructFrustrum(this->cameraClass->getFarZ(), this->cameraClass->getProjM(), this->cameraClass->getViewM());
+	this->mFrustrum->constructFrustrum(this->cameraClass->getProjM(), this->cameraClass->getViewM());
 	
 }
 
@@ -2235,12 +2264,16 @@ void GraphicsHandler::cullBoxes()
 	}*/
 	this->test();
 
-	D3D11_MAPPED_SUBRESOURCE data;
-	ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
+	if (this->visibleInstanceCount > 0)
+	{
+		D3D11_MAPPED_SUBRESOURCE data;
+		ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	this->gDeviceContext->Map(this->instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
-	memcpy(data.pData, this->visibleInstance, sizeof(Instance)*INSTANCECOUNT);
-	this->gDeviceContext->Unmap(this->instanceBuffer, 0);
+		this->gDeviceContext->Map(this->instanceBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &data);
+		memcpy(data.pData, this->visibleInstance, sizeof(Instance)*INSTANCECOUNT);
+		this->gDeviceContext->Unmap(this->instanceBuffer, 0);
+	}
+	
 }
 
 void GraphicsHandler::traverseBoxTree(BoxTree* branch)

@@ -118,6 +118,9 @@
     <FxCompile Include="TerrainVS.hlsl">
       <Filter>Source Files\shaders\Deffered</Filter>
     </FxCompile>
+    <FxCompile Include="TerrainShadowVS.hlsl">
+      <Filter>Source Files\shaders\Light</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

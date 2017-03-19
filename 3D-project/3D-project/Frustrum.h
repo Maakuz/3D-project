@@ -33,10 +33,9 @@ public:
 	bool AABBVsFrustrum(AABB box) const;
 	bool AABBVsFrustrum(DirectX::XMFLOAT3 center, DirectX::XMFLOAT3 half) const;
 	bool PointVSFrustum(DirectX::XMFLOAT3 point) const;
+	bool boxVsPlane(DirectX::XMFLOAT4 plane, DirectX::XMFLOAT3 center, DirectX::XMFLOAT3 half) const;
 	void constructFrustrum(DirectX::XMFLOAT4X4 projMatrix, DirectX::XMFLOAT4X4 viewMatrix);
-	void constructFrustrum(float screenDepth, DirectX::XMFLOAT4X4 projMatrix, DirectX::XMFLOAT4X4 viewMatrix);
 
 private:
 	mPlane planes[6];
-	DirectX::BoundingFrustum *frustrum;
 };
