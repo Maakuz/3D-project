@@ -47,7 +47,6 @@ public:
 class TerrainHandler
 {	
 private:
-
 	int height, width;
 	float heightMultiple;
 	float camHeightFromTerrain;

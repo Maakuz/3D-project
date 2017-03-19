@@ -29,7 +29,6 @@ private:
 	float zNear;
 	float zFar;
 
-
 	//man sparar vectorer och matriser som floats pga performance
 	DirectX::XMFLOAT3 mDirection; //Hållet man tittar
 	DirectX::XMFLOAT3 mPosition; //position på kamera

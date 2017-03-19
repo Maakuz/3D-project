@@ -22,7 +22,6 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 	this->gDeviceContext = gDeviceContext;
 
 	this->mDirection = DirectX::XMFLOAT3(0, 0, 1);
-
 	
 	this->previousMouseLocation = DirectX::XMINT2(this->width / 2, this->height / 2);
 	this->mPitch = 0.f;
@@ -37,7 +36,6 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 
 	ClientToScreen(this->window, &p);
 	SetCursorPos(p.x, p.y);
-
 }
 
 CameraClass::~CameraClass()
@@ -85,7 +83,7 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 	upDirection = DirectX::XMVectorSet(0, 1, 0, 0);
 
 	DirectX::XMVECTOR lookDirecton;
-	lookDirecton = DirectX::XMVectorSet(0, -1, 0, 0);
+	lookDirecton = DirectX::XMVectorSet(0, 0, 1, 0);
 
 	matrices.view = DirectX::XMMatrixLookAtLH(eyePosition, focusPosition, upDirection);
 
@@ -127,7 +125,6 @@ ID3D11Buffer* CameraClass::createConstantBuffer()
 	description.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
 	ID3D11Buffer* pBuffer = nullptr;
-	
 
 	D3D11_SUBRESOURCE_DATA matriceResource = getMatricesSubresource();
 	HRESULT hr = this->gDevice->CreateBuffer(&description, &matriceResource, &pBuffer);
@@ -151,11 +148,7 @@ void CameraClass::updateConstantBuffer(ID3D11Buffer* VSConstantBuffer)
 	//Låser buffern för GPU:n och hämtar den till CPU
 	this->gDeviceContext->Map(VSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &dataPtr);
 	
-	DirectX::XMMATRIX temp = this->matrices.world;
-	
-	temp = DirectX::XMMatrixRotationRollPitchYaw(0, 0, 0);//DirectX::XMMatrixRotationRollPitchYaw(this->rotationValue, this->rotationValue, 0);
-	 
-	this->matrices.world = temp;
+	DirectX::XMMATRIX temp;
 
 	temp = DirectX::XMLoadFloat4x4(&this->mViewMatrix);
 	temp = DirectX::XMMatrixTranspose(temp);
@@ -203,9 +196,8 @@ void CameraClass::updatecameraPosBuffer(ID3D11Buffer* CameraConstantBuffer)
 
 void CameraClass::kill()
 {
-	ULONG test = 0;
-	test = this->gDevice->Release();
-	test = this->gDeviceContext->Release();;
+	this->gDevice->Release();
+	this->gDeviceContext->Release();;
 }
 
 bool CameraClass::airResistance()
@@ -279,7 +271,7 @@ void CameraClass::update(float dt)
 	position = DirectX::XMVectorSetY(position, DirectX::XMVectorGetY(position) + DirectX::XMVectorGetY(strafe));
 	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(strafe));
 	
-	///TERRAIN WALKING CHANGES PLEASE NO DISSAPEAR THIS TIME
+	//Terrain walking
 	DirectX::XMFLOAT3 wUp(0, 1, 0);
 	DirectX::XMVECTOR WUp = DirectX::XMLoadFloat3(&wUp);
 
@@ -295,7 +287,6 @@ void CameraClass::update(float dt)
 	floatForward.y = terrainWalkDir.y * movement.y;
 	floatForward.z = terrainWalkDir.z * movement.y;
 	/////END
-
 
 	//NOCLIPMODE (Disable terrain walk)
 	//DirectX::XMFLOAT3 floatForward;
@@ -325,8 +316,8 @@ void CameraClass::update(float dt)
 
 	if (this->escapePressed == false)
 	{
-		newMouseLocation.x = (ms.x); // nya mnus frra i total
-		newMouseLocation.y = (ms.y); //this->defaultMouseSensitivity
+		newMouseLocation.x = (ms.x); // nya position
+		newMouseLocation.y = (ms.y); 
 
 		deltaMouseMovement.x = newMouseLocation.x - previousMouseLocation.x;
 		deltaMouseMovement.y = previousMouseLocation.y - newMouseLocation.y; //y reversed

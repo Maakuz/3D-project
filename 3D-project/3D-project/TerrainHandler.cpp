@@ -17,6 +17,8 @@ void TerrainHandler::createFrustumTree(int nrOfSplits)
 	bound.yStart = 0;
 	bound.xEnd = this->width - 1;
 	bound.yEnd = this->height - 1;
+
+
 	this->tree = new FrustumTree(this->nrOfVertices);
 
 	this->tree->boundingVolume = box;
@@ -28,7 +30,7 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, Fru
 {
 	if (nrOfSplits > 0)
 	{
-		//********************************NW**************************************************************
+		//*****************************************************NW**********************************************************
 		//Get the bounds of the terrain in this region
 		FrustumBounds nextBound;
 		nextBound.xStart = bound.xStart;
@@ -41,7 +43,7 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, Fru
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, branch->NW);
 
 
-		//*****************************************************NE***********************************************************
+		//*****************************************************NE**********************************************************
 		//Get the bounds of the terrain in this region
 		nextBound.xStart = bound.xStart + ((bound.xEnd - bound.xStart) / 2);
 		nextBound.yStart = bound.yStart;
@@ -52,7 +54,7 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, Fru
 
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, branch->NE);
 
-		//*****************************************************SW***********************************************************
+		//*****************************************************SW**********************************************************
 		//Get the bounds of the terrain in this region
 		nextBound.xStart = bound.xStart;
 		nextBound.yStart = bound.yStart + ((bound.yEnd - bound.yStart) / 2);
@@ -64,7 +66,7 @@ void TerrainHandler::_CreateFrustumTree(int nrOfSplits, FrustumBounds bound, Fru
 		this->_CreateFrustumTree(nrOfSplits - 1, nextBound, branch->SW);
 
 
-		//***********************************************SE*********************************************************
+		//******************************************************SE*********************************************************
 		//Get the bounds of the terrain in this region
 		nextBound.xStart = bound.xStart + ((bound.xEnd - bound.xStart) / 2);
 		nextBound.yStart = bound.yStart + ((bound.yEnd - bound.yStart) / 2);
@@ -147,7 +149,7 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 		&this->srv);
 	if (FAILED(hr))
 	{
-		MessageBox(0, L"texture creation failed", L"error", MB_OK);
+		MessageBox(0, L"Texture creation failed", L"error", MB_OK);
 	}
 
 }

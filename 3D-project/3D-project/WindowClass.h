@@ -17,8 +17,6 @@ private:
 
 
 	GraphicsHandler *graphicsHandler;
-	void setAirResistance();
-
 
 public:
 	WindowClass(HINSTANCE hInstance);

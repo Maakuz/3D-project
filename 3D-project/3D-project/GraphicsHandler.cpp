@@ -116,7 +116,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	this->particleFirstTimeInit();
 	this->createRasterState();
 	
-	
+	//Checking live objects
 	//HRESULT hr = this->gDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast <void **>(&debugDevice)); 
 	//if (FAILED(hr))
 	//{
@@ -2025,9 +2025,8 @@ void GraphicsHandler::renderShadows()
 
 void GraphicsHandler::createLightMatrices()
 {
-	//If z is 0 it won't work, will look into this
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(0, 13, 0.1f, 0);
+	eyePosition = DirectX::XMVectorSet(0, 13, 2, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 0);
