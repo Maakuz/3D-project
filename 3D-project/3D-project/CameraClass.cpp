@@ -76,7 +76,7 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(0, 0, 0);
 
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(50, 0, 50, 0);
+	eyePosition = DirectX::XMVectorSet(0, 3, 0, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 1);

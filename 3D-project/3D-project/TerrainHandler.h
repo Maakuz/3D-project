@@ -9,7 +9,7 @@ struct HeightMap { float x, y, z; };
 
 struct FrustumBounds
 {
-	int xStart, xStop, yStart, yStop;
+	int xStart, xEnd, yStart, yEnd;
 };
 
 class FrustumTree
@@ -23,13 +23,12 @@ public:
 	VertexInfo* data;
 	int vertexCount;
 
-	FrustumTree(AABB boundingVolume, VertexInfo* data, int vertexCount)
+	FrustumTree(int vertexCount, VertexInfo* data = nullptr)
 	{
 		this->NE = nullptr;
 		this->SE = nullptr;
 		this->NW = nullptr;
 		this->SW = nullptr;
-		this->boundingVolume = boundingVolume;
 		this->data = data;
 		this->vertexCount = vertexCount;
 	}
@@ -40,7 +39,7 @@ public:
 		delete this->SW;
 		delete this->SE;
 		delete this->NE;
-		//delete[] this->data;
+		delete[] this->data;
 	}
 };
 
@@ -64,7 +63,8 @@ private:
 	FrustumTree* tree;
 
 	void createFrustumTree(int nrOfSplits = 4);
-	void _CreateFrustumTree(int nrOfSplits, FrustumBounds bound, AABB box, FrustumTree*& branch, VertexInfo* chunks, int vertexAmount);
+	void _CreateFrustumTree(int nrOfSplits, FrustumBounds bound, FrustumTree*& branch);
+	void createBranchData(FrustumBounds bound, FrustumTree*& branch);
 
 	float determinateDeterminant(DirectX::XMFLOAT3& a, DirectX::XMFLOAT3& b, DirectX::XMFLOAT3& c);
 public:

@@ -171,7 +171,6 @@ private:
 	FrustrumCulling* frustrum;
 	VertexInfo* visibleTerrainVertices;
 	int terrainVerticeAmount;
-	int terrainCounter;
 	Frustrum *mFrustrum;
 	
 

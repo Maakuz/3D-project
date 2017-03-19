@@ -2218,8 +2218,6 @@ void GraphicsHandler::cullGeometry()
 		traverseTerrainTree(terrainHandler->GetFrustumTree());
 
 		this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->visibleTerrainVertices, this->terrainVerticeAmount);
-
-		//this->terrainHandler->updateVertexBuffer(this->gDeviceContext, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->data, this->terrainHandler->GetFrustumTree()->NE->NE->NE->NE->vertexCount);
 	}
 }
 
