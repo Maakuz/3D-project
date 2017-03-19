@@ -128,7 +128,7 @@ TerrainHandler::TerrainHandler(ID3D11Device* gDevice, std::string path)
 	this->height = 0;
 	this->width = 0;
 	this->heightMultiple = 50;
-	this->camHeightFromTerrain = 1.f;
+	this->camHeightFromTerrain = 3.f;
 	this->heightMap = nullptr;
 	this->vertexLength = 0.3f;
 	this->offsetY = -35;

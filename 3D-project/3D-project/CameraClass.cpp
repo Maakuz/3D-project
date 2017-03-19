@@ -70,7 +70,7 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 {
 	this->fovAngleY = M_PI * 0.5f; //90 grader fov
 	this->aspectRatio = (float)width / (float)height;
-	this->zNear = 1.0f;
+	this->zNear = 1.f;
 	this->zFar = 200.f;
 
 	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(0, 0, 0);
@@ -280,28 +280,28 @@ void CameraClass::update(float dt)
 	position = DirectX::XMVectorSetZ(position, DirectX::XMVectorGetZ(position) + DirectX::XMVectorGetZ(strafe));
 	
 	///TERRAIN WALKING CHANGES PLEASE NO DISSAPEAR THIS TIME
-	//DirectX::XMFLOAT3 wUp(0, 1, 0);
-	//DirectX::XMVECTOR WUp = DirectX::XMLoadFloat3(&wUp);
+	DirectX::XMFLOAT3 wUp(0, 1, 0);
+	DirectX::XMVECTOR WUp = DirectX::XMLoadFloat3(&wUp);
 
-	//DirectX::XMVECTOR RIGHT = DirectX::XMLoadFloat3(&this->mRight);
+	DirectX::XMVECTOR RIGHT = DirectX::XMLoadFloat3(&this->mRight);
 
-	//DirectX::XMVECTOR TERRAINWALKDIR = DirectX::XMVector3Cross(RIGHT, WUp);
+	DirectX::XMVECTOR TERRAINWALKDIR = DirectX::XMVector3Cross(RIGHT, WUp);
 
-	//DirectX::XMFLOAT3 terrainWalkDir;
-	//DirectX::XMStoreFloat3(&terrainWalkDir, TERRAINWALKDIR);
+	DirectX::XMFLOAT3 terrainWalkDir;
+	DirectX::XMStoreFloat3(&terrainWalkDir, TERRAINWALKDIR);
 
-	//DirectX::XMFLOAT3 floatForward;
-	//floatForward.x = terrainWalkDir.x * movement.y;
-	//floatForward.y = terrainWalkDir.y * movement.y;
-	//floatForward.z = terrainWalkDir.z * movement.y;
+	DirectX::XMFLOAT3 floatForward;
+	floatForward.x = terrainWalkDir.x * movement.y;
+	floatForward.y = terrainWalkDir.y * movement.y;
+	floatForward.z = terrainWalkDir.z * movement.y;
 	/////END
 
 
 	//NOCLIPMODE (Disable terrain walk)
-	DirectX::XMFLOAT3 floatForward;
-	floatForward.x = this->mDirection.x * movement.y;
-	floatForward.y = this->mDirection.y * movement.y;
-	floatForward.z = this->mDirection.z * movement.y;
+	//DirectX::XMFLOAT3 floatForward;
+	//floatForward.x = this->mDirection.x * movement.y;
+	//floatForward.y = this->mDirection.y * movement.y;
+	//floatForward.z = this->mDirection.z * movement.y;
 
 	DirectX::XMVECTOR forward = DirectX::XMLoadFloat3(&floatForward);
 

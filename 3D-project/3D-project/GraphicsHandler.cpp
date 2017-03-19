@@ -1715,7 +1715,7 @@ void GraphicsHandler::update(float deltaT)
 	this->cameraClass->update(deltaT);
 	this->cameraClass->updatecameraPosBuffer(this->cameraPos);
 	this->cameraClass->updateConstantBuffer(this->matrixBuffer);
-	//this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
+	this->terrainHandler->walkOnTerrain(this->cameraClass->getCameraPos());
 	this->updateLightBuffer();
 
 	if (this->currentTime - this->lastUpdate >= 0.8f)
@@ -2239,14 +2239,12 @@ void GraphicsHandler::cull()
 	
 	//Not very performace efficient
 	this->cullGeometry();
-
-	
 }
 
 void GraphicsHandler::cullGeometry()
 {
 	//culls the terrain
-	if (this->frustrum->AABBVsFrustrum(terrainHandler->GetFrustumTree()->boundingVolume))
+	if (mFrustrum->AABBVsFrustrum(terrainHandler->GetFrustumTree()->boundingVolume))
 	{
 		this->terrainVerticeAmount = 0;
 		traverseTerrainTree(terrainHandler->GetFrustumTree());
@@ -2328,16 +2326,16 @@ void GraphicsHandler::traverseTerrainTree(FrustumTree* branch)
 {
 	if (branch->NE != nullptr)
 	{
-		if (frustrum->compareBoxToFrustrum(branch->NE->boundingVolume))
+		if (mFrustrum->AABBVsFrustrum(branch->NE->boundingVolume))
 			traverseTerrainTree(branch->NE);
 
-		if (frustrum->compareBoxToFrustrum(branch->NW->boundingVolume))
+		if (mFrustrum->AABBVsFrustrum(branch->NW->boundingVolume))
 			traverseTerrainTree(branch->NW);
 
-		if (frustrum->compareBoxToFrustrum(branch->SW->boundingVolume))
+		if (mFrustrum->AABBVsFrustrum(branch->SW->boundingVolume))
 			traverseTerrainTree(branch->SW);
 
-		if (frustrum->compareBoxToFrustrum(branch->SE->boundingVolume))
+		if (mFrustrum->AABBVsFrustrum(branch->SE->boundingVolume))
 			traverseTerrainTree(branch->SE);
 	}
 
