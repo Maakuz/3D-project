@@ -4,7 +4,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
 
-	this->defaultMovementRate = 1.01f;
+	this->defaultMovementRate = 0.01f;
 	this->defaultMouseSensitivity = 0.01f;
 
 	this->rotationValue = 0;
