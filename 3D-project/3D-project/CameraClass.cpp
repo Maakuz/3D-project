@@ -4,7 +4,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
 
-	this->defaultMovementRate = 1.01f;
+	this->defaultMovementRate = 0.01f;
 	this->defaultMouseSensitivity = 0.01f;
 
 	this->rotationValue = 0;
@@ -29,7 +29,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 	this->mYaw = 0.f;
 
 	this->escapePressed = false;
-	this->airRe = false;
+	this->airRe = true;
 
 	POINT p;
 	p.x = this->width / 2;
@@ -70,13 +70,13 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 {
 	this->fovAngleY = M_PI * 0.5f; //90 grader fov
 	this->aspectRatio = (float)width / (float)height;
-	this->zNear = 0.1f;
+	this->zNear = 1.0f;
 	this->zFar = 200.f;
 
 	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(0, 0, 0);
 
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(50, 0, 50, 0);
+	eyePosition = DirectX::XMVectorSet(0, 3, 0, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 1);
@@ -254,14 +254,11 @@ void CameraClass::update(float dt)
 	}
 	if (ks.X)
 	{
-		if (this->airRe)
-		{
-			this->airRe = false;
-		}
-		else
-		{
-			this->airRe = true;
-		}
+		this->airRe = true;	
+	}
+	if (ks.C)
+	{
+		this->airRe = false;
 	}
 
 	DirectX::XMVECTOR position = DirectX::XMLoadFloat3(&this->mPosition);
