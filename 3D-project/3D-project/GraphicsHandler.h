@@ -204,13 +204,14 @@ private:
 	void updateLightBuffer();
 	void linkVertecies();
 	void createBoxTree(int nrOfSplits);
-	BoxTree* _createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, std::vector<Instance> data, int instanceCount);
+	void _createBoxTree(int nrOfSplits, AABB aabb, BoxTree *&branch, std::vector<Instance> data, int instanceCount);
 	bool pointVSAABB(DirectX::XMFLOAT3 point, AABB box);
 	void updateFrustrum();
 	void cull();
 	void cullGeometry();
 	void cullBoxes();
 	void traverseBoxTree(BoxTree* branch);
+	void test();
 	void traverseTerrainTree(FrustumTree* branch);
 
 public:

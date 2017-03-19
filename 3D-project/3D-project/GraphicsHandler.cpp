@@ -125,7 +125,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
-	this->createBoxTree(1);
+	this->createBoxTree(2);
 	this->frustrum = new FrustrumCulling(this->cameraClass);
 	this->frustrum->makePlanes();
 	this->frustrum->makePoints();
@@ -1630,7 +1630,11 @@ void GraphicsHandler::renderGeometry()
 	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
+	if (this->visibleInstanceCount != 0)
+	{
+		this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
+	}
+	
 
 
 	//Null stuff
@@ -1978,7 +1982,11 @@ void GraphicsHandler::renderShadows()
 	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
 
 	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
+	if (this->visibleInstanceCount != 0)
+	{
+		this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
+	}
+	//this->gDeviceContext->DrawInstanced(36, INSTANCECOUNT, 0, 0);
 	
 	//Nulling
 	ID3D11DepthStencilView* nullshadowDSV = nullptr;
@@ -2080,18 +2088,20 @@ void GraphicsHandler::createBoxTree(int nrOfSplits)
 		temp.push_back(this->intancies[i]);
 	}
 
-	this->root = this->_createBoxTree(nrOfSplits, aabb, this->root, temp, INSTANCECOUNT);
+	this->_createBoxTree(nrOfSplits, aabb, this->root, temp, INSTANCECOUNT);
 }
 
-GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB aabb, BoxTree *branch, std::vector<Instance> data, int instanceCount)
+void GraphicsHandler::_createBoxTree(int nrOfSplits, AABB aabb, BoxTree *&branch, std::vector<Instance> data, int instanceCount)
 {
+	branch = new BoxTree();
+	branch->boundingVolume = aabb;
+	branch->data = data;
+	branch->instanceCount = instanceCount;
+
 	if (nrOfSplits > 0)
 	{
 		nrOfSplits--;
-		branch = new BoxTree();
-		branch->boundingVolume = aabb;
-		branch->data = data;
-		branch->instanceCount = instanceCount;
+		
 
 		//creates four new smaller aabbs for the four branches
 
@@ -2163,18 +2173,13 @@ GraphicsHandler::BoxTree* GraphicsHandler::_createBoxTree(int nrOfSplits, AABB a
 				urd++;
 			}
 		}
-		branch->downLeft = this->_createBoxTree(nrOfSplits, downL, branch->downLeft, downLeftData, dld);
-		branch->upLeft = this->_createBoxTree(nrOfSplits, upL, branch->upLeft, upLeftData, uld);
-		branch->downRight = this->_createBoxTree(nrOfSplits, downR, branch->downRight, downRightData, drd);
-		branch->upRight = this->_createBoxTree(nrOfSplits, upR, branch->upRight, upRightData, urd);
+		 this->_createBoxTree(nrOfSplits, downL, branch->downLeft, downLeftData, dld);
+		this->_createBoxTree(nrOfSplits, upL, branch->upLeft, upLeftData, uld);
+		 this->_createBoxTree(nrOfSplits, downR, branch->downRight, downRightData, drd);
+		this->_createBoxTree(nrOfSplits, upR, branch->upRight, upRightData, urd);
 		
 		
 	}
-	else
-	{
-		branch = nullptr;	
-	}
-	return branch;
 }
 
 bool GraphicsHandler::pointVSAABB(DirectX::XMFLOAT3 point, AABB box)
@@ -2194,7 +2199,7 @@ void GraphicsHandler::updateFrustrum()
 	this->frustrum->makePoints();
 	this->frustrum->makePlanes();*/
 
-	this->mFrustrum->constructFrustrum(this->cameraClass->getProjM(), this->cameraClass->getViewM());
+	this->mFrustrum->constructFrustrum(this->cameraClass->getFarZ(), this->cameraClass->getProjM(), this->cameraClass->getViewM());
 	
 }
 
@@ -2224,10 +2229,11 @@ void GraphicsHandler::cullGeometry()
 void GraphicsHandler::cullBoxes()
 {
 	this->visibleInstanceCount = 0;
-	if (this->mFrustrum->AABBVsFrustrum(this->root->boundingVolume))
+	/*if (this->mFrustrum->AABBVsFrustrum(this->root->boundingVolume))
 	{
 		this->traverseBoxTree(this->root);
-	}
+	}*/
+	this->test();
 
 	D3D11_MAPPED_SUBRESOURCE data;
 	ZeroMemory(&data, sizeof(D3D11_MAPPED_SUBRESOURCE));
@@ -2252,23 +2258,35 @@ void GraphicsHandler::traverseBoxTree(BoxTree* branch)
 	else
 	{
 		//traverse down tree if bounding volume is within frustrum
-		if (branch->downLeft != nullptr && this->frustrum->AABBVsFrustrum(branch->downLeft->boundingVolume))
+		if (this->mFrustrum->AABBVsFrustrum(branch->downLeft->boundingVolume))
 		{
 			this->traverseBoxTree(branch->downLeft);
 		}
-		if (branch->upLeft != nullptr && this->mFrustrum->AABBVsFrustrum(branch->upLeft->boundingVolume))
+		if (this->mFrustrum->AABBVsFrustrum(branch->upLeft->boundingVolume))
 		{
 			this->traverseBoxTree(branch->upLeft);
 		}
-		if (branch->downRight != nullptr && this->mFrustrum->AABBVsFrustrum(branch->downRight->boundingVolume))
+		if (this->mFrustrum->AABBVsFrustrum(branch->downRight->boundingVolume))
 		{
 			this->traverseBoxTree(branch->downRight);
 		}
-		if (branch->upRight != nullptr && this->mFrustrum->AABBVsFrustrum(branch->upRight->boundingVolume))
+		if (this->mFrustrum->AABBVsFrustrum(branch->upRight->boundingVolume))
 		{
 			this->traverseBoxTree(branch->upRight);
 		}
 		
+	}
+}
+
+void GraphicsHandler::test()
+{
+	for (size_t i = 0; i < INSTANCECOUNT; i++)
+	{
+		if (this->mFrustrum->AABBVsFrustrum(this->intancies[i].offset, DirectX::XMFLOAT3(0.5f, 0.5f, 0.5f)))
+		{
+			this->visibleInstance[this->visibleInstanceCount] = this->intancies[i];
+			this->visibleInstanceCount++;
+		}
 	}
 }
 

@@ -238,7 +238,12 @@ bool FrustrumCulling::compareBoxToFrustrum(AABB box)
 
 bool FrustrumCulling::AABBVsFrustrum(AABB box) const
 {
-	DirectX::XMFLOAT3 point[8];
+
+
+	const int nrOfPoints = 8;
+	const int nrOfPlanes = 6;
+	DirectX::XMFLOAT3 point[nrOfPoints];
+
 
 	point[0] = box.p0;
 	point[1] = DirectX::XMFLOAT3(box.p1.x, box.p0.y, box.p0.z);
@@ -250,24 +255,27 @@ bool FrustrumCulling::AABBVsFrustrum(AABB box) const
 	point[7] = box.p1;
 
 	int inside = 0;
-	for (size_t i = 0; i < 6; i++)
+	float test = 0.0f;
+	for (size_t i = 0; i < nrOfPoints; i++)
 	{
 		inside = 0;
-		for (size_t j = 0; j < 8; j++)
+		for (size_t j = 0; j < nrOfPlanes; j++)
 		{
-			DirectX::XMFLOAT3 p2p = DirectX::XMFLOAT3(point[j].x - this->plane[i].pOnPlane.x, point[j].y - this->plane[i].pOnPlane.y, point[j].z - this->plane[i].pOnPlane.z );
-			float dotP = (p2p.x * this->plane[i].normal.x, p2p.y * this->plane[i].normal.y, p2p.z * this->plane[i].normal.z);
-			if (dotP > 0)
+			DirectX::XMFLOAT3 p2p = DirectX::XMFLOAT3(point[j].x - this->plane[i].pOnPlane.x, point[j].y - this->plane[i].pOnPlane.y, point[j].z - this->plane[i].pOnPlane.z);
+			test = (p2p.x * this->plane[i].normal.x, p2p.y * this->plane[i].normal.y, p2p.z * this->plane[i].normal.z);
+			if (test > 0)
 			{
 				inside++;
 			}
+			else
+			{
+				break;
+			}
 		}
-		if (inside == 0)
+		if (inside == nrOfPlanes)
 		{
-			return false;
+			return true;
 		}
 	}
-	
-
-	return true;
+	return false;
 }
