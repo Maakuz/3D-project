@@ -124,7 +124,7 @@ GraphicsHandler::GraphicsHandler(HWND wHandler, int height, int width)
 	//Constant buffer till vertex shader
 	this->matrixBuffer = this->cameraClass->createConstantBuffer();
 	this->cameraPos = this->cameraClass->createCamrePosBuffer();
-	this->createBoxTree(2);
+	this->createBoxTree(4);
 
 	this->mFrustrum = new Frustrum();
 	this->mFrustrum->constructFrustrum(this->cameraClass->getProjM(), this->cameraClass->getViewM());
