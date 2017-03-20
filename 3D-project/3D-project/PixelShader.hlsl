@@ -42,7 +42,6 @@ cbuffer lightMatrixes : register(b3)
 struct VS_OUT
 {
 	float4 pos : SV_Position;
-	float4 posVS : VSPOS;
 	float2 uv : TEXCOORD;
 };
 
@@ -66,10 +65,6 @@ float4 main(VS_OUT input) : SV_TARGET
     float3 specular;
     float weight;
     float attenuation;
-
-
-    //Light vector
-    lVec = lightPos - positions.Sample(sSampler, input.uv);
 
 	//For directional lights only
     lVec = -lightDir;

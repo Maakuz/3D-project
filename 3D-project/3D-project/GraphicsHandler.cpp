@@ -1599,11 +1599,45 @@ void GraphicsHandler::render()
 	this->gDeviceContext->PSSetShaderResources(4, 1, &this->nullSRV);
 }
 
+void GraphicsHandler::renderShadows()
+{
+
+	this->gDeviceContext->OMSetRenderTargets(0, nullptr, this->shadowDSV);
+	this->gDeviceContext->ClearDepthStencilView(this->shadowDSV, D3D11_CLEAR_DEPTH, 1.f, 0);
+
+
+	this->gDeviceContext->VSSetShader(this->terraniShadowVertexShader, nullptr, 0);
+	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
+	this->gDeviceContext->PSSetShader(nullptr, nullptr, 0);
+
+	this->gDeviceContext->IASetInputLayout(this->terrainLayout);
+
+
+	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->lightMatrixBuffer);
+
+	this->terrainHandler->setShaderResources(this->gDeviceContext);
+	this->terrainHandler->renderTerrain(this->gDeviceContext);
+
+	this->gDeviceContext->VSSetShader(this->shadowVertexShader, nullptr, 0);
+	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
+	UINT32 vertexSize = sizeof(VertexInfo);
+	UINT32 intanceSize = sizeof(Instance);
+	UINT32 offset = 0;
+	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
+	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
+
+	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
+
+	//Nulling
+	ID3D11DepthStencilView* nullshadowDSV = nullptr;
+	this->gDeviceContext->OMSetRenderTargets(0, nullptr, nullshadowDSV);
+
+}
+
 void GraphicsHandler::renderGeometry()
 {
-	
-
-
 	float clearColor[] = { 102/255.0f, 152/255.0f, 255/255.0f, 1 };
 	this->gDeviceContext->OMSetRenderTargets(NROFBUFFERS, this->renderTargetViews, this->DSV);
 	//this->sortTriangles();
@@ -1632,12 +1666,12 @@ void GraphicsHandler::renderGeometry()
 	this->setViewPort(this->height, this->width);
 
 	this->gDeviceContext->PSSetSamplers(0, 1, &this->sState);
+
 	//Draw terrain
 	this->terrainHandler->setShaderResources(this->gDeviceContext);
 	this->terrainHandler->renderTerrain(this->gDeviceContext);
 
-	//Swap the texture
-	
+	//Changing the vertex shader
 	this->gDeviceContext->VSSetShader(this->defferedVertexShader, nullptr, 0);
 	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
 	this->gDeviceContext->OMSetDepthStencilState(this->dsState, 1);
@@ -1980,47 +2014,11 @@ void GraphicsHandler::createInstanceBuffer()
 
 }
 
-void GraphicsHandler::renderShadows()
-{
-
-	this->gDeviceContext->OMSetRenderTargets(0, nullptr, this->shadowDSV);
-	this->gDeviceContext->ClearDepthStencilView(this->shadowDSV, D3D11_CLEAR_DEPTH, 1.f, 0);
-
-	
-	this->gDeviceContext->VSSetShader(this->terraniShadowVertexShader, nullptr, 0);
-	this->gDeviceContext->GSSetShader(nullptr, nullptr, 0);
-	this->gDeviceContext->PSSetShader(nullptr, nullptr, 0);
-
-	this->gDeviceContext->IASetInputLayout(this->terrainLayout);
-	
-
-	this->gDeviceContext->VSSetConstantBuffers(0, 1, &this->lightMatrixBuffer);
-
-	this->terrainHandler->setShaderResources(this->gDeviceContext);
-	this->terrainHandler->renderTerrain(this->gDeviceContext);
-
-	this->gDeviceContext->VSSetShader(this->shadowVertexShader, nullptr, 0);
-	this->gDeviceContext->IASetInputLayout(this->defferedVertexLayout);
-	UINT32 vertexSize = sizeof(VertexInfo);
-	UINT32 intanceSize = sizeof(Instance);
-	UINT32 offset = 0;
-	this->gDeviceContext->IASetVertexBuffers(0, 1, &this->defferedVertexBuffer, &vertexSize, &offset);
-	this->gDeviceContext->IASetVertexBuffers(1, 1, &this->instanceBuffer, &intanceSize, &offset);
-
-	this->gDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
-	this->gDeviceContext->DrawInstanced(36, this->visibleInstanceCount, 0, 0);
-
-	//Nulling
-	ID3D11DepthStencilView* nullshadowDSV = nullptr;
-	this->gDeviceContext->OMSetRenderTargets(0, nullptr, nullshadowDSV);
-
-}
 
 void GraphicsHandler::createLightMatrices()
 {
 	DirectX::XMVECTOR eyePosition;
-	eyePosition = DirectX::XMVectorSet(0, 13, 2, 0);
+	eyePosition = DirectX::XMVectorSet(0, 13, 1, 0);
 
 	DirectX::XMVECTOR focusPosition;
 	focusPosition = DirectX::XMVectorSet(0, 0, 0, 0);

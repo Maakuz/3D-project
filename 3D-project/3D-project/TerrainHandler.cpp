@@ -256,7 +256,7 @@ void TerrainHandler::createVertices()
 		this->vertices[i] = { 0 };
 	}
 
-	float offsetX = ((this->width - 1) * 	this->vertexLength) / 2.f;
+	float offsetX = ((this->width - 1) * this->vertexLength) / 2.f;
 	float offsetZ = ((this->height - 1) * this->vertexLength) / 2.f;
 
 	int count = 0;
@@ -474,6 +474,7 @@ void TerrainHandler::kill()
 void TerrainHandler::walkOnTerrain(DirectX::XMFLOAT3& camPos)
 {
 	//Someone messed up and made z into x in the terrain so this is the game we're playing now
+	//HARDCODED VALUE UGH
 	float norCamX = camPos.z + ((this->width - 1) * this->vertexLength) / 2.f;
 	float norCamZ = camPos.x + ((this->height - 1) * this->vertexLength) / 2.f;
 
