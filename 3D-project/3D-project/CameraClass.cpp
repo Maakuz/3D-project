@@ -4,7 +4,7 @@ CameraClass::CameraClass(ID3D11Device* gDevice, ID3D11DeviceContext* gDeviceCont
 {
 	this->defaultRotationRate = DirectX::XMConvertToRadians(0.1f);
 
-	this->defaultMovementRate = 0.01f;
+	this->defaultMovementRate = 0.02f;
 	this->defaultMouseSensitivity = 0.01f;
 
 	this->rotationValue = 0;
@@ -68,7 +68,7 @@ matrixStruct CameraClass::initiateMatrices(int width, int height)
 {
 	this->fovAngleY = M_PI * 0.5f; //90 grader fov
 	this->aspectRatio = (float)width / (float)height;
-	this->zNear = 1.f;
+	this->zNear = 1.0f;
 	this->zFar = 200.f;
 
 	this->matrices.world = DirectX::XMMatrixRotationRollPitchYaw(0, 0, 0);

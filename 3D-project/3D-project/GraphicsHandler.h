@@ -209,6 +209,7 @@ private:
 	void cullBoxes();
 	void traverseBoxTree(BoxTree* branch);
 	void traverseTerrainTree(FrustumTree* branch);
+	void test();
 
 public:
 	GraphicsHandler(HWND wHandler, int height, int width);
